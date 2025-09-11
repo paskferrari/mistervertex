@@ -1,103 +1,194 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState } from 'react'
+import Link from 'next/link'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import { isValidEmail } from '@/lib/utils'
+import { Mail, TrendingUp, Users, Award, CheckCircle, AlertCircle, LogIn } from 'lucide-react'
+
+export default function LandingPage() {
+  const [email, setEmail] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    
+    if (!isValidEmail(email)) {
+      setError('Inserisci un indirizzo email valido')
+      return
+    }
+
+    // Verifica se Supabase è configurato
+    if (!isSupabaseConfigured()) {
+      setError('Piattaforma in configurazione. Riprova più tardi.')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const { error } = await supabase
+        .from('email_requests')
+        .insert([{ email, status: 'pending' }])
+
+      if (error) {
+        if (error.code === '23505') {
+          setError('Questa email è già stata registrata')
+        } else {
+          setError('Errore durante la registrazione. Riprova più tardi.')
+        }
+      } else {
+        setIsSubmitted(true)
+        setEmail('')
+      }
+    } catch (err) {
+      setError('Errore di connessione. Riprova più tardi.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Header */}
+      <header className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <TrendingUp className="h-8 w-8 text-purple-400" />
+            <span className="text-2xl font-bold text-white">Mister Vertex</span>
+          </div>
+          <Link 
+            href="/login"
+            className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-4 py-2 rounded-lg transition-all duration-200"
+          >
+            <LogIn className="h-4 w-4" />
+            <span>Accedi</span>
+          </Link>
+        </div>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Hero Section */}
+      <main className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
+            La Community di
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+              {' '}Betting{' '}
+            </span>
+            del Futuro
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed">
+            Unisciti alla community esclusiva di <strong>Mister Vertex</strong> e accedi ai pronostici
+            più accurati del settore. Trasforma la tua passione in profitto.
+          </p>
+
+          {/* Configuration Notice */}
+          {!isSupabaseConfigured() && (
+            <div className="max-w-2xl mx-auto mb-8">
+              <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4">
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className="h-5 w-5 text-yellow-400" />
+                  <div>
+                    <h3 className="text-yellow-400 font-medium">Configurazione in Corso</h3>
+                    <p className="text-yellow-300 text-sm mt-1">
+                      La piattaforma è in fase di configurazione. Per completare il setup, configura Supabase seguendo le istruzioni nel README.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Email Form */}
+          <div className="max-w-md mx-auto mb-12">
+            {!isSubmitted ? (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Inserisci la tua email"
+                    className="w-full pl-10 pr-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                
+                {error && (
+                  <p className="text-red-400 text-sm">{error}</p>
+                )}
+                
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Registrazione...' : 'Richiedi Accesso Esclusivo'}
+                </button>
+              </form>
+            ) : (
+              <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-6">
+                <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">Richiesta Inviata!</h3>
+                <p className="text-gray-300">
+                  Grazie per il tuo interesse. Riceverai presto le credenziali di accesso.
+                </p>
+              </div>
+            )}
+            
+            <div className="text-center mt-6">
+               <p className="text-gray-400">
+                 Hai già un account?{' '}
+                 <Link href="/login" className="text-purple-400 hover:text-purple-300 transition-colors">
+                   Accedi qui
+                 </Link>
+               </p>
+             </div>
+           </div>
+
+          {/* Features */}
+          <div className="grid md:grid-cols-3 gap-8 mt-16">
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+              <TrendingUp className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">Pronostici Accurati</h3>
+              <p className="text-gray-300">
+                Analisi approfondite e pronostici basati su dati statistici avanzati
+              </p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+              <Users className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">Community Esclusiva</h3>
+              <p className="text-gray-300">
+                Accesso limitato per garantire qualità e risultati superiori
+              </p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+              <Award className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-2">Esperienza Premium</h3>
+              <p className="text-gray-300">
+                Diversi livelli di abbonamento per ogni tipo di scommettitore
+              </p>
+            </div>
+          </div>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Footer */}
+      <footer className="container mx-auto px-4 py-8 mt-16">
+        <div className="text-center text-gray-400">
+          <p>&copy; 2024 Mister Vertex. Tutti i diritti riservati.</p>
+          <p className="mt-2 text-sm">
+            Gioca responsabilmente. Il gioco può causare dipendenza.
+          </p>
+        </div>
       </footer>
     </div>
-  );
+  )
 }
