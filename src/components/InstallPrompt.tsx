@@ -73,7 +73,7 @@ export default function InstallPrompt() {
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900">Accesso istantaneo</h4>
-                <p className="text-gray-600 text-sm">Apri l'app direttamente dalla home screen</p>
+                <p className="text-gray-600 text-sm">Apri l&apos;app direttamente dalla home screen</p>
               </div>
             </div>
 

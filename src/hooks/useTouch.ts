@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useCallback } from 'react'
 
 interface TouchPosition {
   x: number

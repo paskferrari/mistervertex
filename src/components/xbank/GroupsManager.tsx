@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, Plus, Edit, Trash2, TrendingUp, Target, Calendar, DollarSign, BarChart3, Eye, X } from 'lucide-react'
+import { Users, Plus, Target, Eye, Trash2, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 interface Group {
@@ -35,7 +35,7 @@ interface GroupsManagerProps {
 
 const GroupsManager = ({ currency }: GroupsManagerProps) => {
   const [groups, setGroups] = useState<Group[]>([])
-  const [predictions, setPredictions] = useState<Prediction[]>([])
+
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [showGroupDetails, setShowGroupDetails] = useState<string | null>(null)

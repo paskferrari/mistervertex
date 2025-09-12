@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { isValidEmail } from '@/lib/utils'
 import { Mail, TrendingUp, Users, Award, CheckCircle, AlertCircle, LogIn, HelpCircle } from 'lucide-react'

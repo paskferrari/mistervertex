@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, memo, useMemo } from 'react'
-import { TrendingUp, TrendingDown, Target, Award, BarChart3, PieChart, Activity, Calendar, Filter, Download } from 'lucide-react'
+import { useState, useEffect, memo } from 'react'
+import { TrendingUp, TrendingDown, Target, Award, BarChart3, PieChart, Activity, Download } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 interface AnalyticsData {
@@ -62,7 +62,7 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
 
   useEffect(() => {
     loadAnalytics()
-  }, [timeRange, selectedSport])
+  }, [timeRange, selectedSport, loadAnalytics])
 
   const loadAnalytics = async () => {
     try {
@@ -85,18 +85,7 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
     }
   }
 
-  // Memoizza i calcoli costosi per migliorare le performance
-  const memoizedMetrics = useMemo(() => {
-    if (!analytics) return null
-    
-    return {
-      formattedProfit: analytics.totalProfit.toFixed(2),
-      formattedROI: analytics.roi.toFixed(1),
-      formattedWinRate: analytics.winRate.toFixed(1),
-      formattedAvgOdds: analytics.avgOdds.toFixed(2),
-      isProfitable: analytics.totalProfit >= 0
-    }
-  }, [analytics?.totalProfit, analytics?.roi, analytics?.winRate, analytics?.avgOdds])
+
 
   const exportData = async () => {
     try {

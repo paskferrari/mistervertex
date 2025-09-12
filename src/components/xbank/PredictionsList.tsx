@@ -47,7 +47,7 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
   const [sortBy, setSortBy] = useState('created_at')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [showForm, setShowForm] = useState(false)
-  const [editingPrediction, setEditingPrediction] = useState<Prediction | null>(null)
+
   const [showFilters, setShowFilters] = useState(false)
 
   const sports = [

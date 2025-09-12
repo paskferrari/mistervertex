@@ -569,7 +569,7 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
                 <h4 className="text-lg font-bold text-amber-900 mb-4">Passi della Scalata</h4>
                 {selectedScalata.steps && selectedScalata.steps.length > 0 ? (
                   <div className="space-y-2">
-                    {selectedScalata.steps.map((step, index) => (
+                    {selectedScalata.steps.map((step) => (
                       <div key={step.id} className="bg-amber-50 rounded-lg p-4 flex justify-between items-center border border-amber-200">
                         <div className="flex items-center space-x-4">
                           <span className="text-amber-600 font-medium">#{step.sequence}</span>

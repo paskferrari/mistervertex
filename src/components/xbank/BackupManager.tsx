@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Download, Upload, RefreshCw, Database, Calendar, FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react'
+import { Download, Upload, RefreshCw, Database, FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'react-hot-toast'
 
@@ -61,7 +61,7 @@ export default function BackupManager({ userId }: BackupManagerProps) {
   useEffect(() => {
     loadBackupSettings()
     checkLastBackup()
-  }, [userId])
+  }, [userId, loadBackupSettings, checkLastBackup])
 
   const loadBackupSettings = async () => {
     try {
@@ -115,7 +115,7 @@ export default function BackupManager({ userId }: BackupManagerProps) {
       if (data) {
         setLastBackup(data.created_at)
       }
-    } catch (error) {
+    } catch {
       // Nessun backup trovato
     }
   }

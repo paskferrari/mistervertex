@@ -49,7 +49,7 @@ export default function BankrollManager({ currentBankroll, currency, onBankrollU
 
   useEffect(() => {
     loadTransactions()
-  }, [page, filterType])
+  }, [page, filterType, loadTransactions])
 
   const loadTransactions = async () => {
     try {
@@ -143,21 +143,7 @@ export default function BankrollManager({ currentBankroll, currency, onBankrollU
     }
   }
 
-  const getTransactionColor = (type: string) => {
-    switch (type) {
-      case 'deposit':
-      case 'win':
-        return 'text-green-400'
-      case 'withdrawal':
-      case 'bet':
-      case 'loss':
-        return 'text-red-400'
-      case 'adjustment':
-        return 'text-orange-400'
-      default:
-        return 'text-gray-400'
-    }
-  }
+
 
   const formatTransactionType = (type: string) => {
     const types: { [key: string]: string } = {
@@ -368,7 +354,7 @@ export default function BankrollManager({ currentBankroll, currency, onBankrollU
                     aria-describedby="amount-help"
                     required
                   />
-                  <div id="amount-help" className="sr-only">Inserisci l'importo della transazione in {currency}</div>
+                  <div id="amount-help" className="sr-only">Inserisci l&apos;importo della transazione in {currency}</div>
                 </div>
               
                 <div>

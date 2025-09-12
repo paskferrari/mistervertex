@@ -473,7 +473,7 @@ export default function XBankPage() {
                         inputMode="decimal"
                         autoComplete="off"
                       />
-                      <div id="initial-bankroll-help" className="sr-only">Inserisci l'importo iniziale del tuo bankroll</div>
+                      <div id="initial-bankroll-help" className="sr-only">Inserisci l&apos;importo iniziale del tuo bankroll</div>
                     </div>
 
                     <div>
@@ -493,7 +493,7 @@ export default function XBankPage() {
                         inputMode="decimal"
                         autoComplete="off"
                       />
-                      <div id="current-bankroll-help" className="sr-only">Inserisci l'importo attuale del tuo bankroll</div>
+                      <div id="current-bankroll-help" className="sr-only">Inserisci l&apos;importo attuale del tuo bankroll</div>
                     </div>
 
                     <div>

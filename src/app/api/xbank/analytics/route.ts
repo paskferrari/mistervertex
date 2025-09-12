@@ -2,6 +2,51 @@ import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { supabaseAdmin } from '@/lib/supabase'
 
+interface JWTPayload {
+  userId: string
+  [key: string]: unknown
+}
+
+interface DateFilter {
+  userId: string
+  createdAt?: { $gte: Date }
+  sport?: string
+}
+
+interface Prediction {
+  id: string
+  user_id: string
+  status: 'pending' | 'won' | 'lost'
+  stake_amount: number
+  odds: number
+  category: string
+  created_at: string
+  [key: string]: unknown
+}
+
+interface MonthlyData {
+  month: string
+  profit: number
+  predictions: number
+  winRate: number
+}
+
+interface SportData {
+  sport: string
+  predictions: number
+  won: number
+  stake: number
+  return: number
+}
+
+interface SportStats {
+  sport: string
+  predictions: number
+  winRate: number
+  profit: number
+  roi: number
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Verifica autenticazione
@@ -10,7 +55,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token mancante' }, { status: 401 })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload
     const userId = decoded.userId
 
     // Verifica ruolo VIP
@@ -29,7 +74,7 @@ export async function GET(request: NextRequest) {
     const sport = searchParams.get('sport') || 'all'
 
     // Costruisci filtri per le query
-    const dateFilter: any = { userId }
+    const dateFilter: DateFilter = { userId }
     const now = new Date()
     
     switch (timeRange) {
@@ -74,17 +119,17 @@ export async function GET(request: NextRequest) {
 
     // Calcola metriche base
     const totalPredictions = predictions?.length || 0
-    const settledPredictions = predictions?.filter((p: any) => p.status !== 'pending') || []
-    const wonPredictions = predictions?.filter((p: any) => p.status === 'won') || []
+    const settledPredictions = predictions?.filter((p: Prediction) => p.status !== 'pending') || []
+    const wonPredictions = predictions?.filter((p: Prediction) => p.status === 'won') || []
     const winRate = settledPredictions.length > 0 ? (wonPredictions.length / settledPredictions.length) * 100 : 0
     
-    const totalStake = predictions?.reduce((sum: number, p: any) => sum + (p.stake_amount || 0), 0) || 0
-    const totalReturn = wonPredictions.reduce((sum: number, p: any) => sum + ((p.stake_amount || 0) * (p.odds || 1)), 0)
+    const totalStake = predictions?.reduce((sum: number, p: Prediction) => sum + (p.stake_amount || 0), 0) || 0
+    const totalReturn = wonPredictions.reduce((sum: number, p: Prediction) => sum + ((p.stake_amount || 0) * (p.odds || 1)), 0)
     const totalProfit = totalReturn - totalStake
     const roi = totalStake > 0 ? (totalProfit / totalStake) * 100 : 0
     
     const avgOdds = predictions?.length > 0 ? 
-      predictions.reduce((sum: number, p: any) => sum + (p.odds || 1), 0) / predictions.length : 0
+      predictions.reduce((sum: number, p: Prediction) => sum + (p.odds || 1), 0) / predictions.length : 0
 
     // Calcola streak
     let currentStreak = 0
@@ -93,7 +138,7 @@ export async function GET(request: NextRequest) {
     let tempStreak = 0
     let tempType: 'win' | 'loss' = 'win'
     
-    const sortedPredictions = [...settledPredictions].sort((a: any, b: any) => 
+    const sortedPredictions = [...settledPredictions].sort((a: Prediction, b: Prediction) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
     
@@ -129,15 +174,15 @@ export async function GET(request: NextRequest) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const nextDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 1)
       
-      const monthPredictions = predictions?.filter((p: any) => {
+      const monthPredictions = predictions?.filter((p: Prediction) => {
         const pDate = new Date(p.created_at)
         return pDate >= date && pDate < nextDate
       }) || []
       
-      const monthSettled = monthPredictions.filter((p: any) => p.status !== 'pending')
-      const monthWon = monthPredictions.filter((p: any) => p.status === 'won')
-      const monthStake = monthPredictions.reduce((sum: number, p: any) => sum + (p.stake_amount || 0), 0)
-      const monthReturn = monthWon.reduce((sum: number, p: any) => sum + ((p.stake_amount || 0) * (p.odds || 1)), 0)
+      const monthSettled = monthPredictions.filter((p: Prediction) => p.status !== 'pending')
+      const monthWon = monthPredictions.filter((p: Prediction) => p.status === 'won')
+      const monthStake = monthPredictions.reduce((sum: number, p: Prediction) => sum + (p.stake_amount || 0), 0)
+      const monthReturn = monthWon.reduce((sum: number, p: Prediction) => sum + ((p.stake_amount || 0) * (p.odds || 1)), 0)
       
       monthlyData.push({
         month: date.toLocaleDateString('it-IT', { month: 'short', year: 'numeric' }),
@@ -148,8 +193,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Statistiche per sport
-    const sportsMap = new Map()
-    predictions?.forEach((p: any) => {
+    const sportsMap = new Map<string, SportData>()
+    predictions?.forEach((p: Prediction) => {
       const sport = p.category || 'other'
       if (!sportsMap.has(sport)) {
         sportsMap.set(sport, {
@@ -171,7 +216,7 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    const sportStats = Array.from(sportsMap.values()).map((s: any) => ({
+    const sportStats: SportStats[] = Array.from(sportsMap.values()).map((s: SportData) => ({
       sport: s.sport,
       predictions: s.predictions,
       winRate: s.predictions > 0 ? (s.won / s.predictions) * 100 : 0,

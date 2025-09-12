@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Plus, Trash2, Calendar, DollarSign, Target, TrendingUp } from 'lucide-react'
+import { X, Plus, Trash2, DollarSign, Target, TrendingUp } from 'lucide-react'
 
 interface Prediction {
   title: string

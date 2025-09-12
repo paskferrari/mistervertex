@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MessageSquare, Heart, Share2, Eye, Plus, Edit, Trash2, Filter, Search, Calendar, Trophy, TrendingUp } from 'lucide-react'
+import { MessageSquare, Heart, Share2, Eye, Plus, Trash2, Search } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import Image from 'next/image'
 
@@ -50,8 +50,7 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedPost, setSelectedPost] = useState<BoardPost | null>(null)
-  const [showPostModal, setShowPostModal] = useState(false)
+
 
   // Form state per nuovo post
   const [newPost, setNewPost] = useState<{
@@ -262,14 +261,7 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
     }
   }
 
-  const getVisibilityLabel = (visibility: string) => {
-    switch (visibility) {
-      case 'public': return 'Pubblico'
-      case 'followers': return 'Solo Follower'
-      case 'vip': return 'Solo VIP'
-      default: return visibility
-    }
-  }
+
 
   const filteredPosts = (activeTab === 'feed' ? posts : myPosts).filter(post => {
     if (filter !== 'all' && post.post_type !== filter) return false
