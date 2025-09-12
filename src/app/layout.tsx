@@ -5,8 +5,7 @@ import "../styles/xbank-mobile.css"
 import "../styles/pwa-optimizations.css"
 import Navigation from "../components/Navigation"
 import PWAManager from "../components/PWAManager"
-import { createClient } from "../lib/supabase"
-import { cookies } from "next/headers"
+import { supabase } from "../lib/supabase"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -38,16 +37,11 @@ export const viewport = {
   themeColor: '#8b5cf6',
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   return (
     <html lang="it">
@@ -73,7 +67,7 @@ export default async function RootLayout({
       </head>
       <body className={inter.className}>
         <PWAManager>
-          <Navigation user={user} />
+          <Navigation />
           <main className="min-h-screen">
             {children}
           </main>
