@@ -61,7 +61,7 @@ export default function BackupManager({ userId }: BackupManagerProps) {
   useEffect(() => {
     loadBackupSettings()
     checkLastBackup()
-  }, [userId, loadBackupSettings, checkLastBackup])
+  }, [userId])
 
   const loadBackupSettings = async () => {
     try {

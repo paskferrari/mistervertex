@@ -62,7 +62,7 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
 
   useEffect(() => {
     loadAnalytics()
-  }, [timeRange, selectedSport, loadAnalytics])
+  }, [timeRange, selectedSport])
 
   const loadAnalytics = async () => {
     try {

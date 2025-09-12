@@ -49,7 +49,7 @@ export default function BankrollManager({ currentBankroll, currency, onBankrollU
 
   useEffect(() => {
     loadTransactions()
-  }, [page, filterType, loadTransactions])
+  }, [page, filterType])
 
   const loadTransactions = async () => {
     try {
