@@ -128,9 +128,6 @@ const nextConfig = {
     return config
   },
 
-  // Ottimizzazioni runtime
-  swcMinify: true,
-  
   // Configurazione per il build
   output: 'standalone',
   
