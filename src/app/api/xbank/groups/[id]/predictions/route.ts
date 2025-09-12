@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import jwt from 'jsonwebtoken'
 
+interface DecodedToken {
+  userId: string
+  email: string
+  iat?: number
+  exp?: number
+}
+
 interface RouteParams {
   params: Promise<{
     id: string
@@ -23,10 +30,10 @@ export async function GET(
       return NextResponse.json({ error: 'Token di autenticazione mancante' }, { status: 401 })
     }
 
-    let decoded: any
+    let decoded: DecodedToken
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!)
-    } catch (error) {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken
+    } catch {
       return NextResponse.json({ error: 'Token non valido' }, { status: 401 })
     }
 
@@ -114,10 +121,10 @@ export async function POST(
       return NextResponse.json({ error: 'Token di autenticazione mancante' }, { status: 401 })
     }
 
-    let decoded: any
+    let decoded: DecodedToken
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!)
-    } catch (error) {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken
+    } catch {
       return NextResponse.json({ error: 'Token non valido' }, { status: 401 })
     }
 
@@ -203,10 +210,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Token di autenticazione mancante' }, { status: 401 })
     }
 
-    let decoded: any
+    let decoded: DecodedToken
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!)
-    } catch (error) {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken
+    } catch {
       return NextResponse.json({ error: 'Token non valido' }, { status: 401 })
     }
 

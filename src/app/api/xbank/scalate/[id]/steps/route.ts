@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+interface ScalataSettings {
+  multiplier?: number
+  [key: string]: any
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
@@ -103,7 +108,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Calcola lo stake per il prossimo passo basato sul tipo di scalata
     let nextStake = 0
-    const settings = scalata.settings as any || {}
+    const settings = scalata.settings as ScalataSettings || {}
     
     switch (scalata.scalata_type) {
       case 'progressive':

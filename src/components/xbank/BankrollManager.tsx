@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Plus, TrendingUp, TrendingDown, DollarSign, Calendar, Filter, RefreshCw } from 'lucide-react'
 
@@ -17,12 +17,11 @@ interface BankrollTransaction {
 }
 
 interface BankrollManagerProps {
-  currentBankroll: number
   currency: string
   onBankrollUpdate: (newBankroll: number) => void
 }
 
-export default function BankrollManager({ currentBankroll, currency, onBankrollUpdate }: BankrollManagerProps) {
+export default function BankrollManager({ currency, onBankrollUpdate }: BankrollManagerProps) {
   const [transactions, setTransactions] = useState<BankrollTransaction[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -47,11 +46,7 @@ export default function BankrollManager({ currentBankroll, currency, onBankrollU
     setTimeout(() => setToast(null), 3000)
   }
 
-  useEffect(() => {
-    loadTransactions()
-  }, [page, filterType])
-
-  const loadTransactions = async () => {
+  const loadTransactions = useCallback(async () => {
     try {
       setLoading(true)
       const { data: { session } } = await supabase.auth.getSession()
@@ -85,7 +80,11 @@ export default function BankrollManager({ currentBankroll, currency, onBankrollU
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, filterType])
+
+  useEffect(() => {
+    loadTransactions()
+  }, [loadTransactions])
 
   const addTransaction = async () => {
     try {

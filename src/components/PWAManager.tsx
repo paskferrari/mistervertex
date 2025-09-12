@@ -4,6 +4,15 @@ import { useEffect, useState } from 'react'
 import InstallPrompt from './InstallPrompt'
 import OfflineSupport, { OfflineIndicator } from './OfflineSupport'
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[]
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed'
+    platform: string
+  }>
+  prompt(): Promise<void>
+}
+
 interface PWAManagerProps {
   children?: React.ReactNode
 }
@@ -87,7 +96,7 @@ export default function PWAManager({ children }: PWAManagerProps) {
             <div>
               <h4 className="font-semibold text-sm">Aggiornamento disponibile</h4>
               <p className="text-xs opacity-90 mt-1">
-                Una nuova versione dell'app è pronta
+                Una nuova versione dell&apos;app è pronta
               </p>
             </div>
             <button
@@ -113,7 +122,7 @@ export default function PWAManager({ children }: PWAManagerProps) {
 export function usePWA() {
   const [isInstalled, setIsInstalled] = useState(false)
   const [canInstall, setCanInstall] = useState(false)
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
 
   useEffect(() => {
     // Controlla se l'app è già installata
@@ -124,7 +133,7 @@ export function usePWA() {
     }
 
     // Gestisce l'evento beforeinstallprompt
-    const handleBeforeInstallPrompt = (e: Event) => {
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
       e.preventDefault()
       setDeferredPrompt(e)
       setCanInstall(true)
@@ -138,12 +147,12 @@ export function usePWA() {
     }
 
     checkInstalled()
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-    window.addEventListener('appinstalled', handleAppInstalled)
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener)
+    window.addEventListener('appinstalled', handleAppInstalled as EventListener)
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-      window.removeEventListener('appinstalled', handleAppInstalled)
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener)
+      window.removeEventListener('appinstalled', handleAppInstalled as EventListener)
     }
   }, [])
 

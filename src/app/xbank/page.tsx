@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo, lazy, Suspense } from 'react'
+import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Zap, Settings, TrendingUp, Target, Users, BarChart3, Plus, ArrowLeft, Save, Wallet, MessageSquare } from 'lucide-react'
@@ -87,7 +87,7 @@ export default function XBankPage() {
      }
    }, [activeTab])
 
-  const checkUser = async () => {
+  const checkUser = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       
@@ -122,7 +122,7 @@ export default function XBankPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
 
   const loadSettings = async (userId: string) => {
     try {
@@ -350,14 +350,13 @@ export default function XBankPage() {
             {activeTab === 'bankroll' && (
                <Suspense fallback={<LoadingComponent message="Caricamento gestione bankroll..." />}>
                  <BankrollManager 
-                   currentBankroll={settings?.current_bankroll || 0}
-                   currency={settings?.currency || 'EUR'}
-                   onBankrollUpdate={(newBankroll) => {
-                     if (settings) {
-                       setSettings({ ...settings, current_bankroll: newBankroll })
-                     }
-                   }}
-                 />
+                 currency={settings?.currency || 'EUR'}
+                 onBankrollUpdate={(newBankroll) => {
+                   if (settings) {
+                     setSettings({ ...settings, current_bankroll: newBankroll })
+                   }
+                 }}
+               />
                </Suspense>
              )}
 

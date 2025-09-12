@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Download, Upload, RefreshCw, Database, FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'react-hot-toast'
@@ -58,12 +58,7 @@ export default function BackupManager({ userId }: BackupManagerProps) {
   const [backupFrequency, setBackupFrequency] = useState('weekly')
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle')
 
-  useEffect(() => {
-    loadBackupSettings()
-    checkLastBackup()
-  }, [userId])
-
-  const loadBackupSettings = async () => {
+  const loadBackupSettings = useCallback(async () => {
     try {
       const { data } = await supabase
         .from('user_settings')
@@ -79,7 +74,7 @@ export default function BackupManager({ userId }: BackupManagerProps) {
     } catch (error) {
       console.error('Errore nel caricamento impostazioni backup:', error)
     }
-  }
+  }, [userId])
 
   const saveBackupSettings = async () => {
     try {
@@ -102,7 +97,7 @@ export default function BackupManager({ userId }: BackupManagerProps) {
     }
   }
 
-  const checkLastBackup = async () => {
+  const checkLastBackup = useCallback(async () => {
     try {
       const { data } = await supabase
         .from('user_backups')
@@ -118,7 +113,12 @@ export default function BackupManager({ userId }: BackupManagerProps) {
     } catch {
       // Nessun backup trovato
     }
-  }
+  }, [userId])
+
+  useEffect(() => {
+    loadBackupSettings()
+    checkLastBackup()
+  }, [loadBackupSettings, checkLastBackup])
 
   const exportData = async () => {
     try {

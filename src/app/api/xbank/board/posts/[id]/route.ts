@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+interface PostUpdateData {
+  title?: string
+  content?: string
+  tags?: string[]
+  visibility?: string
+  views_count?: number
+}
+
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
@@ -97,7 +105,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const body = await request.json()
-    const updates: any = {}
+    const updates: PostUpdateData = {}
 
     // Campi aggiornabili
     if (body.title !== undefined) updates.title = body.title

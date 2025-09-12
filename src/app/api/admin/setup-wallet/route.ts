@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Crea la tabella wallet
     const { error: createTableError } = await supabase.rpc('exec_sql', {

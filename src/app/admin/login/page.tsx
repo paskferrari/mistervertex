@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, safeSupabaseAuth } from '@/lib/supabase'
-import { Lock, Mail, TrendingUp } from 'lucide-react'
+import { Lock, Mail } from 'lucide-react'
 import Image from 'next/image'
 
 export default function AdminLogin() {
@@ -41,7 +41,7 @@ export default function AdminLogin() {
           router.push('/admin/dashboard')
         }
       }
-    } catch (err) {
+    } catch {
       setError('Errore di connessione')
     } finally {
       setIsLoading(false)

@@ -1,11 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+
+interface PendingAction {
+  type: string
+  data: Record<string, unknown>
+  timestamp: number
+}
 
 interface OfflineData {
   emails: string[]
-  userPreferences: Record<string, any>
+  userPreferences: Record<string, unknown>
   lastSync: number
 }
 
@@ -15,8 +21,26 @@ interface OfflineSupportProps {
 
 export default function OfflineSupport({ children }: OfflineSupportProps) {
   const [isOnline, setIsOnline] = useState(true)
-  const [pendingActions, setPendingActions] = useState<any[]>([])
+  const [pendingActions, setPendingActions] = useState<PendingAction[]>([])
   const [offlineData, setOfflineData] = useState<OfflineData | null>(null)
+
+  const syncPendingActions = useCallback(async () => {
+    if (pendingActions.length === 0) return
+
+    try {
+      for (const action of pendingActions) {
+        await processAction(action)
+      }
+      
+      // Pulisci le azioni completate
+      setPendingActions([])
+      localStorage.removeItem('pending-actions')
+      
+      console.log('Sincronizzazione completata')
+    } catch (error) {
+      console.error('Errore durante la sincronizzazione:', error)
+    }
+  }, [pendingActions])
 
   useEffect(() => {
     // Monitora lo stato della connessione
@@ -40,7 +64,7 @@ export default function OfflineSupport({ children }: OfflineSupportProps) {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [])
+  }, [syncPendingActions])
 
   const saveCurrentState = () => {
     try {
@@ -72,31 +96,13 @@ export default function OfflineSupport({ children }: OfflineSupportProps) {
     }
   }
 
-  const addPendingAction = (action: any) => {
+  const addPendingAction = (action: Omit<PendingAction, 'timestamp'>) => {
     const newActions = [...pendingActions, { ...action, timestamp: Date.now() }]
     setPendingActions(newActions)
     localStorage.setItem('pending-actions', JSON.stringify(newActions))
   }
 
-  const syncPendingActions = async () => {
-    if (pendingActions.length === 0) return
-
-    try {
-      for (const action of pendingActions) {
-        await processAction(action)
-      }
-      
-      // Pulisci le azioni completate
-      setPendingActions([])
-      localStorage.removeItem('pending-actions')
-      
-      console.log('Sincronizzazione completata')
-    } catch (error) {
-      console.error('Errore durante la sincronizzazione:', error)
-    }
-  }
-
-  const processAction = async (action: any) => {
+  const processAction = async (action: PendingAction) => {
     switch (action.type) {
       case 'email_request':
         const { error } = await supabase
@@ -176,7 +182,7 @@ export function useOfflineOperations() {
     }
   }
 
-  const getOfflineEmails = () => {
+  const getOfflineEmails = (): Record<string, unknown>[] => {
     try {
       return JSON.parse(localStorage.getItem('offline-emails') || '[]')
     } catch (error) {
@@ -185,7 +191,7 @@ export function useOfflineOperations() {
     }
   }
 
-  const saveUserPreference = (key: string, value: any) => {
+  const saveUserPreference = (key: string, value: unknown) => {
     try {
       const preferences = JSON.parse(localStorage.getItem('user-preferences') || '{}')
       preferences[key] = value
@@ -209,7 +215,7 @@ export function useOfflineOperations() {
     }
   }
 
-  const getUserPreference = (key: string, defaultValue: any = null) => {
+  const getUserPreference = (key: string, defaultValue: unknown = null) => {
     try {
       const preferences = JSON.parse(localStorage.getItem('user-preferences') || '{}')
       return preferences[key] !== undefined ? preferences[key] : defaultValue

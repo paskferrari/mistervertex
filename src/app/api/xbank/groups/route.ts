@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+interface GroupPrediction {
+  id: string
+  status: 'won' | 'lost' | 'pending'
+  stake_amount: number
+  result_amount?: number
+  odds: number
+}
+
+interface Group {
+  id: string
+  name: string
+  description?: string
+  xbank_custom_predictions: GroupPrediction[]
+}
+
 // GET - Recupera i gruppi di pronostici dell'utente
 export async function GET(request: NextRequest) {
   try {
@@ -64,20 +79,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Calcola le statistiche per ogni gruppo
-    const groupsWithStats = (data || []).map((group: any) => {
+    const groupsWithStats = (data || []).map((group: Group) => {
       const predictions = group.xbank_custom_predictions || []
       const totalPredictions = predictions.length
-      const wonPredictions = predictions.filter((p: any) => p.status === 'won').length
-      const lostPredictions = predictions.filter((p: any) => p.status === 'lost').length
-      const pendingPredictions = predictions.filter((p: any) => p.status === 'pending').length
+      const wonPredictions = predictions.filter((p: GroupPrediction) => p.status === 'won').length
+      const lostPredictions = predictions.filter((p: GroupPrediction) => p.status === 'lost').length
+      const pendingPredictions = predictions.filter((p: GroupPrediction) => p.status === 'pending').length
       
-      const totalStaked = predictions.reduce((sum: number, p: any) => sum + (p.stake_amount || 0), 0)
+      const totalStaked = predictions.reduce((sum: number, p: GroupPrediction) => sum + (p.stake_amount || 0), 0)
       const totalReturns = predictions
-        .filter((p: any) => p.status === 'won')
-        .reduce((sum: number, p: any) => sum + (p.result_amount || (p.stake_amount * p.odds)), 0)
+        .filter((p: GroupPrediction) => p.status === 'won')
+        .reduce((sum: number, p: GroupPrediction) => sum + (p.result_amount || (p.stake_amount * p.odds)), 0)
       const totalLosses = predictions
-        .filter((p: any) => p.status === 'lost')
-        .reduce((sum: number, p: any) => sum + p.stake_amount, 0)
+        .filter((p: GroupPrediction) => p.status === 'lost')
+        .reduce((sum: number, p: GroupPrediction) => sum + p.stake_amount, 0)
       
       const profit = totalReturns - totalLosses
       const roi = totalStaked > 0 ? ((profit / totalStaked) * 100) : 0

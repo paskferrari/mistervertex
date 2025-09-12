@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Leggi il file SQL per creare le tabelle X-BANK
     const sqlFilePath = join(process.cwd(), 'database', 'create_xbank_tables.sql')

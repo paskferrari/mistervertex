@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 // Initialize Supabase client only when needed to avoid build-time errors
@@ -18,14 +18,14 @@ function getSupabaseAdmin() {
   })
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('Starting database migration...')
     
     const supabaseAdmin = getSupabaseAdmin()
     
     // First check if access_level column already exists
-    const { data: existingData, error: checkError } = await supabaseAdmin
+    const { error: checkError } = await supabaseAdmin
       .from('predictions')
       .select('access_level')
       .limit(1)

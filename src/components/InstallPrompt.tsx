@@ -148,8 +148,8 @@ export function InstallBanner() {
           </svg>
         </div>
         <div className="flex-1">
-          <h4 className="font-semibold text-gray-900 text-sm">Installa l'app</h4>
-          <p className="text-gray-600 text-xs">Per un'esperienza migliore</p>
+          <h4 className="font-semibold text-gray-900 text-sm">Installa l&apos;app</h4>
+          <p className="text-gray-600 text-xs">Per un&apos;esperienza migliore</p>
         </div>
         <div className="flex space-x-2">
           <button

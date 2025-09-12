@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+interface PredictionUpdateData {
+  updated_at: string
+  title?: string
+  description?: string
+  odds?: number
+  stake_amount?: number
+  stake_type?: string
+  confidence?: string
+  event_date?: string | null
+  bookmaker?: string
+  market_type?: string
+  group_id?: string | null
+  tags?: string[]
+  status?: string
+  settled_at?: string | null
+  result_amount?: number | null
+}
+
 // PUT - Aggiorna un pronostico personalizzato
 export async function PUT(
   request: NextRequest,
@@ -82,7 +100,7 @@ export async function PUT(
     }
 
     // Prepara i dati per l'aggiornamento
-    const updateData: any = {
+    const updateData: PredictionUpdateData = {
       updated_at: new Date().toISOString()
     }
 

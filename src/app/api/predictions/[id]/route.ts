@@ -1,6 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+interface PredictionUpdateData {
+  updated_at: string
+  title?: string
+  description?: string
+  sport?: string
+  match_info?: string
+  prediction_type?: string
+  odds?: number
+  confidence_level?: number
+  access_level?: number
+  status?: string
+  result?: string
+}
+
+interface PredictionInputData {
+  title?: string
+  description?: string
+  sport?: string
+  match_info?: string
+  prediction_type?: string
+  odds?: string | number
+  confidence_level?: string | number
+  access_level?: string | number
+  status?: string
+  result?: string
+}
+
 // GET - Recupera un pronostico specifico
 export async function GET(
   request: NextRequest,
@@ -39,7 +66,7 @@ export async function PUT(
 ) {
   const { id } = await params
   try {
-    const body = await request.json()
+    const body = await request.json() as PredictionInputData
     const {
       title,
       description,
@@ -54,7 +81,7 @@ export async function PUT(
     } = body
 
     // Prepara i dati per l'aggiornamento
-    const updateData: any = {
+    const updateData: PredictionUpdateData = {
       updated_at: new Date().toISOString()
     }
 
@@ -63,24 +90,26 @@ export async function PUT(
     if (sport !== undefined) updateData.sport = sport
     if (match_info !== undefined) updateData.match_info = match_info
     if (prediction_type !== undefined) updateData.prediction_type = prediction_type
-    if (odds !== undefined) updateData.odds = parseFloat(odds)
+    if (odds !== undefined) updateData.odds = typeof odds === 'string' ? parseFloat(odds) : odds
     if (confidence_level !== undefined) {
-      if (confidence_level < 1 || confidence_level > 5) {
+      const confidenceNum = typeof confidence_level === 'string' ? parseInt(confidence_level) : confidence_level
+      if (confidenceNum < 1 || confidenceNum > 5) {
         return NextResponse.json(
           { error: 'Il livello di fiducia deve essere tra 1 e 5' },
           { status: 400 }
         )
       }
-      updateData.confidence_level = parseInt(confidence_level)
+      updateData.confidence_level = confidenceNum
     }
     if (access_level !== undefined) {
-      if (![0, 1, 2].includes(access_level)) {
+      const accessNum = typeof access_level === 'string' ? parseInt(access_level) : access_level
+      if (![0, 1, 2].includes(accessNum)) {
         return NextResponse.json(
           { error: 'Livello di accesso non valido' },
           { status: 400 }
         )
       }
-      updateData.access_level = parseInt(access_level)
+      updateData.access_level = accessNum
     }
     if (status !== undefined) {
       if (!['active', 'completed', 'cancelled'].includes(status)) {

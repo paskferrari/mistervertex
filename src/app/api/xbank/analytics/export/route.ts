@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { supabaseAdmin } from '@/lib/supabase'
 
+interface JWTPayload {
+  userId: string
+  [key: string]: string | number | boolean | undefined
+}
+
+interface PredictionData {
+  created_at: string
+  title?: string
+  event_name?: string
+  category?: string
+  odds?: number
+  stake_amount?: number
+  confidence?: number
+  status: string
+  bookmaker?: string
+  bet_type?: string
+  notes?: string
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Verifica autenticazione
@@ -10,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token mancante' }, { status: 401 })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload
     const userId = decoded.userId
 
     // Verifica ruolo VIP
@@ -75,7 +94,7 @@ export async function POST(request: NextRequest) {
       'Note'
     ]
 
-    const csvRows = predictions?.map((p: any) => {
+    const csvRows = predictions?.map((p) => {
       const profit = p.status === 'won' 
         ? ((p.stake_amount || 0) * (p.odds || 1)) - (p.stake_amount || 0)
         : p.status === 'lost' 
@@ -102,12 +121,12 @@ export async function POST(request: NextRequest) {
 
     // Calcola statistiche di riepilogo
     const totalPredictions = predictions?.length || 0
-    const settledPredictions = predictions?.filter((p: any) => p.status !== 'pending') || []
-    const wonPredictions = predictions?.filter((p: any) => p.status === 'won') || []
+    const settledPredictions = predictions?.filter((p) => p.status !== 'pending') || []
+    const wonPredictions = predictions?.filter((p) => p.status === 'won') || []
     const winRate = settledPredictions.length > 0 ? (wonPredictions.length / settledPredictions.length) * 100 : 0
     
-    const totalStake = predictions?.reduce((sum: number, p: any) => sum + (p.stake_amount || 0), 0) || 0
-    const totalReturn = wonPredictions.reduce((sum: number, p: any) => sum + ((p.stake_amount || 0) * (p.odds || 1)), 0)
+    const totalStake = predictions?.reduce((sum: number, p: PredictionData) => sum + (p.stake_amount || 0), 0) || 0
+    const totalReturn = wonPredictions.reduce((sum: number, p: PredictionData) => sum + ((p.stake_amount || 0) * (p.odds || 1)), 0)
     const totalProfit = totalReturn - totalStake
     const roi = totalStake > 0 ? (totalProfit / totalStake) * 100 : 0
 

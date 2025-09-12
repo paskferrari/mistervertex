@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, safeSupabaseAuth } from '@/lib/supabase'
-import { TrendingUp, Star, Trophy, Crown, LogOut, Calendar, Target, TrendingDown, User, Copy, Wallet, Zap } from 'lucide-react'
+import { Star, Trophy, Crown, LogOut, Calendar, Target, TrendingUp, TrendingDown, User, Copy, Wallet, Zap } from 'lucide-react'
 import Image from 'next/image'
 
 interface UserData {
@@ -30,8 +30,7 @@ export default function UserDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'predictions' | 'profile' | 'wallet'>('predictions')
   const [walletItems, setWalletItems] = useState<any[]>([])
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [showRemoveConfirm, setShowRemoveConfirm] = useState<string | null>(null)
+
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null)
   const [loadingOperation, setLoadingOperation] = useState<string | null>(null)
   const router = useRouter()
@@ -54,7 +53,7 @@ export default function UserDashboard() {
     console.log('🎨 Wallet items state changed:', walletItems.length, walletItems)
   }, [walletItems])
 
-  const checkUserAndLoadData = async () => {
+  const checkUserAndLoadData = useCallback(async () => {
     try {
       const { data: { user: authUser } } = await safeSupabaseAuth.getUser()
       
@@ -84,7 +83,7 @@ export default function UserDashboard() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [router])
 
   const loadWallet = async () => {
     try {

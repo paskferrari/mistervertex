@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin, safeSupabaseAuth } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 // GET - Recupera i pronostici salvati nel wallet dell'utente
 export async function GET(request: NextRequest) {
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verifica se il pronostico è già nel wallet
-    const { data: existing, error: existingError } = await supabaseAdmin
+    const { data: existing } = await supabaseAdmin
       .from('wallet')
       .select('id')
       .eq('user_id', user_id)

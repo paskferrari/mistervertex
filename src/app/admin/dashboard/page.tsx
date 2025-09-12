@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, safeSupabaseAuth } from '@/lib/supabase'
 import { formatDate, generateRandomPassword } from '@/lib/utils'
@@ -11,7 +11,6 @@ import {
   XCircle, 
   UserPlus, 
   LogOut,
-  TrendingUp,
   Eye,
   EyeOff
 } from 'lucide-react'
@@ -44,12 +43,7 @@ export default function AdminDashboard() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    checkAuth()
-    fetchData()
-  }, [])
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     const { data: { user } } = await safeSupabaseAuth.getUser()
     if (!user) {
       router.push('/admin/login')
@@ -67,7 +61,12 @@ export default function AdminDashboard() {
       await supabase.auth.signOut()
       router.push('/admin/login')
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    checkAuth()
+    fetchData()
+  }, [checkAuth])
 
   const fetchData = async () => {
     try {
@@ -84,6 +83,7 @@ export default function AdminDashboard() {
         .order('created_at', { ascending: false })
 
       setEmailRequests(requests || [])
+
       setUsers(usersData || [])
     } catch (error) {
       console.error('Error fetching data:', error)

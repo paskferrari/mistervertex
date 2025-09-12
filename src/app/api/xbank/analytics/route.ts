@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 interface JWTPayload {
   userId: string
-  [key: string]: unknown
+  [key: string]: string | number | boolean | undefined
 }
 
 interface DateFilter {
@@ -21,14 +21,8 @@ interface Prediction {
   odds: number
   category: string
   created_at: string
-  [key: string]: unknown
-}
-
-interface MonthlyData {
-  month: string
-  profit: number
-  predictions: number
-  winRate: number
+  confidence?: number
+  [key: string]: string | number | boolean | undefined
 }
 
 interface SportData {
@@ -45,6 +39,23 @@ interface SportStats {
   winRate: number
   profit: number
   roi: number
+}
+
+interface ConfidenceData {
+  level: number
+  predictions: number
+  won: number
+  stake: number
+  return: number
+  totalOdds: number
+}
+
+interface ConfidenceStats {
+  level: number
+  predictions: number
+  winRate: number
+  avgOdds: number
+  profit: number
 }
 
 export async function GET(request: NextRequest) {
@@ -194,7 +205,7 @@ export async function GET(request: NextRequest) {
 
     // Statistiche per sport
     const sportsMap = new Map<string, SportData>()
-    predictions?.forEach((p: Prediction) => {
+    predictions?.forEach((p) => {
       const sport = p.category || 'other'
       if (!sportsMap.has(sport)) {
         sportsMap.set(sport, {
@@ -207,12 +218,14 @@ export async function GET(request: NextRequest) {
       }
       
       const sportData = sportsMap.get(sport)
-      sportData.predictions++
-      sportData.stake += p.stake_amount || 0
-      
-      if (p.status === 'won') {
-        sportData.won++
-        sportData.return += (p.stake_amount || 0) * (p.odds || 1)
+      if (sportData) {
+        sportData.predictions++
+        sportData.stake += p.stake_amount || 0
+        
+        if (p.status === 'won') {
+          sportData.won++
+          sportData.return += (p.stake_amount || 0) * (p.odds || 1)
+        }
       }
     })
     
@@ -225,7 +238,7 @@ export async function GET(request: NextRequest) {
     }))
 
     // Statistiche per livello di confidenza
-    const confidenceMap = new Map()
+    const confidenceMap = new Map<number, ConfidenceData>()
     for (let level = 1; level <= 5; level++) {
       confidenceMap.set(level, {
         level,
@@ -237,7 +250,7 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    predictions?.forEach((p: any) => {
+    predictions?.forEach((p) => {
       const level = p.confidence || 3
       const confData = confidenceMap.get(level)
       if (confData) {
@@ -252,7 +265,7 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    const confidenceStats = Array.from(confidenceMap.values()).map((c: any) => ({
+    const confidenceStats = Array.from(confidenceMap.values()).map((c: ConfidenceData): ConfidenceStats => ({
       level: c.level,
       predictions: c.predictions,
       winRate: c.predictions > 0 ? (c.won / c.predictions) * 100 : 0,

@@ -2,16 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import jwt from 'jsonwebtoken'
 
-interface BankrollTransaction {
-  id?: string
-  user_id: string
-  prediction_id?: string
-  transaction_type: 'bet' | 'win' | 'loss' | 'adjustment' | 'deposit' | 'withdrawal'
-  amount: number
-  description: string
-  balance_before: number
-  balance_after: number
-  created_at?: string
+interface DecodedToken {
+  sub: string
+  email?: string
+  iat?: number
+  exp?: number
 }
 
 // GET - Recupera lo storico delle transazioni bankroll
@@ -23,7 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.substring(7)
-    const decoded = jwt.decode(token) as any
+    const decoded = jwt.decode(token) as DecodedToken | null
     
     if (!decoded || !decoded.sub) {
       return NextResponse.json({ error: 'Token non valido' }, { status: 401 })
@@ -103,7 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.substring(7)
-    const decoded = jwt.decode(token) as any
+    const decoded = jwt.decode(token) as DecodedToken | null
     
     if (!decoded || !decoded.sub) {
       return NextResponse.json({ error: 'Token non valido' }, { status: 401 })
@@ -231,7 +226,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const token = authHeader.substring(7)
-    const decoded = jwt.decode(token) as any
+    const decoded = jwt.decode(token) as DecodedToken | null
     
     if (!decoded || !decoded.sub) {
       return NextResponse.json({ error: 'Token non valido' }, { status: 401 })

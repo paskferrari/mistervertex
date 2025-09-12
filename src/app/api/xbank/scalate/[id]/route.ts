@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+interface ScalataUpdateData {
+  name?: string
+  description?: string
+  status?: string
+  updated_at?: string
+  current_step?: number
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
@@ -93,7 +101,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const body = await request.json()
-    const updates: any = {}
+    const updates: ScalataUpdateData = {}
 
     // Campi aggiornabili
     if (body.name !== undefined) updates.name = body.name

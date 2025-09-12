@@ -177,7 +177,7 @@ export default function LoginPage() {
               <p className="text-gray-400 text-sm">
                 Non hai ancora un account?{' '}
                 <Link href="/" className="text-purple-400 hover:text-purple-300 transition-colors">
-                  Richiedi l'accesso
+                  Richiedi l&apos;accesso
                 </Link>
               </p>
             </div>
@@ -188,8 +188,8 @@ export default function LoginPage() {
             <div className="text-center">
               <h3 className="text-blue-400 font-medium mb-2">Accesso Riservato</h3>
               <p className="text-blue-300 text-sm">
-                L&apos;accesso alla piattaforma è riservato agli utenti approvati da Mister Vertex.
-                Se non hai ancora un account, richiedi l&apos;accesso dalla home page.
+                L'accesso alla piattaforma è riservato agli utenti approvati da Mister Vertex.
+                Se non hai ancora un account, richiedi l'accesso dalla home page.
               </p>
             </div>
           </div>

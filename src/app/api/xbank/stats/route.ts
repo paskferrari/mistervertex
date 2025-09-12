@@ -1,6 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+interface Prediction {
+  id: string
+  status: 'won' | 'lost' | 'pending'
+  stake_amount: string | number
+  result_amount?: string | number
+  odds: string | number
+  market?: string
+  market_type?: string
+  confidence?: string
+  created_at: string
+}
+
+interface MarketStats {
+  total: number
+  won: number
+  staked: number
+  returns: number
+}
+
+interface ConfidenceStats {
+  [key: string]: {
+    total: number
+    won: number
+    staked: number
+    returns: number
+  }
+}
+
 // GET - Recupera le statistiche complete dell'utente
 export async function GET(request: NextRequest) {
   try {
@@ -101,26 +129,26 @@ export async function GET(request: NextRequest) {
 
     // Calcola le statistiche
     const totalPredictions = predictions?.length || 0
-    const wonPredictions = predictions?.filter((p: any) => p.status === 'won').length || 0
-    const lostPredictions = predictions?.filter((p: any) => p.status === 'lost').length || 0
-    const pendingPredictions = predictions?.filter((p: any) => p.status === 'pending').length || 0
+    const wonPredictions = predictions?.filter((p: Prediction) => p.status === 'won').length || 0
+    const lostPredictions = predictions?.filter((p: Prediction) => p.status === 'lost').length || 0
+    const pendingPredictions = predictions?.filter((p: Prediction) => p.status === 'pending').length || 0
     
-    const totalStaked = predictions?.reduce((sum: number, p: any) => {
-      const stake = parseFloat(p.stake_amount) || 0
+    const totalStaked = predictions?.reduce((sum: number, p: Prediction) => {
+      const stake = parseFloat(String(p.stake_amount)) || 0
       return sum + stake
     }, 0) || 0
     
     const totalReturns = predictions
-      ?.filter((p: any) => p.status === 'won')
-      .reduce((sum: number, p: any) => {
-        const resultAmount = parseFloat(p.result_amount) || (parseFloat(p.stake_amount) * parseFloat(p.odds))
+      ?.filter((p: Prediction) => p.status === 'won')
+      .reduce((sum: number, p: Prediction) => {
+        const resultAmount = parseFloat(String(p.result_amount)) || (parseFloat(String(p.stake_amount)) * parseFloat(String(p.odds)))
         return sum + resultAmount
       }, 0) || 0
       
     const totalLosses = predictions
-      ?.filter((p: any) => p.status === 'lost')
-      .reduce((sum: number, p: any) => {
-        const stake = parseFloat(p.stake_amount) || 0
+      ?.filter((p: Prediction) => p.status === 'lost')
+      .reduce((sum: number, p: Prediction) => {
+        const stake = parseFloat(String(p.stake_amount)) || 0
         return sum + stake
       }, 0) || 0
     
@@ -129,15 +157,15 @@ export async function GET(request: NextRequest) {
     const winRate = (wonPredictions + lostPredictions) > 0 ? ((wonPredictions / (wonPredictions + lostPredictions)) * 100) : 0
     
     // Calcola l'average odds per tutte le predizioni (non solo quelle vinte)
-    const totalPredictionsWithOdds = predictions?.filter((p: any) => p.odds && p.odds > 0).length || 0
+    const totalPredictionsWithOdds = predictions?.filter((p: Prediction) => p.odds && parseFloat(String(p.odds)) > 0).length || 0
     const avgOdds = totalPredictionsWithOdds > 0 
       ? (predictions
-          ?.filter((p: any) => p.odds && p.odds > 0)
-          ?.reduce((sum: number, p: any) => sum + parseFloat(p.odds), 0) || 0) / totalPredictionsWithOdds
+          ?.filter((p: Prediction) => p.odds && parseFloat(String(p.odds)) > 0)
+          ?.reduce((sum: number, p: Prediction) => sum + parseFloat(String(p.odds)), 0) || 0) / totalPredictionsWithOdds
       : 0
 
     // Calcola le statistiche per sport/mercato
-    const marketStats = predictions?.reduce((acc: any, p: any) => {
+    const marketStats = predictions?.reduce((acc: Record<string, MarketStats>, p: Prediction) => {
       const market = p.market_type || 'Altro'
       if (!acc[market]) {
         acc[market] = { total: 0, won: 0, staked: 0, returns: 0 }
@@ -145,15 +173,15 @@ export async function GET(request: NextRequest) {
       acc[market].total++
       if (p.status === 'won') {
         acc[market].won++
-        acc[market].returns += parseFloat(p.result_amount) || (parseFloat(p.stake_amount) * parseFloat(p.odds))
+        acc[market].returns += parseFloat(String(p.result_amount)) || (parseFloat(String(p.stake_amount)) * parseFloat(String(p.odds)))
       }
-      acc[market].staked += parseFloat(p.stake_amount) || 0
+      acc[market].staked += parseFloat(String(p.stake_amount)) || 0
       return acc
     }, {}) || {}
 
     // Calcola le statistiche per confidence level
-    const confidenceStats = predictions?.reduce((acc: any, p: any) => {
-      const confidenceValue = parseFloat(p.confidence)
+    const confidenceStats = predictions?.reduce((acc: ConfidenceStats, p: Prediction) => {
+      const confidenceValue = parseFloat(String(p.confidence))
       if (isNaN(confidenceValue) || confidenceValue < 0 || confidenceValue > 100) {
         return acc // Salta predizioni con confidence non valida
       }
@@ -166,18 +194,25 @@ export async function GET(request: NextRequest) {
       acc[key].total++
       if (p.status === 'won') {
         acc[key].won++
-        acc[key].returns += parseFloat(p.result_amount) || (parseFloat(p.stake_amount) * parseFloat(p.odds))
+        acc[key].returns += parseFloat(String(p.result_amount || 0)) || (parseFloat(String(p.stake_amount || 0)) * parseFloat(String(p.odds || 0)))
       }
-      acc[key].staked += parseFloat(p.stake_amount) || 0
+      acc[key].staked += parseFloat(String(p.stake_amount || 0)) || 0
       return acc
     }, {}) || {}
 
     // Prepara i dati del grafico del bankroll
-    const bankrollChart = bankrollHistory?.map((entry: any) => ({
+    interface BankrollEntry {
+      created_at: string
+      balance_after: string | number
+      transaction_type: string
+      amount: string | number
+    }
+    
+    const bankrollChart = bankrollHistory?.map((entry: BankrollEntry) => ({
       date: entry.created_at,
-      balance: parseFloat(entry.balance_after) || 0,
+      balance: parseFloat(String(entry.balance_after)) || 0,
       transaction_type: entry.transaction_type,
-      amount: parseFloat(entry.amount) || 0
+      amount: parseFloat(String(entry.amount)) || 0
     })) || []
 
     // Calcola il yield (profitto annualizzato)
@@ -205,22 +240,28 @@ export async function GET(request: NextRequest) {
         avg_odds: Math.round((avgOdds || 0) * 100) / 100,
         yield: Math.round(annualizedYield * 100) / 100
       },
-      market_breakdown: Object.entries(marketStats).map(([market, stats]: [string, any]) => ({
-        market,
-        total: stats.total,
-        won: stats.won,
-        win_rate: stats.total > 0 ? Math.round((stats.won / stats.total) * 10000) / 100 : 0,
-        profit: Math.round((stats.returns - stats.staked) * 100) / 100,
-        roi: stats.staked > 0 ? Math.round(((stats.returns - stats.staked) / stats.staked) * 10000) / 100 : 0
-      })),
-      confidence_breakdown: Object.entries(confidenceStats).map(([range, stats]: [string, any]) => ({
-        confidence_range: range,
-        total: stats.total,
-        won: stats.won,
-        win_rate: stats.total > 0 ? Math.round((stats.won / stats.total) * 10000) / 100 : 0,
-        profit: Math.round((stats.returns - stats.staked) * 100) / 100,
-        roi: stats.staked > 0 ? Math.round(((stats.returns - stats.staked) / stats.staked) * 10000) / 100 : 0
-      })),
+      market_breakdown: Object.entries(marketStats).map(([market, stats]) => {
+        const marketStatsTyped = stats as MarketStats
+        return {
+          market,
+          total: marketStatsTyped.total,
+          won: marketStatsTyped.won,
+          win_rate: marketStatsTyped.total > 0 ? Math.round((marketStatsTyped.won / marketStatsTyped.total) * 10000) / 100 : 0,
+          profit: Math.round((marketStatsTyped.returns - marketStatsTyped.staked) * 100) / 100,
+          roi: marketStatsTyped.staked > 0 ? Math.round(((marketStatsTyped.returns - marketStatsTyped.staked) / marketStatsTyped.staked) * 10000) / 100 : 0
+        }
+      }),
+      confidence_breakdown: Object.entries(confidenceStats).map(([range, stats]) => {
+        const confidenceStatsTyped = stats as ConfidenceStats[string]
+        return {
+          confidence_range: range,
+          total: confidenceStatsTyped.total,
+          won: confidenceStatsTyped.won,
+          win_rate: confidenceStatsTyped.total > 0 ? Math.round((confidenceStatsTyped.won / confidenceStatsTyped.total) * 10000) / 100 : 0,
+          profit: Math.round((confidenceStatsTyped.returns - confidenceStatsTyped.staked) * 100) / 100,
+          roi: confidenceStatsTyped.staked > 0 ? Math.round(((confidenceStatsTyped.returns - confidenceStatsTyped.staked) / confidenceStatsTyped.staked) * 10000) / 100 : 0
+        }
+      }),
       bankroll_history: bankrollChart
     })
   } catch (error) {

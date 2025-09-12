@@ -1,6 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+interface PredictionBackup {
+  id?: string
+  title?: string
+  event_name?: string
+  category?: string
+  odds?: number
+  stake_amount?: number
+  confidence?: number
+  status: string
+  bookmaker?: string
+  bet_type?: string
+  notes?: string
+  created_at?: string
+  user_id?: string
+}
+
+interface GroupBackup {
+  id?: string
+  name?: string
+  description?: string
+  created_at?: string
+  user_id?: string
+}
+
+interface ScalataBackup {
+  id?: string
+  name?: string
+  target_amount?: number
+  current_amount?: number
+  status?: string
+  created_at?: string
+  user_id?: string
+}
+
+interface PostBackup {
+  id?: string
+  title?: string
+  content?: string
+  category?: string
+  created_at?: string
+  user_id?: string
+}
+
+interface TransactionBackup {
+  id?: string
+  type?: string
+  amount?: number
+  description?: string
+  created_at?: string
+  user_id?: string
+}
+
+interface BackupData {
+  predictions?: PredictionBackup[]
+  groups?: GroupBackup[]
+  scalate?: ScalataBackup[]
+  board_posts?: PostBackup[]
+  bankroll_transactions?: TransactionBackup[]
+  settings?: Record<string, unknown>
+  exported_at?: string
+  version?: string
+  user_id?: string
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Verifica autenticazione
@@ -96,7 +160,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { backup_data, action } = body
+    const { backup_data, action }: { backup_data: BackupData; action: string } = body
 
     if (action === 'import') {
       // Validazione del formato
@@ -121,7 +185,7 @@ export async function POST(request: NextRequest) {
       if (backup_data.predictions?.length > 0) {
         importPromises.push(
           supabase.from('predictions').insert(
-            backup_data.predictions.map((p: any) => ({ ...p, user_id: user.id }))
+            backup_data.predictions.map((p: PredictionBackup) => ({ ...p, user_id: user.id }))
           )
         )
       }
@@ -129,7 +193,7 @@ export async function POST(request: NextRequest) {
       if (backup_data.groups?.length > 0) {
         importPromises.push(
           supabase.from('prediction_groups').insert(
-            backup_data.groups.map((g: any) => ({ ...g, user_id: user.id }))
+            backup_data.groups.map((g: GroupBackup) => ({ ...g, user_id: user.id }))
           )
         )
       }
@@ -137,7 +201,7 @@ export async function POST(request: NextRequest) {
       if (backup_data.scalate?.length > 0) {
         importPromises.push(
           supabase.from('scalate').insert(
-            backup_data.scalate.map((s: any) => ({ ...s, user_id: user.id }))
+            backup_data.scalate.map((s: ScalataBackup) => ({ ...s, user_id: user.id }))
           )
         )
       }
@@ -145,7 +209,7 @@ export async function POST(request: NextRequest) {
       if (backup_data.board_posts?.length > 0) {
         importPromises.push(
           supabase.from('board_posts').insert(
-            backup_data.board_posts.map((p: any) => ({ ...p, user_id: user.id }))
+            backup_data.board_posts.map((p: PostBackup) => ({ ...p, user_id: user.id }))
           )
         )
       }
@@ -153,7 +217,7 @@ export async function POST(request: NextRequest) {
       if (backup_data.bankroll_transactions?.length > 0) {
         importPromises.push(
           supabase.from('bankroll_transactions').insert(
-            backup_data.bankroll_transactions.map((t: any) => ({ ...t, user_id: user.id }))
+            backup_data.bankroll_transactions.map((t: TransactionBackup) => ({ ...t, user_id: user.id }))
           )
         )
       }

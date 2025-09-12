@@ -1,7 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import fs from 'fs'
-import path from 'path'
 
 // Initialize Supabase client only when needed to avoid build-time errors
 function getSupabaseAdmin() {
@@ -15,21 +13,17 @@ function getSupabaseAdmin() {
   return createClient(supabaseUrl, supabaseServiceKey)
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Crea client Supabase con service role key per operazioni admin
     const supabase = getSupabaseAdmin()
-
-    // Leggi il file SQL
-    const sqlFilePath = path.join(process.cwd(), 'database', 'create_notifications_table.sql')
-    const sqlContent = fs.readFileSync(sqlFilePath, 'utf8')
 
     // Crea la tabella notifications manualmente
     // Nota: Le operazioni DDL devono essere eseguite tramite Supabase Dashboard
     // Questo endpoint serve per verificare e creare alcuni dati di test
     
     // Verifica se la tabella esiste già
-    const { data: existingTable, error: tableCheckError } = await supabase
+    const { error: tableCheckError } = await supabase
       .from('notifications')
       .select('id')
       .limit(1)
@@ -50,7 +44,7 @@ export async function POST(request: NextRequest) {
     console.log('Tabella notifications già esistente o creata con successo')
 
     // Verifica se la tabella è stata creata
-    const { data: tableExists, error: checkError } = await supabase
+    const { error: checkError } = await supabase
       .from('notifications')
       .select('id')
       .limit(1)

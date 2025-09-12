@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import jwt from 'jsonwebtoken'
 
+interface DecodedToken {
+  userId: string
+  email: string
+  iat?: number
+  exp?: number
+}
+
+interface GroupPrediction {
+  id: string
+  status: 'won' | 'lost' | 'pending'
+  stake: number
+  result_profit?: number | null
+  total_odds: number
+}
+
 interface RouteParams {
   params: Promise<{
     id: string
@@ -23,10 +38,10 @@ export async function GET(
       return NextResponse.json({ error: 'Token di autenticazione mancante' }, { status: 401 })
     }
 
-    let decoded: any
+    let decoded: DecodedToken
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!)
-    } catch (error) {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken
+    } catch {
       return NextResponse.json({ error: 'Token non valido' }, { status: 401 })
     }
 
@@ -78,16 +93,19 @@ export async function GET(
       return NextResponse.json({ error: 'Errore nel calcolo delle statistiche' }, { status: 500 })
     }
 
+    const typedPredictions = (predictions || []) as GroupPrediction[]
+    
     const stats = {
-      predictions_count: predictions?.length || 0,
-      total_stake: predictions?.reduce((sum: number, p: any) => sum + p.stake, 0) || 0,
-      total_profit: predictions?.filter((p: any) => p.result_profit !== null)
-        .reduce((sum: number, p: any) => sum + (p.result_profit || 0), 0) || 0,
-      win_rate: predictions?.length > 0 ? 
-        (predictions.filter((p: any) => p.status === 'won').length / 
-         predictions.filter((p: any) => p.status !== 'pending').length) * 100 : 0,
-      avg_odds: predictions?.length > 0 ? 
-        (predictions.reduce((sum: number, p: any) => sum + p.total_odds, 0) / predictions.length) || 0 : 0
+      predictions_count: typedPredictions.length,
+      total_stake: typedPredictions.reduce((sum: number, p: GroupPrediction) => sum + p.stake, 0),
+      total_profit: typedPredictions
+        .filter((p: GroupPrediction) => p.result_profit !== null)
+        .reduce((sum: number, p: GroupPrediction) => sum + (p.result_profit || 0), 0),
+      win_rate: typedPredictions.length > 0 ? 
+        (typedPredictions.filter((p: GroupPrediction) => p.status === 'won').length / 
+         typedPredictions.filter((p: GroupPrediction) => p.status !== 'pending').length) * 100 : 0,
+      avg_odds: typedPredictions.length > 0 ?
+        (typedPredictions.reduce((sum: number, p: GroupPrediction) => sum + p.total_odds, 0) / typedPredictions.length) : 0
     }
 
     const roi = stats.total_stake > 0 ? (stats.total_profit / stats.total_stake) * 100 : 0
@@ -122,10 +140,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Token di autenticazione mancante' }, { status: 401 })
     }
 
-    let decoded: any
+    let decoded: DecodedToken
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!)
-    } catch (error) {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken
+    } catch {
       return NextResponse.json({ error: 'Token non valido' }, { status: 401 })
     }
 
@@ -218,10 +236,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Token di autenticazione mancante' }, { status: 401 })
     }
 
-    let decoded: any
+    let decoded: DecodedToken
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!)
-    } catch (error) {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken
+    } catch {
       return NextResponse.json({ error: 'Token non valido' }, { status: 401 })
     }
 

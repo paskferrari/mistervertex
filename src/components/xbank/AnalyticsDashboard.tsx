@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, memo } from 'react'
+import { useState, useEffect, useCallback, memo } from 'react'
 import { TrendingUp, TrendingDown, Target, Award, BarChart3, PieChart, Activity, Download } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
@@ -60,11 +60,7 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
   const [timeRange, setTimeRange] = useState('all')
   const [selectedSport, setSelectedSport] = useState('all')
 
-  useEffect(() => {
-    loadAnalytics()
-  }, [timeRange, selectedSport])
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -83,7 +79,11 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeRange, selectedSport])
+
+  useEffect(() => {
+    loadAnalytics()
+  }, [loadAnalytics])
 
 
 

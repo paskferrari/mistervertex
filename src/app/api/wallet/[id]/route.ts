@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+interface WalletUpdateData {
+  updated_at: string
+  stake_amount?: number | null
+  notes?: string
+  status?: string
+  result?: string
+}
+
+interface WalletInputData {
+  stake_amount?: string | number | null
+  notes?: string
+  status?: string
+  result?: string
+}
+
 // PUT - Aggiorna un elemento del wallet (stake, note, status)
 export async function PUT(
   request: NextRequest,
@@ -8,16 +23,16 @@ export async function PUT(
 ) {
   const { id } = await params
   try {
-    const body = await request.json()
+    const body = await request.json() as WalletInputData
     const { stake_amount, notes, status, result } = body
 
     // Prepara i dati per l'aggiornamento
-    const updateData: any = {
+    const updateData: WalletUpdateData = {
       updated_at: new Date().toISOString()
     }
 
     if (stake_amount !== undefined) {
-      updateData.stake_amount = stake_amount ? parseFloat(stake_amount) : null
+      updateData.stake_amount = stake_amount ? (typeof stake_amount === 'string' ? parseFloat(stake_amount) : stake_amount) : null
     }
     if (notes !== undefined) updateData.notes = notes
     if (status !== undefined) {

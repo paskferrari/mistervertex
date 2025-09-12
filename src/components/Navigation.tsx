@@ -3,13 +3,13 @@
 import { useState, useMemo, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Menu, X, TrendingUp, BarChart3, Wallet, Home, User, Shield, Users } from 'lucide-react'
+import { Menu, X, BarChart3, Wallet, Home, Users } from 'lucide-react'
 import Image from 'next/image'
 
 interface NavigationItem {
   name: string
   href: string
-  icon: React.ComponentType<any>
+  icon: React.ComponentType<{ className?: string }>
   description?: string
 }
 

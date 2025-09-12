@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+interface SettingsUpdateData {
+  updated_at: string
+  initial_bankroll?: number
+  current_bankroll?: number
+  currency?: string
+  unit_type?: string
+  unit_value?: number
+  risk_management?: any
+}
+
 // GET - Recupera le impostazioni X-BANK dell'utente
 export async function GET(request: NextRequest) {
   try {
@@ -139,7 +149,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Prepara i dati per l'aggiornamento
-    const updateData: any = {
+    const updateData: SettingsUpdateData = {
       updated_at: new Date().toISOString()
     }
 

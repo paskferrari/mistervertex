@@ -41,13 +41,13 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
             </div>
           <h3 className="text-2xl font-bold text-white">Benvenuto nella Community</h3>
           <p className="text-gray-300 leading-relaxed">
-            Sei entrato nella community di betting più esclusiva d'Italia. Qui troverai pronostici accurati, 
+            Sei entrato nella community di betting più esclusiva d&apos;Italia. Qui troverai pronostici accurati, 
             analisi approfondite e una community di scommettitori professionali.
           </p>
           <div className="bg-purple-500/20 border border-purple-500/30 rounded-lg p-4">
             <p className="text-purple-300 text-sm">
-              💡 <strong>Suggerimento:</strong> Questa guida ti aiuterà a orientarti nella piattaforma. 
-              Puoi saltarla in qualsiasi momento o riaprirla dall'icona di aiuto.
+              💡 <strong>Suggerimento:</strong> Questa guida ti aiuterà a orientarti nella piattaforma.
+              Puoi saltarla in qualsiasi momento o riaprirla dall&apos;icona di aiuto.
             </p>
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
                 <h4 className="font-semibold text-white">Nuovo Utente?</h4>
               </div>
               <p className="text-gray-300 text-sm mb-3">
-                Inserisci la tua email nel modulo qui sotto per richiedere l'accesso esclusivo alla community.
+                Inserisci la tua email nel modulo qui sotto per richiedere l&apos;accesso esclusivo alla community.
               </p>
               <div className="text-xs text-purple-300">
                 ⏱️ Riceverai le credenziali entro 24 ore
@@ -114,7 +114,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
                 <h4 className="font-semibold text-white">Hai già un Account?</h4>
               </div>
               <p className="text-gray-300 text-sm mb-3">
-                Clicca sul pulsante "Accedi" in alto a destra per entrare nella tua area riservata.
+                Clicca sul pulsante &quot;Accedi&quot; in alto a destra per entrare nella tua area riservata.
               </p>
               <div className="text-xs text-blue-300">
                 🔐 Accesso sicuro e protetto
@@ -142,20 +142,20 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
             </div>
           <h3 className="text-2xl font-bold text-white">Perfetto!</h3>
           <p className="text-gray-300 leading-relaxed">
-            Ora conosci le basi della piattaforma. Inizia richiedendo l'accesso o effettuando il login 
+            Ora conosci le basi della piattaforma. Inizia richiedendo l&apos;accesso o effettuando il login 
             se hai già un account.
           </p>
           <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4">
             <p className="text-green-300 text-sm">
               🎯 <strong>Prossimo Passo:</strong> Scorri verso il basso per inserire la tua email 
-              o clicca "Accedi" se hai già un account.
+              o clicca &quot;Accedi&quot; se hai già un account.
             </p>
           </div>
           <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4">
             <div className="flex items-center justify-center space-x-2">
               <HelpCircle className="h-4 w-4 text-blue-400" />
               <p className="text-blue-300 text-sm">
-                Puoi sempre riaprire questa guida cliccando sull'icona di aiuto
+                Puoi sempre riaprire questa guida cliccando sull&apos;icona di aiuto
               </p>
             </div>
           </div>

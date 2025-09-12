@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Save, X, TrendingUp } from 'lucide-react'
+import { Plus, Edit, Trash2, Save, X } from 'lucide-react'
 import Image from 'next/image'
 
 interface Prediction {
@@ -63,7 +63,7 @@ export default function AdminPredictionsPage() {
       } else {
         console.error(data.error || 'Errore nel caricamento dei pronostici')
       }
-    } catch (error) {
+    } catch {
       console.error('Errore di connessione')
     } finally {
       setLoading(false)
@@ -103,7 +103,7 @@ export default function AdminPredictionsPage() {
       } else {
         console.error(data.error || 'Errore nell\'operazione')
       }
-    } catch (error) {
+    } catch {
       console.error('Errore di connessione')
     } finally {
       setSubmitting(false)
@@ -141,7 +141,7 @@ export default function AdminPredictionsPage() {
       } else {
         console.error(data.error || 'Errore nell\'eliminazione')
       }
-    } catch (error) {
+    } catch {
       console.error('Errore di connessione')
     }
   }

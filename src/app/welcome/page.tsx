@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, safeSupabaseAuth } from '@/lib/supabase'
 import { TrendingUp, Star, Trophy, Crown, Users, ArrowRight } from 'lucide-react'
@@ -22,7 +22,7 @@ export default function WelcomePage() {
     checkUser()
   }, [])
 
-  const checkUser = async () => {
+  const checkUser = useCallback(async () => {
     try {
       const { data: { user: authUser } } = await safeSupabaseAuth.getUser()
       
@@ -50,7 +50,7 @@ export default function WelcomePage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [router])
 
   const getRoleInfo = (role: string) => {
     switch (role) {
