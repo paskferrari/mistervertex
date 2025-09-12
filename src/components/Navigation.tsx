@@ -174,7 +174,7 @@ export default function Navigation() {
 
   return (
     <>
-      {/* PWA Safe Area Support */}
+      {/* PWA Safe Area Support & Native App Optimizations */}
       <style jsx global>{`
         :root {
           --safe-area-inset-top: env(safe-area-inset-top);
@@ -189,6 +189,18 @@ export default function Navigation() {
           padding-left: max(var(--safe-area-inset-left), 0px);
           padding-right: max(var(--safe-area-inset-right), 0px);
         }
+        /* Native App Touch Optimizations */
+        .touch-optimized {
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+        }
+        /* Prevent bounce scroll on navigation */
+        .nav-container {
+          overscroll-behavior: contain;
+          -webkit-overflow-scrolling: touch;
+        }
       `}</style>
       
       <nav 
@@ -199,6 +211,7 @@ export default function Navigation() {
           sticky top-0 z-50 
           transition-all duration-500 ease-out
           safe-area-top safe-area-sides
+          nav-container touch-optimized
           ${isScrolled ? 'backdrop-blur-2xl bg-opacity-98 shadow-2xl' : 'backdrop-blur-xl'}
         `} 
         role="navigation" 
@@ -258,6 +271,7 @@ export default function Navigation() {
                     focus:outline-none focus:ring-2 focus:ring-offset-2 
                     border border-transparent
                     hover:scale-105 active:scale-95
+                    touch-optimized touch-target
                     ${
                       isActive(item.href)
                         ? `${currentPalette.activeBackground} ${currentPalette.activeText} shadow-lg scale-105 border-opacity-50`
@@ -284,6 +298,7 @@ export default function Navigation() {
                 rounded-xl transition-all duration-300 
                 border border-transparent
                 hover:scale-110 active:scale-95
+                touch-optimized touch-target
                 ${isScrolled ? 'p-2' : 'p-3'}
               `}
               aria-label={isMobileMenuOpen ? 'Chiudi menu' : 'Apri menu'}
@@ -326,7 +341,7 @@ export default function Navigation() {
                     focus:outline-none focus:ring-2 focus:ring-offset-2 
                     border border-transparent
                     hover:scale-105 active:scale-95
-                    transform
+                    transform touch-optimized touch-target
                     ${
                       isActive(item.href)
                         ? `${currentPalette.activeBackground} ${currentPalette.activeText} shadow-xl scale-105`

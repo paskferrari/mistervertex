@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 interface ScalataSettings {
   multiplier?: number
   max_loss?: number
-  [key: string]: unknown
+  [key: string]: number | string | boolean | null | undefined
 }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

@@ -38,6 +38,7 @@ export default function UserDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'predictions' | 'profile' | 'wallet'>('predictions')
   const [walletItems, setWalletItems] = useState<WalletItem[]>([])
+  const [isScrolled, setIsScrolled] = useState(false)
 
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null)
   const [loadingOperation, setLoadingOperation] = useState<string | null>(null)
@@ -88,6 +89,15 @@ export default function UserDashboard() {
   useEffect(() => {
     checkUserAndLoadData()
   }, [checkUserAndLoadData])
+
+  // Gestione scroll per ottimizzazioni UI
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   useEffect(() => {
     console.log('🎨 Wallet items state changed:', walletItems.length, walletItems)
@@ -384,7 +394,7 @@ export default function UserDashboard() {
         <div className="flex space-x-1 bg-white/10 backdrop-blur-sm rounded-lg p-1 mb-6 max-w-lg">
           <button
             onClick={() => setActiveTab('predictions')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 touch-optimized touch-target ${
               activeTab === 'predictions'
                 ? 'bg-purple-600 text-white shadow-lg scale-105'
                 : 'text-gray-300 hover:text-white hover:bg-white/10'
@@ -394,7 +404,7 @@ export default function UserDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('wallet')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 touch-optimized touch-target ${
               activeTab === 'wallet'
                 ? 'bg-purple-600 text-white shadow-lg scale-105'
                 : 'text-gray-300 hover:text-white hover:bg-white/10'
@@ -404,7 +414,7 @@ export default function UserDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('profile')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 touch-optimized touch-target ${
               activeTab === 'profile'
                 ? 'bg-purple-600 text-white shadow-lg scale-105'
                 : 'text-gray-300 hover:text-white hover:bg-white/10'
@@ -477,7 +487,7 @@ export default function UserDashboard() {
                           <button
                             onClick={() => copyToWallet(prediction)}
                             disabled={loadingOperation === `copy-${prediction.id}`}
-                            className="flex items-center space-x-1 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white px-3 py-1 rounded-lg text-sm transition-all duration-200 transform hover:scale-105 active:scale-95 hover:shadow-lg group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                            className="flex items-center space-x-1 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white px-3 py-1 rounded-lg text-sm transition-all duration-200 transform hover:scale-105 active:scale-95 hover:shadow-lg group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none touch-optimized touch-target"
                           >
                             {loadingOperation === `copy-${prediction.id}` ? (
                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

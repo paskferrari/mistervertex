@@ -64,11 +64,13 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} native-app-container no-horizontal-scroll`}>
         <PWAManager>
           <Navigation />
-          <main className="min-h-screen">
-            {children}
+          <main className="min-h-screen native-scroll safe-area-top safe-area-bottom">
+            <div className="h-full overflow-y-auto">
+              {children}
+            </div>
           </main>
         </PWAManager>
       </body>
