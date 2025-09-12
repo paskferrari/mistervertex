@@ -8,7 +8,7 @@ interface SettingsUpdateData {
   currency?: string
   unit_type?: string
   unit_value?: number
-  risk_management?: any
+  risk_management?: Record<string, unknown>
 }
 
 // GET - Recupera le impostazioni X-BANK dell'utente

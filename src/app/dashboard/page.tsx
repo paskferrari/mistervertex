@@ -24,12 +24,20 @@ interface Prediction {
   created_at: string
 }
 
+interface WalletItem {
+  id: string
+  prediction_id: string
+  prediction: Prediction
+  stake_amount: number
+  notes?: string
+}
+
 export default function UserDashboard() {
   const [user, setUser] = useState<UserData | null>(null)
   const [predictions, setPredictions] = useState<Prediction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'predictions' | 'profile' | 'wallet'>('predictions')
-  const [walletItems, setWalletItems] = useState<any[]>([])
+  const [walletItems, setWalletItems] = useState<WalletItem[]>([])
 
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null)
   const [loadingOperation, setLoadingOperation] = useState<string | null>(null)
@@ -44,14 +52,6 @@ export default function UserDashboard() {
   const isInWallet = (predictionId: string) => {
     return walletItems.some(item => item.prediction_id === predictionId)
   }
-
-  useEffect(() => {
-    checkUserAndLoadData()
-  }, [])
-
-  useEffect(() => {
-    console.log('🎨 Wallet items state changed:', walletItems.length, walletItems)
-  }, [walletItems])
 
   const checkUserAndLoadData = useCallback(async () => {
     try {
@@ -84,6 +84,14 @@ export default function UserDashboard() {
       setIsLoading(false)
     }
   }, [router])
+
+  useEffect(() => {
+    checkUserAndLoadData()
+  }, [checkUserAndLoadData])
+
+  useEffect(() => {
+    console.log('🎨 Wallet items state changed:', walletItems.length, walletItems)
+  }, [walletItems])
 
   const loadWallet = async () => {
     try {

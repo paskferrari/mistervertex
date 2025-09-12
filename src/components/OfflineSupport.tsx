@@ -22,7 +22,6 @@ interface OfflineSupportProps {
 export default function OfflineSupport({ children }: OfflineSupportProps) {
   const [isOnline, setIsOnline] = useState(true)
   const [pendingActions, setPendingActions] = useState<PendingAction[]>([])
-  const [offlineData, setOfflineData] = useState<OfflineData | null>(null)
 
   const syncPendingActions = useCallback(async () => {
     if (pendingActions.length === 0) return
@@ -57,7 +56,7 @@ export default function OfflineSupport({ children }: OfflineSupportProps) {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
     
-    setIsOnline(navigator.onLine)
+    setIsOnline(typeof window !== 'undefined' ? navigator.onLine : true)
     loadOfflineData()
 
     return () => {
@@ -74,7 +73,6 @@ export default function OfflineSupport({ children }: OfflineSupportProps) {
         lastSync: Date.now()
       }
       localStorage.setItem('offline-data', JSON.stringify(currentData))
-      setOfflineData(currentData)
     } catch (error) {
       console.error('Errore nel salvare i dati offline:', error)
     }
@@ -82,11 +80,6 @@ export default function OfflineSupport({ children }: OfflineSupportProps) {
 
   const loadOfflineData = () => {
     try {
-      const data = localStorage.getItem('offline-data')
-      if (data) {
-        setOfflineData(JSON.parse(data))
-      }
-      
       const pending = localStorage.getItem('pending-actions')
       if (pending) {
         setPendingActions(JSON.parse(pending))
@@ -96,11 +89,7 @@ export default function OfflineSupport({ children }: OfflineSupportProps) {
     }
   }
 
-  const addPendingAction = (action: Omit<PendingAction, 'timestamp'>) => {
-    const newActions = [...pendingActions, { ...action, timestamp: Date.now() }]
-    setPendingActions(newActions)
-    localStorage.setItem('pending-actions', JSON.stringify(newActions))
-  }
+
 
   const processAction = async (action: PendingAction) => {
     switch (action.type) {
@@ -152,7 +141,7 @@ export function useOfflineOperations() {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
     
-    setIsOnline(navigator.onLine)
+    setIsOnline(typeof window !== 'undefined' ? navigator.onLine : true)
 
     return () => {
       window.removeEventListener('online', handleOnline)
@@ -241,7 +230,7 @@ export function useOfflineOperations() {
     try {
       const actions = JSON.parse(localStorage.getItem('pending-actions') || '[]')
       return actions.length
-    } catch (error) {
+    } catch {
       return 0
     }
   }
@@ -270,7 +259,7 @@ export function OfflineIndicator() {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
     
-    setIsOnline(navigator.onLine)
+    setIsOnline(typeof window !== 'undefined' ? navigator.onLine : true)
 
     return () => {
       window.removeEventListener('online', handleOnline)

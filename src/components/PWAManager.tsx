@@ -24,7 +24,7 @@ export default function PWAManager({ children }: PWAManagerProps) {
 
   useEffect(() => {
     // Registra il service worker
-    if ('serviceWorker' in navigator) {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/sw.js')
         .then((reg) => {
@@ -36,7 +36,7 @@ export default function PWAManager({ children }: PWAManagerProps) {
             const newWorker = reg.installing
             if (newWorker) {
               newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                if (newWorker.state === 'installed' && typeof window !== 'undefined' && navigator.serviceWorker.controller) {
                   setUpdateAvailable(true)
                 }
               })
@@ -55,7 +55,7 @@ export default function PWAManager({ children }: PWAManagerProps) {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
     
-    setIsOnline(navigator.onLine)
+    setIsOnline(typeof window !== 'undefined' ? navigator.onLine : true)
 
     return () => {
       window.removeEventListener('online', handleOnline)

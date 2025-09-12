@@ -7,6 +7,7 @@ interface PostUpdateData {
   tags?: string[]
   visibility?: string
   views_count?: number
+  updated_at?: string
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

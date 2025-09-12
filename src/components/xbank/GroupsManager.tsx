@@ -35,6 +35,7 @@ interface GroupsManagerProps {
 
 const GroupsManager = ({ currency }: GroupsManagerProps) => {
   const [groups, setGroups] = useState<Group[]>([])
+  const [predictions, setPredictions] = useState<Prediction[]>([])
 
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)

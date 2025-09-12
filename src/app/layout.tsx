@@ -5,7 +5,6 @@ import "../styles/xbank-mobile.css"
 import "../styles/pwa-optimizations.css"
 import Navigation from "../components/Navigation"
 import PWAManager from "../components/PWAManager"
-import { supabase } from "../lib/supabase"
 
 const inter = Inter({ subsets: ["latin"] })
 

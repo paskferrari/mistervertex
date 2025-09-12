@@ -7,6 +7,8 @@ interface ScalataUpdateData {
   status?: string
   updated_at?: string
   current_step?: number
+  current_bankroll?: number
+  settings?: Record<string, unknown>
 }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

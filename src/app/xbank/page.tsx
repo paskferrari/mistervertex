@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Zap, Settings, TrendingUp, Target, Users, BarChart3, Plus, ArrowLeft, Save, Wallet, MessageSquare } from 'lucide-react'
+import { Settings, TrendingUp, Target, Users, BarChart3, Plus, ArrowLeft, Save, Wallet, MessageSquare } from 'lucide-react'
 import NotificationCenter from '@/components/xbank/NotificationCenter'
 import Image from 'next/image'
 
@@ -37,55 +37,7 @@ export default function XBankPage() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [showToast, setShowToast] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
-  const [isKeyboardNavigation, setIsKeyboardNavigation] = useState(false)
 
-  useEffect(() => {
-    checkUser()
-  }, [])
-
-  // Funzione per mostrare il toast
-  const showToastMessage = (message: string) => {
-    setToastMessage(message)
-    setShowToast(true)
-    setTimeout(() => setShowToast(false), 3000)
-  }
-
-  // Gestione navigazione da tastiera
-   useEffect(() => {
-     const tabs = ['dashboard', 'pronostici', 'gruppi', 'scalate', 'analytics', 'bacheca', 'community', 'settings']
-     
-     const handleKeyDown = (e: KeyboardEvent) => {
-       if (e.key === 'Tab') {
-         setIsKeyboardNavigation(true)
-       }
-       
-       // Navigazione con frecce sui tab
-       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-         const currentIndex = tabs.indexOf(activeTab)
-         if (currentIndex !== -1) {
-           e.preventDefault()
-           const nextIndex = e.key === 'ArrowRight' 
-             ? (currentIndex + 1) % tabs.length
-             : (currentIndex - 1 + tabs.length) % tabs.length
-           setActiveTab(tabs[nextIndex])
-         }
-       }
-     }
-
-     const handleMouseDown = () => {
-       setIsKeyboardNavigation(false)
-     }
-
-     document.addEventListener('keydown', handleKeyDown)
-     document.addEventListener('mousedown', handleMouseDown)
-
-     return () => {
-       document.removeEventListener('keydown', handleKeyDown)
-       document.removeEventListener('mousedown', handleMouseDown)
-     }
-   }, [activeTab])
 
   const checkUser = useCallback(async () => {
     try {
@@ -115,7 +67,7 @@ export default function XBankPage() {
       }
 
       setUser(userData)
-      await loadSettings(userData.id)
+      await loadSettings()
     } catch (error) {
       console.error('Errore durante il controllo utente:', error)
       router.push('/login')
@@ -124,7 +76,13 @@ export default function XBankPage() {
     }
   }, [router])
 
-  const loadSettings = async (userId: string) => {
+  useEffect(() => {
+    checkUser()
+  }, [checkUser])
+
+
+
+  const loadSettings = async () => {
     try {
       const response = await fetch('/api/xbank/settings', {
         method: 'GET',

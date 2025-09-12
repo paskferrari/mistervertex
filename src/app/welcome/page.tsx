@@ -18,10 +18,6 @@ export default function WelcomePage() {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
-  useEffect(() => {
-    checkUser()
-  }, [])
-
   const checkUser = useCallback(async () => {
     try {
       const { data: { user: authUser } } = await safeSupabaseAuth.getUser()
@@ -51,6 +47,10 @@ export default function WelcomePage() {
       setIsLoading(false)
     }
   }, [router])
+
+  useEffect(() => {
+    checkUser()
+  }, [checkUser])
 
   const getRoleInfo = (role: string) => {
     switch (role) {

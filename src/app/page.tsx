@@ -22,7 +22,7 @@ export default function LandingPage() {
   
   // PWA enhancements
   const { lightTap, success, error: errorVibration } = useHapticFeedback()
-  const { isMobile, isTouchDevice } = useDeviceType()
+  const { isTouchDevice } = useDeviceType()
   const { isOnline, saveEmailOffline } = useOfflineOperations()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,7 +73,7 @@ export default function LandingPage() {
           if (isTouchDevice) errorVibration()
         }
       }
-    } catch (err) {
+    } catch {
       setError('Errore di connessione. Riprova più tardi.')
       if (isTouchDevice) errorVibration() // Feedback tattile per errore
     } finally {

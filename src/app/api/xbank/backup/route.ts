@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
       // Importa i nuovi dati
       const importPromises = []
       
-      if (backup_data.predictions?.length > 0) {
+      if (backup_data.predictions && backup_data.predictions.length > 0) {
         importPromises.push(
           supabase.from('predictions').insert(
             backup_data.predictions.map((p: PredictionBackup) => ({ ...p, user_id: user.id }))
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
         )
       }
       
-      if (backup_data.groups?.length > 0) {
+      if (backup_data.groups && backup_data.groups.length > 0) {
         importPromises.push(
           supabase.from('prediction_groups').insert(
             backup_data.groups.map((g: GroupBackup) => ({ ...g, user_id: user.id }))
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
         )
       }
       
-      if (backup_data.scalate?.length > 0) {
+      if (backup_data.scalate && backup_data.scalate.length > 0) {
         importPromises.push(
           supabase.from('scalate').insert(
             backup_data.scalate.map((s: ScalataBackup) => ({ ...s, user_id: user.id }))
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
         )
       }
       
-      if (backup_data.board_posts?.length > 0) {
+      if (backup_data.board_posts && backup_data.board_posts.length > 0) {
         importPromises.push(
           supabase.from('board_posts').insert(
             backup_data.board_posts.map((p: PostBackup) => ({ ...p, user_id: user.id }))
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
         )
       }
       
-      if (backup_data.bankroll_transactions?.length > 0) {
+      if (backup_data.bankroll_transactions && backup_data.bankroll_transactions.length > 0) {
         importPromises.push(
           supabase.from('bankroll_transactions').insert(
             backup_data.bankroll_transactions.map((t: TransactionBackup) => ({ ...t, user_id: user.id }))

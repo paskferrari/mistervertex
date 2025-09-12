@@ -183,7 +183,7 @@ export function useTouch({
 // Hook per il feedback tattile
 export function useHapticFeedback() {
   const vibrate = useCallback((pattern: number | number[] = 10) => {
-    if ('vibrate' in navigator) {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate(pattern)
     }
   }, [])
@@ -207,20 +207,24 @@ export function useHapticFeedback() {
 // Hook per rilevare il tipo di dispositivo
 export function useDeviceType() {
   const isMobile = useCallback(() => {
+    if (typeof window === 'undefined') return false
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
     )
   }, [])
 
   const isIOS = useCallback(() => {
+    if (typeof window === 'undefined') return false
     return /iPad|iPhone|iPod/.test(navigator.userAgent)
   }, [])
 
   const isAndroid = useCallback(() => {
+    if (typeof window === 'undefined') return false
     return /Android/.test(navigator.userAgent)
   }, [])
 
   const isTouchDevice = useCallback(() => {
+    if (typeof window === 'undefined') return false
     return 'ontouchstart' in window || navigator.maxTouchPoints > 0
   }, [])
 

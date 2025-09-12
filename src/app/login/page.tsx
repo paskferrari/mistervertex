@@ -64,7 +64,7 @@ export default function LoginPage() {
         // Reindirizza alla pagina di benvenuto
         router.push('/welcome')
       }
-    } catch (err) {
+    } catch {
       setError('Errore di connessione. Riprova più tardi.')
     } finally {
       setIsLoading(false)
@@ -188,8 +188,8 @@ export default function LoginPage() {
             <div className="text-center">
               <h3 className="text-blue-400 font-medium mb-2">Accesso Riservato</h3>
               <p className="text-blue-300 text-sm">
-                L'accesso alla piattaforma è riservato agli utenti approvati da Mister Vertex.
-                Se non hai ancora un account, richiedi l'accesso dalla home page.
+                L&apos;accesso alla piattaforma è riservato agli utenti approvati da Mister Vertex.
+                Se non hai ancora un account, richiedi l&apos;accesso dalla home page.
               </p>
             </div>
           </div>
