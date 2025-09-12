@@ -6,7 +6,9 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { isValidEmail } from '@/lib/utils'
 import { Mail, TrendingUp, Users, Award, CheckCircle, AlertCircle, LogIn, HelpCircle } from 'lucide-react'
 import OnboardingGuide, { useOnboarding } from '@/components/OnboardingGuide'
-import Image from 'next/image'
+import LazyImage from '@/components/LazyImage'
+import { useHapticFeedback, useDeviceType } from '@/hooks/useTouch'
+import { useOfflineOperations } from '@/components/OfflineSupport'
 
 export default function LandingPage() {
   const [email, setEmail] = useState('')
@@ -16,6 +18,11 @@ export default function LandingPage() {
   
   // Onboarding state
   const { isOnboardingOpen, completeOnboarding, openOnboarding, closeOnboarding } = useOnboarding()
+  
+  // PWA enhancements
+  const { lightTap, success, error: errorVibration } = useHapticFeedback()
+  const { isMobile, isTouchDevice } = useDeviceType()
+  const { isOnline, saveEmailOffline } = useOfflineOperations()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,22 +42,39 @@ export default function LandingPage() {
     setIsSubmitting(true)
 
     try {
-      const { error } = await supabase
-        .from('email_requests')
-        .insert([{ email, status: 'pending' }])
+      if (isOnline) {
+        // Modalità online - invia direttamente al database
+        const { error } = await supabase
+          .from('email_requests')
+          .insert([{ email, status: 'pending' }])
 
-      if (error) {
-        if (error.code === '23505') {
-          setError('Questa email è già stata registrata')
+        if (error) {
+          if (error.code === '23505') {
+            setError('Questa email è già stata registrata')
+          } else {
+            setError('Errore durante la registrazione. Riprova più tardi.')
+          }
         } else {
-          setError('Errore durante la registrazione. Riprova più tardi.')
+          setIsSubmitted(true)
+          setEmail('')
+          if (isTouchDevice) success() // Feedback tattile per successo
         }
       } else {
-        setIsSubmitted(true)
-        setEmail('')
+        // Modalità offline - salva localmente
+        const saved = saveEmailOffline(email)
+        if (saved) {
+          setIsSubmitted(true)
+          setEmail('')
+          setError('Email salvata offline. Verrà inviata quando tornerai online.')
+          if (isTouchDevice) success() // Feedback tattile per successo
+        } else {
+          setError('Errore nel salvare l\'email offline. Riprova più tardi.')
+          if (isTouchDevice) errorVibration()
+        }
       }
     } catch (err) {
       setError('Errore di connessione. Riprova più tardi.')
+      if (isTouchDevice) errorVibration() // Feedback tattile per errore
     } finally {
       setIsSubmitting(false)
     }
@@ -62,21 +86,25 @@ export default function LandingPage() {
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="logo-container p-2 bg-white rounded-full shadow-lg border-2 border-purple-400/30">
-              <Image 
+            <div className="logo-container p-2 bg-white rounded-full shadow-lg border-2 border-purple-400/30 gpu-accelerated">
+              <LazyImage 
                 src="/logoVertex.png" 
                 alt="Logo Vertex" 
                 width={40} 
                 height={40}
                 className="drop-shadow-sm"
+                priority={true}
               />
             </div>
             <span className="text-2xl font-bold text-white">Mister Vertex</span>
           </div>
           <div className="flex items-center space-x-3">
             <button
-              onClick={openOnboarding}
-              className="flex items-center space-x-2 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white px-3 py-2 rounded-lg transition-all duration-200"
+              onClick={() => {
+                openOnboarding()
+                if (isTouchDevice) lightTap()
+              }}
+              className="flex items-center space-x-2 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white px-3 py-2 rounded-lg smooth-transition touch-optimized"
               title="Apri guida"
             >
               <HelpCircle className="h-4 w-4" />
