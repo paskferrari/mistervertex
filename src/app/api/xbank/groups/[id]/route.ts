@@ -3,9 +3,9 @@ import { supabase } from '@/lib/supabase'
 import jwt from 'jsonwebtoken'
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 // GET /api/xbank/groups/[id] - Recupera un gruppo specifico
@@ -13,6 +13,7 @@ export async function GET(
   request: NextRequest,
   { params }: RouteParams
 ) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const authHeader = request.headers.get('authorization')
@@ -44,7 +45,7 @@ export async function GET(
       return NextResponse.json({ error: 'Accesso negato. Richiesto abbonamento VIP.' }, { status: 403 })
     }
 
-    const groupId = params.id
+    const groupId = id
 
     // Recupera il gruppo con le statistiche
     const { data: group, error: groupError } = await supabase
@@ -111,6 +112,7 @@ export async function PUT(
   request: NextRequest,
   { params }: RouteParams
 ) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const authHeader = request.headers.get('authorization')
@@ -142,7 +144,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Accesso negato. Richiesto abbonamento VIP.' }, { status: 403 })
     }
 
-    const groupId = params.id
+    const groupId = id
     const { name, description, color } = await request.json()
 
     // Validazione
@@ -206,6 +208,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: RouteParams
 ) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const authHeader = request.headers.get('authorization')
@@ -237,7 +240,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Accesso negato. Richiesto abbonamento VIP.' }, { status: 403 })
     }
 
-    const groupId = params.id
+    const groupId = id
 
     // Verifica che il gruppo appartenga all'utente
     const { data: existingGroup, error: existingError } = await supabase

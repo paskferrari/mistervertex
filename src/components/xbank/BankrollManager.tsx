@@ -32,8 +32,12 @@ export default function BankrollManager({ currentBankroll, currency, onBankrollU
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   // Form state per nuova transazione
-  const [newTransaction, setNewTransaction] = useState({
-    transaction_type: 'deposit' as const,
+  const [newTransaction, setNewTransaction] = useState<{
+    transaction_type: 'bet' | 'win' | 'loss' | 'adjustment' | 'deposit' | 'withdrawal'
+    amount: number
+    description: string
+  }>({
+    transaction_type: 'deposit',
     amount: 0,
     description: ''
   })
@@ -334,7 +338,7 @@ export default function BankrollManager({ currentBankroll, currency, onBankrollU
                     value={newTransaction.transaction_type}
                     onChange={(e) => setNewTransaction({
                       ...newTransaction,
-                      transaction_type: e.target.value as any
+                      transaction_type: e.target.value as 'bet' | 'win' | 'loss' | 'adjustment' | 'deposit' | 'withdrawal'
                     })}
                     className="w-full px-3 py-2 bg-white border border-amber-300 rounded-xl text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
                     aria-describedby="transaction-type-help"

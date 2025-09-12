@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const { data: targetUser } = await supabase
       .from('profiles')
       .select('id, username')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (!targetUser) {
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     // Non permettere di seguire se stessi
-    if (params.id === user.id) {
+    if (id === user.id) {
       return NextResponse.json({ error: 'Non puoi seguire te stesso' }, { status: 400 })
     }
 
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       .from('user_follows')
       .select('id')
       .eq('follower_id', user.id)
-      .eq('following_id', params.id)
+      .eq('following_id', id)
       .single()
 
     if (existingFollow) {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         .from('user_follows')
         .delete()
         .eq('follower_id', user.id)
-        .eq('following_id', params.id)
+        .eq('following_id', id)
 
       if (error) {
         console.error('Errore nell\'unfollow:', error)
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         .from('user_follows')
         .insert({
           follower_id: user.id,
-          following_id: params.id
+          following_id: id
         })
 
       if (error) {

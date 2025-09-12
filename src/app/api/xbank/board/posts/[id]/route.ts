@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -24,7 +25,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const { data: post } = await supabase
       .from('board_posts')
       .select('id, user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single()
 
@@ -36,19 +37,19 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     await supabase
       .from('board_post_likes')
       .delete()
-      .eq('post_id', params.id)
+      .eq('post_id', id)
 
     // Elimina i commenti del post
     await supabase
       .from('board_post_comments')
       .delete()
-      .eq('post_id', params.id)
+      .eq('post_id', id)
 
     // Elimina il post
     const { error } = await supabase
       .from('board_posts')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
 
     if (error) {
@@ -63,7 +64,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -86,7 +88,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const { data: existingPost } = await supabase
       .from('board_posts')
       .select('id, user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single()
 
@@ -108,7 +110,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       const { data: currentPost } = await supabase
         .from('board_posts')
         .select('views_count')
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
       
       updates.views_count = (currentPost?.views_count || 0) + 1
@@ -120,7 +122,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const { data: post, error } = await supabase
       .from('board_posts')
       .update(updates)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .select()
       .single()

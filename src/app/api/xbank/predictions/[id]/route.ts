@@ -4,10 +4,10 @@ import { supabaseAdmin } from '@/lib/supabase'
 // PUT - Aggiorna un pronostico personalizzato
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const {
       title,
@@ -165,10 +165,10 @@ export async function PUT(
 // DELETE - Elimina un pronostico personalizzato
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
-    const { id } = params
 
     // Ottieni il token dall'header Authorization
     const authHeader = request.headers.get('authorization')

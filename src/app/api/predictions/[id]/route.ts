@@ -4,13 +4,14 @@ import { supabaseAdmin } from '@/lib/supabase'
 // GET - Recupera un pronostico specifico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const { data, error } = await supabaseAdmin
       .from('predictions')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) {
@@ -34,8 +35,9 @@ export async function GET(
 // PUT - Aggiorna un pronostico (solo admin)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const body = await request.json()
     const {
@@ -103,7 +105,7 @@ export async function PUT(
     const { data, error } = await supabaseAdmin
       .from('predictions')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -131,13 +133,14 @@ export async function PUT(
 // DELETE - Elimina un pronostico (solo admin)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const { error } = await supabaseAdmin
       .from('predictions')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (error) {
       console.error('Error deleting prediction:', error)

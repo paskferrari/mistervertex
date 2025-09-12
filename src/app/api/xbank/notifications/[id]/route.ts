@@ -4,7 +4,8 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     // Estrai il token JWT dall'header Authorization
     const authHeader = request.headers.get('authorization')
@@ -47,7 +48,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const { data: existingNotification } = await supabase
       .from('notifications')
       .select('id, user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single()
 
@@ -59,7 +60,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const { data: notification, error } = await supabase
       .from('notifications')
       .update({ read: read !== undefined ? read : true })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .select()
       .single()
@@ -76,7 +77,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     // Estrai il token JWT dall'header Authorization
     const authHeader = request.headers.get('authorization')
@@ -116,7 +118,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const { data: existingNotification } = await supabase
       .from('notifications')
       .select('id, user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single()
 
@@ -128,7 +130,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const { error } = await supabase
       .from('notifications')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
 
     if (error) {

@@ -3,10 +3,24 @@
 import { useState } from 'react'
 import { X, Plus, Trash2, Calendar, DollarSign, Target, TrendingUp } from 'lucide-react'
 
+interface Prediction {
+  title: string
+  description: string
+  sport: string
+  stake: number
+  confidence_level: number
+  prediction_type: 'single' | 'multiple'
+  event_date: string
+  notes: string
+  bets: Bet[]
+  total_odds: number
+  potential_win: number
+}
+
 interface PredictionFormProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (prediction: any) => void
+  onSubmit: (prediction: Prediction) => void
   currency: string
 }
 

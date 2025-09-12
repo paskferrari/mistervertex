@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { TrendingUp, Target, Play, Pause, RotateCcw, Plus, Trash2, Edit, Eye, Calendar, DollarSign } from 'lucide-react'
+import { Target, Play, Pause, RotateCcw, Plus, Trash2, Eye } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 interface ScalataStep {
@@ -54,7 +54,7 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
   const [newScalata, setNewScalata] = useState({
     name: '',
     description: '',
-    scalata_type: 'progressive' as const,
+    scalata_type: 'progressive' as Scalata['scalata_type'],
     initial_stake: 10,
     target_profit: 100,
     max_steps: 10,
@@ -151,23 +151,23 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
     }
   }
 
-  const addStepToScalata = async (scalataId: string, stepData: any) => {
-    try {
-      const response = await fetch(`/api/xbank/scalate/${scalataId}/steps`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(stepData)
-      })
-      
-      if (!response.ok) throw new Error('Errore nell\'aggiunta del passo')
-      
-      await loadScalate()
-      toast.success('Passo aggiunto alla scalata')
-    } catch (error) {
-      console.error('Errore:', error)
-      toast.error('Errore nell\'aggiunta del passo')
-    }
-  }
+  // const addStepToScalata = async (scalataId: string, stepData: { prediction_id: string; step_number: number; stake: number; odds: number; potential_win: number }) => {
+  //   try {
+  //     const response = await fetch(`/api/xbank/scalate/${scalataId}/steps`, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify(stepData)
+  //     })
+  //     
+  //     if (!response.ok) throw new Error('Errore nell\'aggiunta del passo')
+  //     
+  //     await loadScalate()
+  //     toast.success('Passo aggiunto alla scalata')
+  //   } catch (error) {
+  //     console.error('Errore:', error)
+  //     toast.error('Errore nell\'aggiunta del passo')
+  //   }
+  // }
 
   const getScalataTypeLabel = (type: string) => {
     switch (type) {
@@ -399,7 +399,7 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
                   <label className="block text-amber-800 text-sm font-medium mb-2">Tipo</label>
                   <select
                     value={newScalata.scalata_type}
-                    onChange={(e) => setNewScalata({ ...newScalata, scalata_type: e.target.value as any })}
+                    onChange={(e) => setNewScalata({ ...newScalata, scalata_type: e.target.value as Scalata['scalata_type'] })}
                     className="w-full bg-amber-50 border border-amber-300 text-amber-900 px-3 py-2 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   >
                     <option value="progressive">Progressiva</option>

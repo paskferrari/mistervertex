@@ -6,12 +6,43 @@ import { supabase } from '@/lib/supabase'
 import { toast } from 'react-hot-toast'
 
 interface BackupData {
-  predictions: any[]
-  groups: any[]
-  scalate: any[]
-  board_posts: any[]
-  bankroll_transactions: any[]
-  settings: any
+  predictions: Array<{
+    id: string
+    title: string
+    description: string
+    sport: string
+    prediction_type: string
+    status: string
+    created_at: string
+  }>
+  groups: Array<{
+    id: string
+    name: string
+    description: string
+    created_at: string
+  }>
+  scalate: Array<{
+    id: string
+    name: string
+    scalata_type: string
+    status: string
+    created_at: string
+  }>
+  board_posts: Array<{
+    id: string
+    title: string
+    content: string
+    post_type: string
+    created_at: string
+  }>
+  bankroll_transactions: Array<{
+    id: string
+    transaction_type: string
+    amount: number
+    description: string
+    created_at: string
+  }>
+  settings: Record<string, unknown>
   exported_at: string
   version: string
 }

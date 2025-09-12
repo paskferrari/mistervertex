@@ -12,7 +12,7 @@ interface Notification {
   type: 'info' | 'success' | 'warning' | 'error' | 'prediction' | 'group' | 'scalata'
   read: boolean
   created_at: string
-  data?: any
+  data?: Record<string, unknown>
 }
 
 interface NotificationCenterProps {

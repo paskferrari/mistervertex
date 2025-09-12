@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const { data: post } = await supabase
       .from('board_posts')
       .select('id, user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (!post) {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const { data: existingLike } = await supabase
       .from('board_post_likes')
       .select('id')
-      .eq('post_id', params.id)
+      .eq('post_id', id)
       .eq('user_id', user.id)
       .single()
 
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       const { error } = await supabase
         .from('board_post_likes')
         .delete()
-        .eq('post_id', params.id)
+        .eq('post_id', id)
         .eq('user_id', user.id)
 
       if (error) {
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       const { error } = await supabase
         .from('board_post_likes')
         .insert({
-          post_id: params.id,
+          post_id: id,
           user_id: user.id
         })
 

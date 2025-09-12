@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
           created_at
         )
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single()
 
@@ -59,7 +60,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -82,7 +84,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const { data: existingScalata } = await supabase
       .from('scalate')
       .select('id, user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single()
 
@@ -108,7 +110,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const { data: scalata, error } = await supabase
       .from('scalate')
       .update(updates)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .select()
       .single()
@@ -125,7 +127,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -148,7 +151,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const { data: existingScalata } = await supabase
       .from('scalate')
       .select('id, user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single()
 
@@ -160,13 +163,13 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     await supabase
       .from('scalata_steps')
       .delete()
-      .eq('scalata_id', params.id)
+      .eq('scalata_id', id)
 
     // Elimina la scalata
     const { error } = await supabase
       .from('scalate')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
 
     if (error) {

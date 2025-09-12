@@ -3,9 +3,9 @@ import { supabase } from '@/lib/supabase'
 import jwt from 'jsonwebtoken'
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 // GET /api/xbank/groups/[id]/predictions - Recupera i pronostici di un gruppo
@@ -13,6 +13,7 @@ export async function GET(
   request: NextRequest,
   { params }: RouteParams
 ) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const authHeader = request.headers.get('authorization')
@@ -44,7 +45,7 @@ export async function GET(
       return NextResponse.json({ error: 'Accesso negato. Richiesto abbonamento VIP.' }, { status: 403 })
     }
 
-    const groupId = params.id
+    const groupId = id
 
     // Verifica che il gruppo appartenga all'utente
     const { data: groupData, error: groupError } = await supabase
@@ -103,7 +104,8 @@ export async function POST(
   request: NextRequest,
   { params }: RouteParams
 ) {
-  try {
+  const { id } = await params
+  try{
     // Verifica autenticazione
     const authHeader = request.headers.get('authorization')
     const token = authHeader?.replace('Bearer ', '') || request.cookies.get('auth-token')?.value
@@ -134,7 +136,7 @@ export async function POST(
       return NextResponse.json({ error: 'Accesso negato. Richiesto abbonamento VIP.' }, { status: 403 })
     }
 
-    const groupId = params.id
+    const groupId = id
     const { predictionIds } = await request.json()
 
     if (!predictionIds || !Array.isArray(predictionIds)) {
@@ -191,7 +193,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: RouteParams
 ) {
-  try {
+  const { id } = await params
+  try{
     // Verifica autenticazione
     const authHeader = request.headers.get('authorization')
     const token = authHeader?.replace('Bearer ', '') || request.cookies.get('auth-token')?.value
@@ -222,7 +225,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Accesso negato. Richiesto abbonamento VIP.' }, { status: 403 })
     }
 
-    const groupId = params.id
+    const groupId = id
     const { predictionIds } = await request.json()
 
     if (!predictionIds || !Array.isArray(predictionIds)) {

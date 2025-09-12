@@ -53,12 +53,20 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
   const [showPostModal, setShowPostModal] = useState(false)
 
   // Form state per nuovo post
-  const [newPost, setNewPost] = useState({
+  const [newPost, setNewPost] = useState<{
+    title: string
+    content: string
+    post_type: 'prediction' | 'analysis' | 'tip' | 'discussion'
+    visibility: 'public' | 'followers' | 'vip'
+    tags: string[]
+    prediction_id: string
+    custom_prediction_id: string
+  }>({
     title: '',
     content: '',
-    post_type: 'discussion' as const,
-    visibility: 'public' as const,
-    tags: [] as string[],
+    post_type: 'discussion',
+    visibility: 'public',
+    tags: [],
     prediction_id: '',
     custom_prediction_id: ''
   })
@@ -553,7 +561,7 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
                   <label className="block text-gray-300 text-sm font-medium mb-2">Tipo</label>
                   <select
                     value={newPost.post_type}
-                    onChange={(e) => setNewPost({ ...newPost, post_type: e.target.value as any })}
+                    onChange={(e) => setNewPost({ ...newPost, post_type: e.target.value as 'prediction' | 'analysis' | 'tip' | 'discussion' })}
                     className="w-full bg-gray-700 border border-gray-600 text-white px-3 py-2 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
                     <option value="discussion">Discussione</option>
@@ -567,7 +575,7 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
                   <label className="block text-gray-300 text-sm font-medium mb-2">Visibilità</label>
                   <select
                     value={newPost.visibility}
-                    onChange={(e) => setNewPost({ ...newPost, visibility: e.target.value as any })}
+                    onChange={(e) => setNewPost({ ...newPost, visibility: e.target.value as 'public' | 'followers' | 'vip' })}
                     className="w-full bg-gray-700 border border-gray-600 text-white px-3 py-2 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
                     <option value="public">Pubblico</option>

@@ -4,8 +4,9 @@ import { supabaseAdmin } from '@/lib/supabase'
 // PUT - Aggiorna un elemento del wallet (stake, note, status)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const body = await request.json()
     const { stake_amount, notes, status, result } = body
@@ -41,7 +42,7 @@ export async function PUT(
     const { data, error } = await supabaseAdmin
       .from('wallet')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', id)
       .select(`
         *,
         prediction:predictions(*)
@@ -72,13 +73,14 @@ export async function PUT(
 // DELETE - Rimuove un pronostico dal wallet
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   try {
     const { error } = await supabaseAdmin
       .from('wallet')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (error) {
       console.error('Error deleting wallet item:', error)

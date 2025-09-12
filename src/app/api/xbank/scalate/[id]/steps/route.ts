@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const { data: scalata } = await supabase
       .from('scalate')
       .select('id, user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single()
 
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const { data: steps, error } = await supabase
       .from('scalata_steps')
       .select('*')
-      .eq('scalata_id', params.id)
+      .eq('scalata_id', id)
       .order('sequence', { ascending: true })
 
     if (error) {
@@ -51,7 +52,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     // Verifica autenticazione
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const { data: scalata } = await supabase
       .from('scalate')
       .select('id, user_id, current_step, max_steps, scalata_type, settings, current_bankroll')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', user.id)
       .single()
 
@@ -125,7 +127,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         const { data: previousSteps } = await supabase
           .from('scalata_steps')
           .select('stake')
-          .eq('scalata_id', params.id)
+          .eq('scalata_id', id)
           .order('sequence', { ascending: false })
           .limit(2)
         
@@ -156,7 +158,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const { data: step, error } = await supabase
       .from('scalata_steps')
       .insert({
-        scalata_id: params.id,
+        scalata_id: id,
         sequence: scalata.current_step + 1,
         title,
         odds,
@@ -180,7 +182,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         current_step: scalata.current_step + 1,
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
 
     return NextResponse.json(step, { status: 201 })
   } catch (error) {

@@ -1,26 +1,36 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, Calendar, TrendingUp, Target, Edit, Trash2, Eye, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Search, Filter, Target, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import PredictionForm from './PredictionForm'
 
+interface Bet {
+  market: string
+  selection: string
+  odds: number
+  stake?: number
+}
+
 interface Prediction {
-  id: string
+  id?: string
   title: string
   description: string
   sport: string
-  stake: number
-  total_odds: number
+  league?: string
+  match?: string
+  prediction_type: 'single' | 'multiple'
+  total_stake?: number
   potential_win: number
   confidence_level: number
-  prediction_type: 'single' | 'multiple'
-  status: 'pending' | 'won' | 'lost' | 'void'
+  status?: 'pending' | 'won' | 'lost' | 'void'
   event_date: string
-  created_at: string
+  created_at?: string
   notes?: string
-  bets: any[]
+  bets: Bet[]
   result_profit?: number
+  stake?: number
+  total_odds?: number
 }
 
 interface PredictionsListProps {
@@ -86,7 +96,7 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
     }
   }
 
-  const handleCreatePrediction = async (predictionData: any) => {
+  const handleCreatePrediction = async (predictionData: Prediction) => {
     try {
       // Ottieni il token di sessione
       const { data: { session } } = await supabase.auth.getSession()
@@ -106,7 +116,7 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
         bookmaker: predictionData.sport || 'Sconosciuto',
         market_type: predictionData.prediction_type || 'single',
         group_id: null,
-        tags: predictionData.bets?.map((bet: any) => bet.market).filter(Boolean) || []
+        tags: predictionData.bets?.map((bet: Bet) => bet.market).filter(Boolean) || []
       }
 
       // Validazione aggiuntiva lato client
@@ -192,7 +202,9 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
   }
 
   const markAsWon = (prediction: Prediction) => {
-    const profit = prediction.potential_win - prediction.stake
+    if (!prediction.id) return
+    const stake = prediction.stake || prediction.total_stake || 0
+    const profit = prediction.potential_win - stake
     handleUpdatePrediction(prediction.id, {
       status: 'won',
       result_profit: profit
@@ -200,13 +212,16 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
   }
 
   const markAsLost = (prediction: Prediction) => {
+    if (!prediction.id) return
+    const stake = prediction.stake || prediction.total_stake || 0
     handleUpdatePrediction(prediction.id, {
       status: 'lost',
-      result_profit: -prediction.stake
+      result_profit: -stake
     })
   }
 
   const markAsVoid = (prediction: Prediction) => {
+    if (!prediction.id) return
     handleUpdatePrediction(prediction.id, {
       status: 'void',
       result_profit: 0
@@ -411,12 +426,12 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    {getStatusIcon(prediction.status)}
+                    {getStatusIcon(prediction.status || 'pending')}
                     <h3 className="text-lg font-semibold text-amber-900">{prediction.title}</h3>
                     <span className="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded-full font-medium">
                       {prediction.sport}
                     </span>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(prediction.status)}`}>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(prediction.status || 'pending')}`}>
                       {statusOptions.find(s => s.value === prediction.status)?.label}
                     </span>
                   </div>
@@ -452,7 +467,7 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
                     </>
                   )}
                   <button
-                    onClick={() => handleDeletePrediction(prediction.id)}
+                    onClick={() => prediction.id && handleDeletePrediction(prediction.id)}
                     className="text-red-600 hover:text-red-700 transition-colors p-1 rounded-lg hover:bg-red-100"
                     title="Elimina"
                   >
