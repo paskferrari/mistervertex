@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, safeSupabaseAuth } from '@/lib/supabase'
 import { TrendingUp, Star, Trophy, Crown, Users, ArrowRight } from 'lucide-react'
+import Image from 'next/image'
 
 interface UserData {
   id: string
@@ -129,9 +130,17 @@ export default function WelcomePage() {
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-center">
-          <div className="flex items-center space-x-2">
-            <TrendingUp className="h-8 w-8 text-purple-400" />
-            <span className="text-2xl font-bold text-white">Mister Vertex</span>
+          <div className="flex items-center space-x-3">
+            <div className="logo-container p-2 bg-white rounded-full shadow-lg border-2 border-purple-400/30">
+              <Image 
+                src="/logoVertex.png" 
+                alt="Logo Vertex" 
+                width={48} 
+                height={48}
+                className="drop-shadow-sm"
+              />
+            </div>
+            <span className="text-3xl font-bold text-white">Mister Vertex</span>
           </div>
         </div>
       </header>
@@ -141,6 +150,24 @@ export default function WelcomePage() {
         <div className="max-w-2xl mx-auto text-center">
           {/* Welcome Message */}
           <div className="mb-12">
+            {/* Welcome Avatar */}
+            <div className="flex justify-center mb-8">
+              <div className="relative">
+                <div className="p-4 bg-white rounded-full shadow-2xl border-4 border-green-400/50">
+                  <Image 
+                    src="/avatarOnBoarding.png" 
+                    alt="Avatar Welcome" 
+                    width={100} 
+                    height={100}
+                    className="rounded-full object-cover drop-shadow-lg"
+                  />
+                </div>
+                <div className="avatar-container absolute -top-2 -right-2 p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full shadow-lg">
+                  <Trophy className="h-5 w-5 text-white" />
+                </div>
+              </div>
+            </div>
+            
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Benvenuto!
             </h1>
@@ -196,11 +223,25 @@ export default function WelcomePage() {
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8 mt-16">
-        <div className="text-center text-gray-400">
-          <p>&copy; 2024 Mister Vertex. Tutti i diritti riservati.</p>
-          <p className="mt-2 text-sm">
-            Gioca responsabilmente. Il gioco può causare dipendenza.
-          </p>
+        <div className="text-center">
+          {/* Footer Logo */}
+          <div className="flex justify-center mb-4">
+            <div className="logo-container p-2 bg-white/10 rounded-full border border-white/20">
+              <Image 
+                src="/logoVertex.png" 
+                alt="Logo Vertex" 
+                width={32} 
+                height={32}
+                className="drop-shadow-sm"
+              />
+            </div>
+          </div>
+          <div className="text-gray-400">
+            <p>&copy; 2024 Mister Vertex. Tutti i diritti riservati.</p>
+            <p className="mt-2 text-sm">
+              Gioca responsabilmente. Il gioco può causare dipendenza.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, safeSupabaseAuth } from '@/lib/supabase'
 import { TrendingUp, Star, Trophy, Crown, LogOut, Calendar, Target, TrendingDown, User, Copy, Wallet, Zap } from 'lucide-react'
+import Image from 'next/image'
 
 interface UserData {
   id: string
@@ -579,9 +580,15 @@ export default function UserDashboard() {
             
             <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6">
               <div className="flex items-center space-x-4 mb-6">
-                <div className={`p-4 rounded-full ${roleInfo.bgColor} ${roleInfo.borderColor} border`}>
-                  <IconComponent className={`h-8 w-8 ${roleInfo.color}`} />
-                </div>
+                <div className="bg-white p-3 rounded-full shadow-xl border-4 border-gray-200">
+                    <Image 
+                     src="/avatarOnBoarding.png" 
+                     alt="Avatar utente" 
+                     width={72} 
+                     height={72} 
+                     className="rounded-full object-cover drop-shadow-lg"
+                    />
+                  </div>
                 <div>
                   <h2 className="text-xl font-semibold text-white">{user.email}</h2>
                   <p className={`${roleInfo.color} font-medium`}>{roleInfo.title}</p>

@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Menu, X, TrendingUp, BarChart3, Wallet, Home, User, Shield, Users } from 'lucide-react'
+import Image from 'next/image'
 
 interface NavigationItem {
   name: string
@@ -209,14 +210,21 @@ export default function Navigation() {
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-3 group">
                 <div className={`
-                  ${isScrolled ? 'w-8 h-8' : 'w-10 h-10'} 
-                  bg-gradient-to-br ${currentPalette.logoGradient} 
+                  ${isScrolled ? 'w-12 h-12' : 'w-14 h-14'} 
+                  bg-white 
                   rounded-xl flex items-center justify-center 
                   shadow-lg group-hover:scale-110 
                   transition-all duration-300 ease-out
                   group-hover:shadow-xl
+                  border-2 border-white/20
                 `}>
-                  <TrendingUp className={`${isScrolled ? 'w-4 h-4' : 'w-6 h-6'} text-white transition-all duration-300`} />
+                  <Image 
+                    src="/logoVertex.png" 
+                    alt="Logo Vertex" 
+                    width={isScrolled ? 32 : 40} 
+                    height={isScrolled ? 32 : 40} 
+                    className="transition-all duration-300 drop-shadow-sm"
+                  />
                 </div>
                 <span className={`
                   ${isScrolled ? 'text-lg' : 'text-xl'} 

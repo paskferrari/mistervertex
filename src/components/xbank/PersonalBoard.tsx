@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { MessageSquare, Heart, Share2, Eye, Plus, Edit, Trash2, Filter, Search, Calendar, Trophy, TrendingUp } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import Image from 'next/image'
 
 interface BoardPost {
   id: string
@@ -398,10 +399,26 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
                 {/* Header Post */}
                 <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-3">
                   <div className="flex items-center space-x-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-bold text-sm">
-                      {post.author.username.charAt(0).toUpperCase()}
-                    </span>
+                  <div className="w-10 h-10 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {post.author.avatar_url ? (
+                      <Image 
+                        src={post.author.avatar_url} 
+                        alt={`Avatar di ${post.author.username}`} 
+                        width={40} 
+                        height={40} 
+                        className="rounded-full object-cover"
+                      />
+                    ) : (
+                       <div className="bg-white rounded-full p-1 shadow-lg border-2 border-gray-200">
+                         <Image 
+                           src="/avatarOnBoarding.png" 
+                           alt="Avatar predefinito" 
+                           width={36} 
+                           height={36} 
+                           className="rounded-full object-cover drop-shadow-sm"
+                         />
+                       </div>
+                      )}
                   </div>
                   
                   <div className="min-w-0 flex-1">

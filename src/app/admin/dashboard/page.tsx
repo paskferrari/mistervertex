@@ -15,6 +15,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react'
+import Image from 'next/image'
 
 interface EmailRequest {
   id: string
@@ -173,8 +174,16 @@ export default function AdminDashboard() {
       <header className="bg-white/10 backdrop-blur-sm border-b border-white/20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-8 w-8 text-purple-400" />
+            <div className="flex items-center space-x-3">
+              <div className="logo-container p-2 bg-white rounded-full shadow-lg border-2 border-purple-400/30">
+                <Image 
+                  src="/logoVertex.png" 
+                  alt="Logo Vertex" 
+                  width={40} 
+                  height={40}
+                  className="drop-shadow-sm"
+                />
+              </div>
               <span className="text-2xl font-bold text-white">Mister Vertex</span>
               <span className="text-sm text-gray-400 ml-4">Admin Dashboard</span>
             </div>

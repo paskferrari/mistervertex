@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { supabase, safeSupabaseAuth } from '@/lib/supabase'
 import { isValidEmail } from '@/lib/utils'
 import { TrendingUp, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -93,8 +94,14 @@ export default function LoginPage() {
             {/* Logo and Title */}
             <div className="text-center mb-8">
               <div className="flex items-center justify-center mb-4">
-                <div className="p-3 bg-purple-500/20 rounded-full border border-purple-500/30">
-                  <TrendingUp className="h-8 w-8 text-purple-400" />
+                <div className="p-4 bg-white rounded-full border-2 border-purple-500/30 shadow-lg">
+                  <Image 
+                    src="/logoVertex.png" 
+                    alt="Logo Vertex" 
+                    width={48} 
+                    height={48}
+                    className="drop-shadow-sm"
+                  />
                 </div>
               </div>
               <h1 className="text-2xl font-bold text-white mb-2">Accedi alla Piattaforma</h1>
@@ -191,11 +198,25 @@ export default function LoginPage() {
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8">
-        <div className="text-center text-gray-400">
-          <p>&copy; 2024 Mister Vertex. Tutti i diritti riservati.</p>
-          <p className="mt-2 text-sm">
-            Gioca responsabilmente. Il gioco può causare dipendenza.
-          </p>
+        <div className="text-center">
+          {/* Footer Logo */}
+          <div className="flex justify-center mb-4">
+            <div className="logo-container p-2 bg-white/10 rounded-full border border-white/20">
+               <Image 
+                 src="/logoVertex.png" 
+                 alt="Logo Vertex" 
+                 width={32} 
+                 height={32}
+                 className="drop-shadow-sm"
+               />
+            </div>
+          </div>
+          <div className="text-gray-400">
+            <p>&copy; 2024 Mister Vertex. Tutti i diritti riservati.</p>
+            <p className="mt-2 text-sm">
+              Gioca responsabilmente. Il gioco può causare dipendenza.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

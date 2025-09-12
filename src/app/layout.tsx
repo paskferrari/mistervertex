@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import "../styles/xbank-mobile.css"
 import Navigation from "../components/Navigation"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -27,6 +28,10 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover',
+  themeColor: '#1e40af',
 }
 
 export default function RootLayout({

@@ -4,13 +4,18 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { isValidEmail } from '@/lib/utils'
-import { Mail, TrendingUp, Users, Award, CheckCircle, AlertCircle, LogIn } from 'lucide-react'
+import { Mail, TrendingUp, Users, Award, CheckCircle, AlertCircle, LogIn, HelpCircle } from 'lucide-react'
+import OnboardingGuide, { useOnboarding } from '@/components/OnboardingGuide'
+import Image from 'next/image'
 
 export default function LandingPage() {
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
+  
+  // Onboarding state
+  const { isOnboardingOpen, completeOnboarding, openOnboarding, closeOnboarding } = useOnboarding()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,23 +61,59 @@ export default function LandingPage() {
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <TrendingUp className="h-8 w-8 text-purple-400" />
+          <div className="flex items-center space-x-3">
+            <div className="logo-container p-2 bg-white rounded-full shadow-lg border-2 border-purple-400/30">
+              <Image 
+                src="/logoVertex.png" 
+                alt="Logo Vertex" 
+                width={40} 
+                height={40}
+                className="drop-shadow-sm"
+              />
+            </div>
             <span className="text-2xl font-bold text-white">Mister Vertex</span>
           </div>
-          <Link 
-            href="/login"
-            className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-4 py-2 rounded-lg transition-all duration-200"
-          >
-            <LogIn className="h-4 w-4" />
-            <span>Accedi</span>
-          </Link>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={openOnboarding}
+              className="flex items-center space-x-2 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white px-3 py-2 rounded-lg transition-all duration-200"
+              title="Apri guida"
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Guida</span>
+            </button>
+            <Link 
+              href="/login"
+              className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-4 py-2 rounded-lg transition-all duration-200"
+            >
+              <LogIn className="h-4 w-4" />
+              <span>Accedi</span>
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto text-center">
+          {/* Hero Avatar */}
+          <div className="flex justify-center mb-8">
+            <div className="relative">
+              <div className="avatar-container p-4 bg-white rounded-full shadow-2xl border-4 border-purple-400/30">
+                <Image 
+                  src="/avatarOnBoarding.png" 
+                  alt="Avatar Mister Vertex" 
+                  width={120} 
+                  height={120}
+                  className="rounded-full object-cover drop-shadow-lg"
+                />
+              </div>
+              <div className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg">
+                <TrendingUp className="h-6 w-6 text-white" />
+              </div>
+            </div>
+          </div>
+          
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
             La Community di
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
@@ -182,13 +223,34 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8 mt-16">
-        <div className="text-center text-gray-400">
-          <p>&copy; 2024 Mister Vertex. Tutti i diritti riservati.</p>
-          <p className="mt-2 text-sm">
-            Gioca responsabilmente. Il gioco può causare dipendenza.
-          </p>
+        <div className="text-center">
+          {/* Footer Logo */}
+          <div className="flex justify-center mb-4">
+            <div className="logo-container p-2 bg-white/10 rounded-full border border-white/20">
+              <Image 
+                src="/logoVertex.png" 
+                alt="Logo Vertex" 
+                width={32} 
+                height={32}
+                className="drop-shadow-sm"
+              />
+            </div>
+          </div>
+          <div className="text-gray-400">
+            <p>&copy; 2024 Mister Vertex. Tutti i diritti riservati.</p>
+            <p className="mt-2 text-sm">
+              Gioca responsabilmente. Il gioco può causare dipendenza.
+            </p>
+          </div>
         </div>
       </footer>
+      
+      {/* Onboarding Guide */}
+      <OnboardingGuide 
+        isOpen={isOnboardingOpen}
+        onClose={closeOnboarding}
+        onComplete={completeOnboarding}
+      />
     </div>
   )
 }

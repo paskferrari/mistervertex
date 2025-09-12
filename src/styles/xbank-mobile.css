@@ -1,0 +1,223 @@
+/* X-BANK Mobile Optimizations */
+
+/* Smooth scrolling per la navigazione mobile */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Touch-friendly interactions */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Miglioramenti per dispositivi mobile */
+@media (max-width: 640px) {
+  /* Ottimizzazioni per logo e avatar */
+  .logo-container {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  .logo-container img {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .avatar-container {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  
+  .avatar-container img {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  /* Footer logo più piccolo su mobile */
+  footer .logo-container {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  footer .logo-container img {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  
+  /* Aumenta l'area di tocco per i pulsanti */
+  button, 
+  [role="tab"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Migliora la leggibilità del testo */
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  /* Ottimizza i form per mobile */
+  input[type="number"],
+  input[type="text"],
+  select {
+    font-size: 16px; /* Previene lo zoom su iOS */
+    border-radius: 12px;
+  }
+  
+  /* Migliora la navigazione con tab */
+  nav[role="tablist"] {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Ottimizza le card per touch */
+  [role="article"] {
+    min-height: 120px;
+    cursor: pointer;
+  }
+  
+  /* Migliora la visibilità dei focus states */
+  button:focus,
+  input:focus,
+  select:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+}
+
+/* Animazioni ottimizzate per mobile */
+@media (prefers-reduced-motion: no-preference) {
+  .hover\:scale-105:hover {
+    transform: scale(1.05);
+  }
+  
+  .active\:scale-95:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Riduci le animazioni per chi preferisce meno movimento */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .hover\:scale-105:hover,
+  .active\:scale-95:active {
+    transform: none;
+  }
+}
+
+/* Ottimizzazioni per schermi ad alta densità */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Migliora la nitidezza delle icone */
+  svg {
+    shape-rendering: geometricPrecision;
+  }
+}
+
+/* Migliora la gestione del viewport su dispositivi mobili */
+@supports (height: 100dvh) {
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+}
+
+/* Ottimizzazioni per la dark mode (se supportata) */
+@media (prefers-color-scheme: dark) {
+  /* Mantieni la palette blu anche in dark mode */
+  .bg-gradient-to-br {
+    background-image: linear-gradient(to bottom right, 
+      rgb(30 58 138), 
+      rgb(67 56 202), 
+      rgb(51 65 85)
+    );
+  }
+}
+
+/* Migliora l'accessibilità per utenti con problemi di vista */
+@media (prefers-contrast: high) {
+  button,
+  input,
+  select {
+    border-width: 2px;
+  }
+  
+  .border-blue-200 {
+    border-color: rgb(37 99 235);
+  }
+  
+  .border-blue-300 {
+    border-color: rgb(29 78 216);
+  }
+}
+
+/* Ottimizzazioni per orientamento landscape su mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .py-8 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 1rem;
+  }
+  
+  header {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* Migliora la gestione dei contenuti lunghi */
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(147 197 253) transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 4px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background-color: rgb(147 197 253);
+  border-radius: 2px;
+}
+
+/* Ottimizza le transizioni per performance mobile */
+.transition-all {
+  transition-property: transform, box-shadow, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Migliora la leggibilità su schermi piccoli */
+@media (max-width: 375px) {
+  .text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+  
+  .text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  .px-2 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}

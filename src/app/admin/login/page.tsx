@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, safeSupabaseAuth } from '@/lib/supabase'
 import { Lock, Mail, TrendingUp } from 'lucide-react'
+import Image from 'next/image'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -52,8 +53,16 @@ export default function AdminLogin() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <TrendingUp className="h-10 w-10 text-purple-400" />
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="p-2 bg-white rounded-full shadow-lg">
+              <Image 
+                src="/logoVertex.png" 
+                alt="Logo Vertex" 
+                width={56} 
+                height={56}
+                className="drop-shadow-sm"
+              />
+            </div>
             <span className="text-3xl font-bold text-white">Mister Vertex</span>
           </div>
           <h1 className="text-2xl font-semibold text-white">Admin Login</h1>
