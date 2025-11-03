@@ -27,10 +27,10 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
       id: 'welcome',
       title: 'Benvenuto in Mister Vertex',
       description: 'La community di betting più esclusiva d\'Italia',
-      icon: <TrendingUp className="h-8 w-8 text-purple-400" />,
+      icon: <TrendingUp className="h-8 w-8 text-accent-gold" />,
       content: (
         <div className="text-center space-y-4">
-          <div className="bg-white rounded-full p-3 w-24 h-24 mx-auto flex items-center justify-center shadow-xl border-4 border-purple-200">
+          <div className="bg-white rounded-full p-3 w-24 h-24 mx-auto flex items-center justify-center shadow-xl border border-accent-gold-fade">
               <Image 
                src="/avatarOnBoarding.png" 
                alt="Avatar OnBoarding" 
@@ -44,8 +44,8 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
             Sei entrato nella community di betting più esclusiva d&apos;Italia. Qui troverai pronostici accurati, 
             analisi approfondite e una community di scommettitori professionali.
           </p>
-          <div className="bg-purple-500/20 border border-purple-500/30 rounded-lg p-4">
-            <p className="text-purple-300 text-sm">
+          <div className="bg-accent-gold-weak border border-accent-gold-fade rounded-lg p-4">
+            <p className="text-secondary text-sm">
               💡 <strong>Suggerimento:</strong> Questa guida ti aiuterà a orientarti nella piattaforma.
               Puoi saltarla in qualsiasi momento o riaprirla dall&apos;icona di aiuto.
             </p>
@@ -57,27 +57,27 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
       id: 'features',
       title: 'Funzionalità Principali',
       description: 'Scopri cosa puoi fare sulla piattaforma',
-      icon: <Award className="h-8 w-8 text-purple-400" />,
+      icon: <Award className="h-8 w-8 text-accent-gold" />,
       content: (
         <div className="space-y-6">
           <h3 className="text-xl font-bold text-white text-center">Cosa Puoi Fare</h3>
           <div className="grid gap-4">
             <div className="flex items-start space-x-3 bg-white/5 rounded-lg p-4">
-              <TrendingUp className="h-6 w-6 text-purple-400 mt-1 flex-shrink-0" />
+              <TrendingUp className="h-6 w-6 text-accent-gold mt-1 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-white">Pronostici Accurati</h4>
                 <p className="text-gray-300 text-sm">Accedi a pronostici basati su analisi statistiche avanzate</p>
               </div>
             </div>
             <div className="flex items-start space-x-3 bg-white/5 rounded-lg p-4">
-              <Users className="h-6 w-6 text-purple-400 mt-1 flex-shrink-0" />
+              <Users className="h-6 w-6 text-accent-gold mt-1 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-white">Community Esclusiva</h4>
                 <p className="text-gray-300 text-sm">Interagisci con altri scommettitori professionali</p>
               </div>
             </div>
             <div className="flex items-start space-x-3 bg-white/5 rounded-lg p-4">
-              <Award className="h-6 w-6 text-purple-400 mt-1 flex-shrink-0" />
+              <Award className="h-6 w-6 text-accent-gold mt-1 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-white">Livelli Premium</h4>
                 <p className="text-gray-300 text-sm">Diversi livelli di abbonamento per ogni esigenza</p>
@@ -91,32 +91,32 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
       id: 'access',
       title: 'Come Accedere',
       description: 'Richiedi l\'accesso o effettua il login',
-      icon: <LogIn className="h-8 w-8 text-purple-400" />,
+      icon: <LogIn className="h-8 w-8 text-accent-gold" />,
       content: (
         <div className="space-y-6">
           <h3 className="text-xl font-bold text-white text-center">Inizia Subito</h3>
           <div className="space-y-4">
-            <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-lg p-4">
+            <div className="bg-white/5 border border-white/20 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
-                <Mail className="h-6 w-6 text-purple-400" />
+                <Mail className="h-6 w-6 text-accent-gold" />
                 <h4 className="font-semibold text-white">Nuovo Utente?</h4>
               </div>
               <p className="text-gray-300 text-sm mb-3">
                 Inserisci la tua email nel modulo qui sotto per richiedere l&apos;accesso esclusivo alla community.
               </p>
-              <div className="text-xs text-purple-300">
+              <div className="text-xs text-secondary">
                 ⏱️ Riceverai le credenziali entro 24 ore
               </div>
             </div>
-            <div className="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-lg p-4">
+            <div className="bg-white/5 border border-white/20 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
-                <LogIn className="h-6 w-6 text-blue-400" />
+                <LogIn className="h-6 w-6 text-accent-gold" />
                 <h4 className="font-semibold text-white">Hai già un Account?</h4>
               </div>
               <p className="text-gray-300 text-sm mb-3">
                 Clicca sul pulsante &quot;Accedi&quot; in alto a destra per entrare nella tua area riservata.
               </p>
-              <div className="text-xs text-blue-300">
+              <div className="text-xs text-secondary">
                 🔐 Accesso sicuro e protetto
               </div>
             </div>
@@ -128,7 +128,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
       id: 'complete',
       title: 'Sei Pronto!',
       description: 'Inizia la tua esperienza con Mister Vertex',
-      icon: <Award className="h-8 w-8 text-purple-400" />,
+      icon: <Award className="h-8 w-8 text-accent-gold" />,
       content: (
         <div className="text-center space-y-6">
           <div className="bg-white rounded-full p-3 w-24 h-24 mx-auto flex items-center justify-center shadow-xl border-4 border-green-200">
@@ -219,7 +219,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
       />
       
       {/* Modal */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 border border-white/20 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="relative bg-primary border border-white/20 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center space-x-3">
@@ -245,7 +245,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
           </div>
           <div className="w-full bg-white/10 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full transition-all duration-300 ease-out"
+              className="bg-accent-gold-weak h-2 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
             />
           </div>
@@ -280,7 +280,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
             {isLastStep ? (
               <button
                 onClick={handleComplete}
-                className="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium"
+                className="lux-cta px-6 py-2 rounded-lg font-medium"
               >
                 <Award className="h-4 w-4" />
                 <span>Inizia!</span>
@@ -288,7 +288,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
             ) : (
               <button
                 onClick={nextStep}
-                className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium"
+                className="lux-cta px-6 py-2 rounded-lg font-medium"
               >
                 <span>Avanti</span>
                 <ChevronRight className="h-4 w-4" />

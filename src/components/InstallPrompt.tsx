@@ -46,8 +46,8 @@ export default function InstallPrompt() {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-        {/* Header con gradiente */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white">
+        {/* Header coerente con tema luxury */}
+        <div className="bg-primary p-6 text-white">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -90,8 +90,8 @@ export default function InstallPrompt() {
             </div>
 
             <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+              <div className="w-8 h-8 bg-accent-gold-weak rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-4 h-4 text-accent-gold" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                 </svg>
               </div>
@@ -113,7 +113,7 @@ export default function InstallPrompt() {
           </button>
           <button
             onClick={handleInstall}
-            className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="flex-1 lux-cta text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             Installa
           </button>
@@ -142,7 +142,7 @@ export function InstallBanner() {
   return (
     <div className="fixed bottom-4 left-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-40 max-w-sm mx-auto">
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 bg-accent-gold-weak rounded-lg flex items-center justify-center flex-shrink-0">
           <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm1 1v10h12V5H4z" clipRule="evenodd" />
           </svg>
@@ -160,7 +160,7 @@ export function InstallBanner() {
           </button>
           <button
             onClick={installApp}
-            className="bg-purple-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-purple-700 transition-colors"
+            className="lux-cta text-white px-3 py-1 rounded text-xs font-medium"
           >
             Installa
           </button>

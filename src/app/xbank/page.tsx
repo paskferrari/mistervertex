@@ -37,6 +37,21 @@ export default function XBankPage() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [mockEnabled, setMockEnabled] = useState(false)
+  
+  // Sidebar: sezioni disponibili (sostituisce i tab)
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'bankroll', label: 'Bankroll', icon: Wallet },
+    { id: 'predictions', label: 'Pronostici', icon: Target },
+    { id: 'groups', label: 'Gruppi', icon: Users },
+    { id: 'scalate', label: 'Scalate', icon: TrendingUp },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'board', label: 'Bacheca', icon: MessageSquare },
+    { id: 'community', label: 'Community', icon: Users },
+    { id: 'settings', label: 'Impostazioni', icon: Settings },
+    { id: 'backup', label: 'Backup', icon: Plus }
+  ]
 
 
   const checkUser = useCallback(async () => {
@@ -44,6 +59,19 @@ export default function XBankPage() {
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session) {
+        // Dev/Test: consenti modalità mock via query (?mock=1) o env
+        if (mockEnabled) {
+          const mockUser: UserData = { id: 'mock-user', email: 'vip@mock.dev', role: 'abbonato_vip' }
+          setUser(mockUser)
+          setSettings({
+            initial_bankroll: 1000,
+            current_bankroll: 1250,
+            currency: 'EUR',
+            unit_type: 'currency',
+            unit_value: 10,
+          })
+          return
+        }
         router.push('/login')
         return
       }
@@ -74,16 +102,30 @@ export default function XBankPage() {
     } finally {
       setLoading(false)
     }
-  }, [router])
+  }, [router, mockEnabled])
 
   useEffect(() => {
     checkUser()
   }, [checkUser])
 
+  // Abilita mock via query (?mock=1) o env NEXT_PUBLIC_XBANK_MOCK
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const fromQuery = params.get('mock') === '1'
+      const fromEnv = process.env.NEXT_PUBLIC_XBANK_MOCK === 'true'
+      setMockEnabled(fromQuery || fromEnv)
+    }
+  }, [])
+
 
 
   const loadSettings = async () => {
     try {
+      if (mockEnabled) {
+        // In modalità mock i dati sono settati in checkUser
+        return
+      }
       const response = await fetch('/api/xbank/settings', {
         method: 'GET',
         headers: {
@@ -105,6 +147,13 @@ export default function XBankPage() {
 
     setSaving(true)
     try {
+      if (mockEnabled) {
+        // Simula salvataggio in modalità mock
+        await new Promise(res => setTimeout(res, 400))
+        alert('Impostazioni salvate (mock)!')
+        setSaving(false)
+        return
+      }
       const response = await fetch('/api/xbank/settings', {
         method: 'POST',
         headers: {
@@ -165,7 +214,7 @@ export default function XBankPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-slate-50 supports-[height:100dvh]:min-h-[100dvh]">
+    <div className="min-h-screen bg-primary text-primary supports-[height:100dvh]:min-h-[100dvh]">
       <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6 max-w-7xl">
         {/* Toast Notification */}
         <div 
@@ -176,23 +225,23 @@ export default function XBankPage() {
           aria-live="polite"
         ></div>
 
-        {/* Header Ottimizzato per App Nativa */}
-        <header className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white shadow-xl safe-area-top">
+        {/* Header sezione (non fisso, separato dalla topbar globale) */}
+        <header className="bg-white/10 backdrop-blur-sm border-b border-white/10 text-primary rounded-xl">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <button
                   onClick={() => router.push('/dashboard')}
-                  className="touch-target flex items-center justify-center w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-all duration-200 transform hover:scale-105 active:scale-95"
+                  className="touch-target flex items-center justify-center w-10 h-10 bg-accent-gold-weak rounded-full hover:opacity-90 transition-all duration-200 transform hover:scale-105 active:scale-95"
                   aria-label="Torna al Dashboard"
                 >
                   <ArrowLeft className="h-5 w-5" aria-hidden="true" />
                 </button>
                 
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center border border-accent-gold-fade">
                     <Image
-                      src="/logoVertex.png"
+                      src="/media/logoBianco.svg"
                       alt="Logo Mister Vertex"
                       width={32}
                       height={32}
@@ -200,17 +249,17 @@ export default function XBankPage() {
                     />
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold text-white">X-BANK</h1>
-                    <p className="text-sm text-blue-100 opacity-90">Gestione Avanzata</p>
+                    <h1 className="text-xl font-bold">X-BANK</h1>
+                    <p className="text-sm text-secondary">Gestione Avanzata</p>
                   </div>
                 </div>
               </div>
               
               <div className="flex items-center space-x-3">
                 <NotificationCenter userId={user.id} />
-                <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl border border-white/30">
-                  <div className="text-xs text-blue-100 font-medium mb-1">Bankroll</div>
-                  <div className="text-lg font-bold text-white">
+                <div className="card p-3">
+                  <div className="text-xs text-secondary font-medium mb-1">Bankroll</div>
+                  <div className="text-lg font-bold">
                     {settings?.current_bankroll?.toFixed(2) || '0.00'} {settings?.currency || 'EUR'}
                   </div>
                 </div>
@@ -219,50 +268,39 @@ export default function XBankPage() {
           </div>
         </header>
 
-        {/* Navigation Tabs Ottimizzata */}
+        {/* Layout con Sidebar (sostituisce i tab) */}
         <div className="container mx-auto px-4 py-4">
-          <nav role="tablist" aria-label="Sezioni X-BANK" className="bg-white/95 backdrop-blur-xl rounded-2xl p-3 mb-6 shadow-xl border border-blue-200/50">
-            <div className="flex overflow-x-auto scrollbar-hide space-x-2 pb-2">
-              {/* Indicatore scroll mobile */}
-              <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-60 md:hidden"></div>
-              {[
-                { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-                { id: 'bankroll', label: 'Bankroll', icon: Wallet },
-                { id: 'predictions', label: 'Pronostici', icon: Target },
-                { id: 'groups', label: 'Gruppi', icon: Users },
-                { id: 'scalate', label: 'Scalate', icon: TrendingUp },
-                { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-                { id: 'board', label: 'Bacheca', icon: MessageSquare },
-                { id: 'community', label: 'Community', icon: Users },
-                { id: 'settings', label: 'Impostazioni', icon: Settings },
-                { id: 'backup', label: 'Backup', icon: Plus }
-              ].map((tab) => {
-                const Icon = tab.icon
-                return (
-                  <button
-                    key={tab.id}
-                    role="tab"
-                    aria-selected={activeTab === tab.id}
-                    aria-controls={`panel-${tab.id}`}
-                    id={`tab-${tab.id}`}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`touch-target flex items-center space-x-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap min-w-max focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                      activeTab === tab.id
-                        ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg scale-105'
-                        : 'text-blue-700 hover:text-blue-900 hover:bg-blue-50/80 hover:shadow-md'
-                    }`}
-                  >
-                    <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                    <span className="sm:hidden text-xs">{tab.label}</span>
-                  </button>
-                )
-              })}
-             </div>
-           </nav>
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+            {/* Sidebar */}
+            <aside 
+              role="navigation" 
+              aria-label="Selezione sezioni X-BANK" 
+              className="card p-3 lg:p-4" 
+              style={{ position: 'sticky', top: 'calc(var(--nav-height) + 12px)' }}
+            >
+              <div className="space-y-2">
+                {menuItems.map((item) => {
+                  const Icon = item.icon
+                  const active = activeTab === item.id
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      aria-current={active ? 'page' : undefined}
+                      className={`list-card w-full flex items-center gap-3 px-3 py-2 ${active ? 'bg-accent-gold-weak border-accent-gold-fade' : ''}`}
+                    >
+                      <div className={`p-2 rounded-xl ${active ? 'bg-white/10' : 'bg-white/5'}`}>
+                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <span className="text-sm font-medium text-primary">{item.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </aside>
 
-          {/* Content Ottimizzato */}
-          <main className="bg-white/95 backdrop-blur-xl rounded-2xl p-4 shadow-xl border border-blue-200/50 safe-area-bottom" tabIndex={-1}>
+            {/* Content */}
+            <main className="card p-4 lg:p-6" tabIndex={-1}>
             {activeTab === 'dashboard' && (
               <section id="panel-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
                 <div className="mb-6">
@@ -284,65 +322,65 @@ export default function XBankPage() {
                     <div className="text-xs text-blue-600">{settings?.currency || 'EUR'}</div>
                   </div>
                   
-                  <div className="touch-target bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-4 border border-indigo-200/50 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 gpu-accelerated" role="article" aria-labelledby="current-bankroll-label">
+                  <div className="touch-target card p-4 transition-all duration-300 hover:scale-105 gpu-accelerated" role="article" aria-labelledby="current-bankroll-label">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center">
-                        <TrendingUp className="h-5 w-5 text-white" />
+                      <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                        <TrendingUp className="h-5 w-5 text-primary" />
                       </div>
                     </div>
-                    <div id="current-bankroll-label" className="text-indigo-700 text-xs font-medium mb-1">Bankroll Attuale</div>
-                    <div className="text-lg font-bold text-indigo-900" aria-describedby="current-bankroll-label">
+                    <div id="current-bankroll-label" className="text-secondary text-xs font-medium mb-1">Bankroll Attuale</div>
+                    <div className="text-lg font-bold text-primary" aria-describedby="current-bankroll-label">
                       {settings?.current_bankroll?.toFixed(2) || '0.00'}
                     </div>
-                    <div className="text-xs text-indigo-600">{settings?.currency || 'EUR'}</div>
+                    <div className="text-xs text-secondary">{settings?.currency || 'EUR'}</div>
                   </div>
                   
-                  <div className="touch-target bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-4 border border-emerald-200/50 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 gpu-accelerated" role="article" aria-labelledby="profit-loss-label">
+                  <div className="touch-target card p-4 transition-all duration-300 hover:scale-105 gpu-accelerated" role="article" aria-labelledby="profit-loss-label">
                     <div className="flex items-center justify-between mb-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        dashboardMetrics?.isPositive ? 'bg-emerald-500' : 'bg-red-500'
+                        dashboardMetrics?.isPositive ? 'bg-accent-gold-weak' : 'bg-red-500'
                       }`}>
                         <Target className="h-5 w-5 text-white" />
                       </div>
                     </div>
-                    <div id="profit-loss-label" className="text-emerald-700 text-xs font-medium mb-1">Profitto/Perdita</div>
+                    <div id="profit-loss-label" className="text-secondary text-xs font-medium mb-1">Profitto/Perdita</div>
                     <div className={`text-lg font-bold ${
-                      dashboardMetrics?.isPositive ? 'text-emerald-700' : 'text-red-600'
+                      dashboardMetrics?.isPositive ? 'text-primary' : 'text-red-500'
                     }`} aria-describedby="profit-loss-label">
                       {dashboardMetrics?.profit || '0.00'}
                     </div>
-                    <div className="text-xs text-emerald-600">{settings?.currency || 'EUR'}</div>
+                    <div className="text-xs text-secondary">{settings?.currency || 'EUR'}</div>
                   </div>
                   
-                  <div className="touch-target bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border border-purple-200/50 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 gpu-accelerated" role="article" aria-labelledby="roi-label">
+                  <div className="touch-target card p-4 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 gpu-accelerated" role="article" aria-labelledby="roi-label">
                     <div className="flex items-center justify-between mb-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        dashboardMetrics?.isPositive ? 'bg-purple-500' : 'bg-red-500'
+                        dashboardMetrics?.isPositive ? 'bg-accent-gold-weak' : 'bg-red-500'
                       }`}>
                         <BarChart3 className="h-5 w-5 text-white" />
                       </div>
                     </div>
-                    <div id="roi-label" className="text-purple-700 text-xs font-medium mb-1">ROI</div>
+                    <div id="roi-label" className="text-secondary text-xs font-medium mb-1">ROI</div>
                     <div className={`text-lg font-bold ${
-                      dashboardMetrics?.isPositive ? 'text-purple-700' : 'text-red-600'
+                      dashboardMetrics?.isPositive ? 'text-secondary' : 'text-red-600'
                     }`} aria-describedby="roi-label">
                       {dashboardMetrics?.roi || '0.00'}%
                     </div>
-                    <div className="text-xs text-purple-600">Rendimento</div>
+                    <div className="text-xs text-secondary">Rendimento</div>
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6 rounded-2xl border border-blue-200/50 shadow-lg" role="banner">
+                <div className="card p-6 rounded-2xl shadow-lg" role="banner">
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-accent-gold-weak rounded-2xl flex items-center justify-center mx-auto mb-4">
                       <Wallet className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-blue-900 mb-2">Benvenuto in X-BANK</h3>
+                    <h3 className="text-xl font-bold text-white mb-2">Benvenuto in X-BANK</h3>
                     <p className="text-blue-700 text-sm mb-4">Il tuo sistema di gestione avanzato per il betting professionale</p>
                     <div className="flex flex-wrap justify-center gap-2">
                       <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">Gestione Bankroll</span>
                       <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">Analytics</span>
-                      <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">Pronostici</span>
+                      <span className="px-3 py-1 bg-accent-gold-weak text-white rounded-full text-xs font-medium">Pronostici</span>
                     </div>
                   </div>
                 </div>
@@ -350,15 +388,16 @@ export default function XBankPage() {
             )}
 
             {activeTab === 'bankroll' && (
-               <Suspense fallback={<LoadingComponent message="Caricamento gestione bankroll..." />}>
+             <Suspense fallback={<LoadingComponent message="Caricamento gestione bankroll..." />}>
                  <BankrollManager 
-                 currency={settings?.currency || 'EUR'}
-                 onBankrollUpdate={(newBankroll) => {
-                   if (settings) {
-                     setSettings({ ...settings, current_bankroll: newBankroll })
-                   }
-                 }}
-               />
+                   currency={settings?.currency || 'EUR'}
+                   mock={mockEnabled}
+                   onBankrollUpdate={(newBankroll) => {
+                     if (settings) {
+                       setSettings({ ...settings, current_bankroll: newBankroll })
+                     }
+                   }}
+                 />
                </Suspense>
              )}
 
@@ -370,6 +409,7 @@ export default function XBankPage() {
                    <Suspense fallback={<LoadingComponent message="Caricamento pronostici..." />}>
                      <PredictionsList 
                        currency={settings?.currency || 'EUR'}
+                       mock={mockEnabled}
                        onBankrollUpdate={(amount) => {
                          if (settings) {
                            const newBankroll = settings.current_bankroll + amount
@@ -389,7 +429,7 @@ export default function XBankPage() {
 
             {activeTab === 'scalate' && (
               <Suspense fallback={<LoadingComponent message="Caricamento scalate..." />}>
-                <ScalateManager currency={settings?.currency || 'EUR'} />
+                <ScalateManager currency={settings?.currency || 'EUR'} mock={mockEnabled} />
               </Suspense>
             )}
 
@@ -401,12 +441,12 @@ export default function XBankPage() {
 
             {activeTab === 'board' && (
               <div>
-                <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-100 p-4 sm:p-6 mb-4 sm:mb-6">
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-3 sm:mb-4 flex items-center">
-                    <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-blue-600" />
+                <div className="card p-4 sm:p-6 mb-4 sm:mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-primary mb-3 sm:mb-4 flex items-center">
+                    <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-accent-gold" />
                     Bacheca Mister Vertex
                   </h2>
-                  <p className="text-sm sm:text-base text-slate-600 mb-3 sm:mb-4">
+                  <p className="text-sm sm:text-base text-secondary mb-3 sm:mb-4">
                     Qui trovi i pronostici proposti dai nostri esperti Mister Vertex. 
                     Analisi professionali e consigli per le tue scommesse.
                   </p>
@@ -433,7 +473,7 @@ export default function XBankPage() {
                      <ul className="space-y-2 text-sm sm:text-base text-slate-600">
                        <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0"></span>Discussioni sui pronostici</li>
                        <li className="flex items-center"><span className="w-2 h-2 bg-indigo-500 rounded-full mr-3 flex-shrink-0"></span>Condivisione strategie</li>
-                       <li className="flex items-center"><span className="w-2 h-2 bg-purple-500 rounded-full mr-3 flex-shrink-0"></span>Valutazioni collaborative</li>
+                       <li className="flex items-center"><span className="w-2 h-2 bg-accent-gold-weak rounded-full mr-3 flex-shrink-0"></span>Valutazioni collaborative</li>
                        <li className="flex items-center"><span className="w-2 h-2 bg-teal-500 rounded-full mr-3 flex-shrink-0"></span>Forum di discussione</li>
                      </ul>
                      <div className="mt-4 p-3 sm:p-4 bg-white rounded-lg border border-blue-200">
@@ -573,7 +613,8 @@ export default function XBankPage() {
                 <BackupManager userId={user.id} />
               </div>
             )}
-          </main>
+            </main>
+          </div>
         </div>
       </div>
     </div>

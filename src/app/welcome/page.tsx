@@ -68,9 +68,9 @@ export default function WelcomePage() {
           title: 'Abbonato VIP',
           description: 'Accesso a tutti i pronostici premium e VIP',
           icon: Crown,
-          color: 'text-purple-400',
-          bgColor: 'bg-purple-500/20',
-          borderColor: 'border-purple-500/30'
+          color: 'text-secondary',
+          bgColor: 'bg-accent-gold-weak',
+          borderColor: 'border-accent-gold-fade'
         }
       case 'abbonato_premium':
         return {
@@ -112,8 +112,8 @@ export default function WelcomePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-xl">Caricamento...</div>
+      <div className="min-h-screen bg-primary text-primary flex items-center justify-center">
+        <div className="text-xl">Caricamento...</div>
       </div>
     )
   }
@@ -126,15 +126,15 @@ export default function WelcomePage() {
   const IconComponent = roleInfo.icon
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-primary text-primary">
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-center">
           <div className="flex items-center space-x-3">
-            <div className="logo-container p-2 bg-white rounded-full shadow-lg border-2 border-purple-400/30">
+            <div className="p-2 bg-white rounded-full shadow-lg border border-accent-gold-fade">
               <Image 
-                src="/logoVertex.png" 
-                alt="Logo Vertex" 
+                src="/media/logoBianco.svg" 
+                alt="Logo Mister Vertex" 
                 width={48} 
                 height={48}
                 className="drop-shadow-sm"
@@ -193,16 +193,16 @@ export default function WelcomePage() {
 
           {/* Features Based on Role */}
           <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-              <TrendingUp className="h-8 w-8 text-purple-400 mx-auto mb-4" />
+            <div className="card p-6">
+              <TrendingUp className="h-8 w-8 text-accent-gold mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-white mb-2">Pronostici Accurati</h3>
               <p className="text-gray-300 text-sm">
                 Accedi ai pronostici di Mister Vertex basati su analisi approfondite
               </p>
             </div>
             
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-              <Users className="h-8 w-8 text-purple-400 mx-auto mb-4" />
+            <div className="card p-6">
+              <Users className="h-8 w-8 text-accent-gold mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-white mb-2">Community Esclusiva</h3>
               <p className="text-gray-300 text-sm">
                 Fai parte di una community selezionata di appassionati di betting
@@ -213,7 +213,7 @@ export default function WelcomePage() {
           {/* Continue Button */}
           <button
             onClick={handleContinue}
-            className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 px-8 rounded-lg transition-all duration-200"
+            className="lux-cta inline-flex items-center space-x-2 font-semibold py-4 px-8 rounded-lg transition-all duration-200"
           >
             <span>Continua</span>
             <ArrowRight className="h-5 w-5" />
@@ -226,10 +226,10 @@ export default function WelcomePage() {
         <div className="text-center">
           {/* Footer Logo */}
           <div className="flex justify-center mb-4">
-            <div className="logo-container p-2 bg-white/10 rounded-full border border-white/20">
+            <div className="p-2 bg-white/10 rounded-full border border-accent-gold-fade">
               <Image 
-                src="/logoVertex.png" 
-                alt="Logo Vertex" 
+                src="/media/logoBianco.svg" 
+                alt="Logo Mister Vertex" 
                 width={32} 
                 height={32}
                 className="drop-shadow-sm"

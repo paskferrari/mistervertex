@@ -82,22 +82,22 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-primary text-primary">
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="logo-container p-2 bg-white rounded-full shadow-lg border-2 border-purple-400/30 gpu-accelerated">
+            <div className="p-2 bg-white/10 rounded-full border border-accent-gold-fade backdrop-blur-sm">
               <LazyImage 
-                src="/logoVertex.png" 
-                alt="Logo Vertex" 
+                src="/media/logoBianco.svg" 
+                alt="Logo Mister Vertex" 
                 width={40} 
                 height={40}
                 className="drop-shadow-sm"
                 priority={true}
               />
             </div>
-            <span className="text-2xl font-bold text-white">Mister Vertex</span>
+            <span className="text-2xl font-bold brand-gradient">Mister Vertex</span>
           </div>
           <div className="flex items-center space-x-3">
             <button
@@ -105,7 +105,7 @@ export default function LandingPage() {
                 openOnboarding()
                 if (isTouchDevice) lightTap()
               }}
-              className="flex items-center space-x-2 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white px-3 py-2 rounded-lg smooth-transition touch-optimized"
+              className="btn-secondary inline-flex items-center space-x-2 px-3 py-2 smooth-transition touch-optimized"
               title="Apri guida"
             >
               <HelpCircle className="h-4 w-4" />
@@ -113,7 +113,7 @@ export default function LandingPage() {
             </button>
             <Link 
               href="/login"
-              className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white px-4 py-2 rounded-lg transition-all duration-200"
+              className="lux-cta inline-flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200"
             >
               <LogIn className="h-4 w-4" />
               <span>Accedi</span>
@@ -128,7 +128,7 @@ export default function LandingPage() {
           {/* Hero Avatar */}
           <div className="flex justify-center mb-8">
             <div className="relative">
-              <div className="avatar-container p-4 bg-white rounded-full shadow-2xl border-4 border-purple-400/30">
+              <div className="avatar-container p-4 bg-white rounded-full shadow-2xl border border-accent-gold-fade">
                 <Image 
                   src="/avatarOnBoarding.png" 
                   alt="Avatar Mister Vertex" 
@@ -137,15 +137,15 @@ export default function LandingPage() {
                   className="rounded-full object-cover drop-shadow-lg"
                 />
               </div>
-              <div className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-lg">
+              <div className="absolute -bottom-2 -right-2 p-2 bg-accent-gold-weak rounded-full shadow-lg">
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
             </div>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">
             La Community di
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+            <span className="brand-gradient">
               {' '}Betting{' '}
             </span>
             del Futuro
@@ -184,7 +184,7 @@ export default function LandingPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Inserisci la tua email"
-                    className="w-full pl-10 pr-4 py-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="lux-input w-full pl-10 pr-4 py-4"
                     disabled={isSubmitting}
                   />
                 </div>
@@ -196,7 +196,7 @@ export default function LandingPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="lux-cta w-full font-semibold py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Registrazione...' : 'Richiedi Accesso Esclusivo'}
                 </button>
@@ -212,9 +212,9 @@ export default function LandingPage() {
             )}
             
             <div className="text-center mt-6">
-               <p className="text-gray-400">
+               <p className="text-secondary">
                  Hai già un account?{' '}
-                 <Link href="/login" className="text-purple-400 hover:text-purple-300 transition-colors">
+                 <Link href="/login" className="lux-link">
                    Accedi qui
                  </Link>
                </p>
@@ -223,24 +223,24 @@ export default function LandingPage() {
 
           {/* Features */}
           <div className="grid md:grid-cols-3 gap-8 mt-16">
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-              <TrendingUp className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+            <div className="card p-6">
+              <TrendingUp className="h-12 w-12 text-accent-gold mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Pronostici Accurati</h3>
               <p className="text-gray-300">
                 Analisi approfondite e pronostici basati su dati statistici avanzati
               </p>
             </div>
             
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-              <Users className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+            <div className="card p-6">
+              <Users className="h-12 w-12 text-accent-gold mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Community Esclusiva</h3>
               <p className="text-gray-300">
                 Accesso limitato per garantire qualità e risultati superiori
               </p>
             </div>
             
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-              <Award className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+            <div className="card p-6">
+              <Award className="h-12 w-12 text-accent-gold mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Esperienza Premium</h3>
               <p className="text-gray-300">
                 Diversi livelli di abbonamento per ogni tipo di scommettitore
@@ -255,10 +255,10 @@ export default function LandingPage() {
         <div className="text-center">
           {/* Footer Logo */}
           <div className="flex justify-center mb-4">
-            <div className="logo-container p-2 bg-white/10 rounded-full border border-white/20">
+            <div className="logo-container p-2 bg-white/10 rounded-full border border-accent-gold-fade">
               <Image 
-                src="/logoVertex.png" 
-                alt="Logo Vertex" 
+                src="/media/logoBianco.svg" 
+                alt="Logo Mister Vertex" 
                 width={32} 
                 height={32}
                 className="drop-shadow-sm"

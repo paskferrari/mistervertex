@@ -142,7 +142,7 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
       case 'warning': return <AlertCircle className="w-4 h-4 text-orange-500" />
       case 'error': return <AlertCircle className="w-4 h-4 text-red-500" />
       case 'prediction': return <Target className="w-4 h-4 text-blue-500" />
-      case 'group': return <Users className="w-4 h-4 text-purple-500" />
+      case 'group': return <Users className="w-4 h-4 text-accent-gold" />
       case 'scalata': return <TrendingUp className="w-4 h-4 text-orange-500" />
       default: return <Info className="w-4 h-4 text-blue-500" />
     }
@@ -168,7 +168,7 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
       {/* Bell Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
+        className="relative p-2 text-white/80 hover:text-white transition-colors"
       >
         <Bell className="w-6 h-6" />
         {unreadCount > 0 && (
@@ -180,7 +180,7 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
 
       {/* Notification Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border z-50 max-h-96 overflow-hidden">
+        <div className="fixed top-16 right-4 w-96 bg-white rounded-xl shadow-2xl border border-amber-300/50 z-[1000] max-h-[60vh] overflow-hidden">
           {/* Header */}
           <div className="p-4 border-b bg-gray-50">
             <div className="flex items-center justify-between">
@@ -206,7 +206,7 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-[50vh] overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 <Bell className="w-12 h-12 mx-auto mb-4 text-gray-300" />

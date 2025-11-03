@@ -162,23 +162,23 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-xl">Caricamento...</div>
+      <div className="min-h-screen bg-primary text-primary flex items-center justify-center">
+        <div className="text-xl">Caricamento...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-primary text-primary">
       {/* Header */}
       <header className="bg-white/10 backdrop-blur-sm border-b border-white/20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="logo-container p-2 bg-white rounded-full shadow-lg border-2 border-purple-400/30">
+              <div className="logo-container p-2 bg-white rounded-full shadow-lg border border-accent-gold-fade">
                 <Image 
-                  src="/logoVertex.png" 
-                  alt="Logo Vertex" 
+                  src="/media/logoBianco.svg" 
+                  alt="Logo Mister Vertex" 
                   width={40} 
                   height={40}
                   className="drop-shadow-sm"
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
                   {emailRequests.filter(r => r.status === 'pending').length}
                 </p>
               </div>
-              <Mail className="h-12 w-12 text-purple-400" />
+              <Mail className="h-12 w-12 text-accent-gold" />
             </div>
           </div>
           
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
                 <p className="text-gray-400 text-sm">Utenti Totali</p>
                 <p className="text-3xl font-bold text-white">{users.length}</p>
               </div>
-              <Users className="h-12 w-12 text-purple-400" />
+              <Users className="h-12 w-12 text-accent-gold" />
             </div>
           </div>
           
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab('requests')}
               className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
                 activeTab === 'requests'
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-accent-gold-weak text-white'
                   : 'text-gray-300 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -253,7 +253,7 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab('users')}
               className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
                 activeTab === 'users'
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-accent-gold-weak text-white'
                   : 'text-gray-300 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -313,7 +313,7 @@ export default function AdminDashboard() {
                   <h3 className="text-xl font-semibold text-white">Utenti Registrati</h3>
                   <button
                     onClick={() => setShowCreateUser(true)}
-                    className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="flex items-center space-x-2 lux-cta px-4 py-2 rounded-lg transition-colors"
                   >
                     <UserPlus className="h-4 w-4" />
                     <span>Crea Utente</span>
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
                           <div className="flex items-center space-x-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                               user.role === 'admin' ? 'bg-red-500/20 text-red-400' :
-                              user.role === 'abbonato_vip' ? 'bg-purple-500/20 text-purple-400' :
+                              user.role === 'abbonato_vip' ? 'bg-accent-gold-weak text-white' :
                               user.role === 'abbonato_premium' ? 'bg-blue-500/20 text-blue-400' :
                               user.role === 'abbonato_base' ? 'bg-green-500/20 text-green-400' :
                               'bg-gray-500/20 text-gray-400'
@@ -366,7 +366,7 @@ export default function AdminDashboard() {
                   type="email"
                   value={newUserEmail}
                   onChange={(e) => setNewUserEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="lux-input w-full px-3 py-2"
                   placeholder="utente@email.com"
                   required
                 />
@@ -377,7 +377,7 @@ export default function AdminDashboard() {
                 <select
                   value={newUserRole}
                   onChange={(e) => setNewUserRole(e.target.value as User['role'])}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="lux-select w-full px-3 py-2"
                 >
                   <option value="guest">Guest</option>
                   <option value="abbonato_base">Abbonato Base</option>
@@ -392,7 +392,7 @@ export default function AdminDashboard() {
                   <button
                     type="button"
                     onClick={generatePassword}
-                    className="text-purple-400 hover:text-purple-300 text-sm"
+                    className="lux-link text-sm"
                   >
                     Genera
                   </button>
@@ -402,7 +402,7 @@ export default function AdminDashboard() {
                     type={showPassword ? 'text' : 'password'}
                     value={generatedPassword}
                     onChange={(e) => setGeneratedPassword(e.target.value)}
-                    className="w-full px-3 py-2 pr-10 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="lux-input w-full px-3 py-2 pr-10"
                     placeholder="Password"
                     required
                   />
@@ -432,7 +432,7 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                  className="flex-1 px-4 py-2 lux-cta text-white rounded-lg transition-colors"
                 >
                   Crea Utente
                 </button>

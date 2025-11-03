@@ -40,9 +40,10 @@ interface Scalata {
 
 interface ScalateManagerProps {
   currency: string
+  mock?: boolean
 }
 
-export default function ScalateManager({ currency }: ScalateManagerProps) {
+export default function ScalateManager({ currency, mock = false }: ScalateManagerProps) {
   const [scalate, setScalate] = useState<Scalata[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -65,17 +66,55 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
   })
 
   useEffect(() => {
+    // Ricarica le scalate quando cambia la modalità mock
     loadScalate()
-  }, [])
+  }, [mock])
 
   const loadScalate = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/xbank/scalate')
-      if (!response.ok) throw new Error('Errore nel caricamento delle scalate')
-      
-      const data = await response.json()
-      setScalate(data)
+      if (mock) {
+        const sample: Scalata[] = [
+          {
+            id: 'sc1',
+            name: 'Progressiva 2x',
+            description: 'Progressione con raddoppio su perdita',
+            scalata_type: 'progressive',
+            initial_stake: 10,
+            target_profit: 100,
+            max_steps: 10,
+            current_step: 3,
+            current_bankroll: 28,
+            status: 'active',
+            steps: [],
+            settings: { multiplier: 2, reset_on_loss: true, auto_progression: false },
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          {
+            id: 'sc2',
+            name: 'Fissa 5€',
+            description: 'Stake fisso su ogni passo',
+            scalata_type: 'fixed',
+            initial_stake: 5,
+            target_profit: 50,
+            max_steps: 12,
+            current_step: 12,
+            current_bankroll: 55,
+            status: 'completed',
+            steps: [],
+            settings: {},
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        ]
+        setScalate(sample)
+      } else {
+        const response = await fetch('/api/xbank/scalate')
+        if (!response.ok) throw new Error('Errore nel caricamento delle scalate')
+        const data = await response.json()
+        setScalate(data)
+      }
     } catch (error) {
       console.error('Errore:', error)
       toast.error('Errore nel caricamento delle scalate')
@@ -86,6 +125,46 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
 
   const createScalata = async () => {
     try {
+      if (mock) {
+        const created: Scalata = {
+          id: `mock-${Date.now()}`,
+          name: newScalata.name,
+          description: newScalata.description,
+          scalata_type: newScalata.scalata_type,
+          initial_stake: newScalata.initial_stake,
+          target_profit: newScalata.target_profit,
+          max_steps: newScalata.max_steps,
+          current_step: 0,
+          current_bankroll: newScalata.initial_stake,
+          status: 'active',
+          steps: [],
+          settings: {
+            multiplier: newScalata.multiplier,
+            reset_on_loss: newScalata.reset_on_loss,
+            max_loss: newScalata.max_loss,
+            auto_progression: newScalata.auto_progression
+          },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        setScalate(prev => [created, ...prev])
+        setShowCreateModal(false)
+        setNewScalata({
+          name: '',
+          description: '',
+          scalata_type: 'progressive',
+          initial_stake: 10,
+          target_profit: 100,
+          max_steps: 10,
+          multiplier: 2,
+          reset_on_loss: true,
+          max_loss: 100,
+          auto_progression: false
+        })
+        toast.success('Scalata creata con successo (mock)')
+        return
+      }
+
       const response = await fetch('/api/xbank/scalate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -115,8 +194,14 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
     }
   }
 
-  const updateScalataStatus = async (id: string, status: string) => {
+  const updateScalataStatus = async (id: string, status: Scalata['status']) => {
     try {
+      if (mock) {
+        setScalate(prev => prev.map(s => s.id === id ? { ...s, status, updated_at: new Date().toISOString() } : s))
+        toast.success('Scalata aggiornata (mock)')
+        return
+      }
+
       const response = await fetch(`/api/xbank/scalate/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -137,6 +222,12 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
     if (!confirm('Sei sicuro di voler eliminare questa scalata?')) return
     
     try {
+      if (mock) {
+        setScalate(prev => prev.filter(s => s.id !== id))
+        toast.success('Scalata eliminata (mock)')
+        return
+      }
+
       const response = await fetch(`/api/xbank/scalate/${id}`, {
         method: 'DELETE'
       })
@@ -278,22 +369,22 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
               {/* Metriche */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
                 <div>
-                  <p className="text-amber-700 text-sm">Progresso</p>
+                  <p className="text-secondary text-sm">Progresso</p>
                   <div className="flex items-center space-x-2">
-                    <div className="flex-1 bg-amber-100 rounded-full h-2">
+                    <div className="flex-1 bg-white/10 rounded-full h-2">
                       <div
-                        className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full transition-all"
+                        className="bg-gradient-to-r from-[var(--accent-gold)] to-[#f4d03f] h-2 rounded-full transition-all"
                         style={{ width: `${calculateProgress(scalata)}%` }}
                       ></div>
                     </div>
-                    <span className="text-amber-900 text-sm">
+                    <span className="text-primary text-sm">
                       {scalata.current_step}/{scalata.max_steps}
                     </span>
                   </div>
                 </div>
                 
                 <div>
-                  <p className="text-amber-700 text-sm">Profitto Attuale</p>
+                  <p className="text-secondary text-sm">Profitto Attuale</p>
                   <p className={`font-bold ${calculateCurrentProfit(scalata) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {calculateCurrentProfit(scalata) >= 0 ? '+' : ''}{calculateCurrentProfit(scalata).toFixed(2)} {currency}
                   </p>
@@ -303,16 +394,16 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
               {/* Info Aggiuntive */}
               <div className="grid grid-cols-3 gap-4 mb-4 text-sm">
                 <div>
-                  <p className="text-amber-700">Tipo</p>
-                  <p className="text-amber-900 font-medium">{getScalataTypeLabel(scalata.scalata_type)}</p>
+                  <p className="text-secondary">Tipo</p>
+                  <p className="text-primary font-medium">{getScalataTypeLabel(scalata.scalata_type)}</p>
                 </div>
                 <div>
-                  <p className="text-amber-700">Stake Iniziale</p>
-                  <p className="text-amber-900 font-medium">{scalata.initial_stake} {currency}</p>
+                  <p className="text-secondary">Stake Iniziale</p>
+                  <p className="text-primary font-medium">{scalata.initial_stake} {currency}</p>
                 </div>
                 <div>
-                  <p className="text-amber-700">Target</p>
-                  <p className="text-amber-900 font-medium">{scalata.target_profit} {currency}</p>
+                  <p className="text-secondary">Target</p>
+                  <p className="text-primary font-medium">{scalata.target_profit} {currency}</p>
                 </div>
               </div>
 
@@ -322,7 +413,7 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
                   {scalata.status === 'active' && (
                     <button
                       onClick={() => updateScalataStatus(scalata.id, 'paused')}
-                      className="flex items-center space-x-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-3 py-1 rounded text-sm transition-all shadow-md"
+                      className="flex items-center space-x-1 bg-gradient-to-r from-[var(--accent-gold)] to-[#f4d03f] hover:brightness-110 text-black px-3 py-1 rounded-xl text-sm transition-all shadow-md hover:-translate-y-0.5"
                     >
                       <Pause className="h-3 w-3" />
                       <span>Pausa</span>
@@ -332,7 +423,7 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
                   {scalata.status === 'paused' && (
                     <button
                       onClick={() => updateScalataStatus(scalata.id, 'active')}
-                      className="flex items-center space-x-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-3 py-1 rounded text-sm transition-all shadow-md"
+                      className="flex items-center space-x-1 bg-gradient-to-r from-emerald-400 to-green-500 hover:brightness-110 text-black px-3 py-1 rounded-xl text-sm transition-all shadow-md hover:-translate-y-0.5"
                     >
                       <Play className="h-3 w-3" />
                       <span>Riprendi</span>
@@ -342,7 +433,7 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
                   {(scalata.status === 'failed' || scalata.status === 'completed') && (
                     <button
                       onClick={() => updateScalataStatus(scalata.id, 'active')}
-                      className="flex items-center space-x-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-3 py-1 rounded text-sm transition-all shadow-md"
+                      className="flex items-center space-x-1 bg-gradient-to-r from-indigo-400 to-blue-500 hover:brightness-110 text-black px-3 py-1 rounded-xl text-sm transition-all shadow-md hover:-translate-y-0.5"
                     >
                       <RotateCcw className="h-3 w-3" />
                       <span>Riavvia</span>
@@ -356,7 +447,7 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
                       setSelectedScalata(scalata)
                       setShowDetailsModal(true)
                     }}
-                    className="flex items-center justify-center space-x-1 bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-2 rounded text-sm transition-all border border-amber-300 min-h-[40px]"
+                    className="flex items-center justify-center space-x-1 bg-white/10 hover:bg-white/15 text-primary px-3 py-2 rounded-xl text-sm transition-all border border-[var(--border-color)] min-h-[40px]"
                   >
                     <Eye className="h-3 w-3" />
                     <span>Dettagli</span>
@@ -378,8 +469,8 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
 
       {/* Modal Creazione Scalata */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-gray-900/30 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-gradient-to-br from-gray-50/98 to-white/98 backdrop-blur-sm rounded-xl p-4 sm:p-6 w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto border border-amber-300/50 shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="card p-4 sm:p-6 w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg sm:text-xl font-bold text-amber-900 mb-4 sm:mb-6">Crea Nuova Scalata</h3>
             
             <div className="space-y-4">
@@ -534,13 +625,13 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
 
       {/* Modal Dettagli Scalata */}
       {showDetailsModal && selectedScalata && (
-        <div className="fixed inset-0 bg-gray-900/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-gray-50/98 to-white/98 backdrop-blur-sm rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-amber-300/50 shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="card p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-amber-900">{selectedScalata.name}</h3>
+              <h3 className="text-xl font-bold text-primary">{selectedScalata.name}</h3>
               <button
                 onClick={() => setShowDetailsModal(false)}
-                className="text-amber-600 hover:text-amber-800"
+                className="text-secondary hover:text-primary"
               >
                 ✕
               </button>
@@ -550,32 +641,32 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
             <div className="space-y-6">
               {/* Informazioni generali */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                  <p className="text-amber-700 text-sm">Stato</p>
-                  <p className="text-amber-900 font-medium">{getStatusLabel(selectedScalata.status)}</p>
+                <div className="bg-white/5 rounded-xl p-4 border border-[var(--border-color)]">
+                  <p className="text-secondary text-sm">Stato</p>
+                  <p className="text-primary font-medium">{getStatusLabel(selectedScalata.status)}</p>
                 </div>
-                <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                  <p className="text-amber-700 text-sm">Progresso</p>
-                  <p className="text-amber-900 font-medium">{selectedScalata.current_step}/{selectedScalata.max_steps}</p>
+                <div className="bg-white/5 rounded-xl p-4 border border-[var(--border-color)]">
+                  <p className="text-secondary text-sm">Progresso</p>
+                  <p className="text-primary font-medium">{selectedScalata.current_step}/{selectedScalata.max_steps}</p>
                 </div>
-                <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                  <p className="text-amber-700 text-sm">Bankroll Attuale</p>
-                  <p className="text-amber-900 font-medium">{selectedScalata.current_bankroll.toFixed(2)} {currency}</p>
+                <div className="bg-white/5 rounded-xl p-4 border border-[var(--border-color)]">
+                  <p className="text-secondary text-sm">Bankroll Attuale</p>
+                  <p className="text-primary font-medium">{selectedScalata.current_bankroll.toFixed(2)} {currency}</p>
                 </div>
               </div>
               
               {/* Lista passi */}
               <div>
-                <h4 className="text-lg font-bold text-amber-900 mb-4">Passi della Scalata</h4>
+                <h4 className="text-lg font-bold text-primary mb-4">Passi della Scalata</h4>
                 {selectedScalata.steps && selectedScalata.steps.length > 0 ? (
                   <div className="space-y-2">
                     {selectedScalata.steps.map((step) => (
-                      <div key={step.id} className="bg-amber-50 rounded-lg p-4 flex justify-between items-center border border-amber-200">
+                      <div key={step.id} className="bg-white/5 rounded-xl p-4 flex justify-between items-center border border-[var(--border-color)]">
                         <div className="flex items-center space-x-4">
-                          <span className="text-amber-600 font-medium">#{step.sequence}</span>
+                          <span className="text-secondary font-medium">#{step.sequence}</span>
                           <div>
-                            <p className="text-amber-900 font-medium">{step.title}</p>
-                            <p className="text-amber-700 text-sm">Quota: {step.odds} • Stake: {step.stake} {currency}</p>
+                            <p className="text-primary font-medium">{step.title}</p>
+                            <p className="text-secondary text-sm">Quota: {step.odds} • Stake: {step.stake} {currency}</p>
                           </div>
                         </div>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(step.status)}`}>
@@ -585,7 +676,7 @@ export default function ScalateManager({ currency }: ScalateManagerProps) {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-amber-600 text-center py-8">Nessun passo aggiunto ancora</p>
+                  <p className="text-secondary text-center py-8">Nessun passo aggiunto ancora</p>
                 )}
               </div>
             </div>

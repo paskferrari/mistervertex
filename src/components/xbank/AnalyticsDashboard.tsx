@@ -115,15 +115,13 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
   }
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-600'
-    if (score >= 60) return 'text-amber-600'
-    return 'text-red-600'
+    if (score >= 80) return 'text-accent-gold'
+    if (score >= 60) return 'text-secondary'
+    return 'text-red-500'
   }
 
   const getScoreBackground = (score: number) => {
-    if (score >= 80) return 'bg-emerald-100'
-    if (score >= 60) return 'bg-amber-100'
-    return 'bg-red-100'
+    return 'bg-white/10'
   }
 
   if (loading) {
@@ -191,19 +189,19 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-amber-700 text-xs sm:text-sm font-medium">Profitto Totale</p>
-              <p className={`text-lg sm:text-2xl font-bold ${analytics.totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              <p className={`text-lg sm:text-2xl font-bold ${analytics.totalProfit >= 0 ? 'text-primary' : 'text-red-600'}`}>
                 {analytics.totalProfit >= 0 ? '+' : ''}{analytics.totalProfit.toFixed(2)} {currency}
               </p>
             </div>
             {analytics.totalProfit >= 0 ? (
-              <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-500" />
+              <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-accent-gold" />
             ) : (
               <TrendingDown className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
             )}
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-lg sm:rounded-xl p-4 sm:p-6 border border-amber-200 shadow-lg">
+        <div className="card p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-amber-700 text-xs sm:text-sm font-medium">Win Rate</p>
@@ -213,22 +211,22 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-lg sm:rounded-xl p-4 sm:p-6 border border-amber-200 shadow-lg">
+        <div className="card p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-amber-700 text-xs sm:text-sm font-medium">ROI</p>
-              <p className={`text-lg sm:text-2xl font-bold ${analytics.roi >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              <p className={`text-lg sm:text-2xl font-bold ${analytics.roi >= 0 ? 'text-primary' : 'text-red-600'}`}>
                 {analytics.roi >= 0 ? '+' : ''}{analytics.roi.toFixed(1)}%
               </p>
             </div>
-            <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-purple-400" />
+            <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-accent-gold" />
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-lg p-4 sm:p-6">
+        <div className="card p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-400 text-xs sm:text-sm">Streak Attuale</p>
+              <p className="text-secondary text-xs sm:text-sm">Streak Attuale</p>
               <p className={`text-lg sm:text-2xl font-bold ${analytics.streak.type === 'win' ? 'text-green-400' : 'text-red-400'}`}>
                 {analytics.streak.current} {analytics.streak.type === 'win' ? 'W' : 'L'}
               </p>
@@ -241,8 +239,8 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
       {/* Quality Score e Indici */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Quality Score */}
-        <div className="bg-gray-800 rounded-lg p-4 sm:p-6">
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4 flex items-center">
+        <div className="card p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-bold text-primary mb-3 sm:mb-4 flex items-center">
             <Award className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-orange-400" />
             Quality Score
           </h3>
@@ -268,12 +266,12 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
                 return (
                   <div key={key}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-300">{label}</span>
+                      <span className="text-secondary">{label}</span>
                       <span className={getScoreColor(score)}>{score}/100</span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-white/10 rounded-full h-2">
                       <div
-                        className={`h-2 rounded-full ${score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-orange-500' : 'bg-red-500'}`}
+                        className={`h-2 rounded-full ${score >= 80 ? 'bg-accent-gold' : score >= 60 ? 'bg-white/40' : 'bg-red-500'}`}
                         style={{ width: `${score}%` }}
                       ></div>
                     </div>
@@ -285,8 +283,8 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
         </div>
 
         {/* Indici */}
-        <div className="bg-gray-800 rounded-lg p-4 sm:p-6">
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4 flex items-center">
+        <div className="card p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-bold text-primary mb-3 sm:mb-4 flex items-center">
             <PieChart className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-blue-400" />
             Indici di Performance
           </h3>
@@ -300,11 +298,11 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
             }).map(([key, label]) => {
               const value = analytics.indices[key as keyof typeof analytics.indices]
               return (
-                <div key={key} className="text-center p-3 sm:p-4 bg-gray-700 rounded-lg">
-                  <div className="text-lg sm:text-2xl font-bold text-white mb-1">
+                <div key={key} className="text-center p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+                  <div className="text-lg sm:text-2xl font-bold text-primary mb-1">
                     {value.toFixed(1)}
                   </div>
-                  <div className="text-xs sm:text-sm text-gray-400">{label}</div>
+                  <div className="text-xs sm:text-sm text-secondary">{label}</div>
                 </div>
               )
             })}
@@ -313,26 +311,26 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
       </div>
 
       {/* Statistiche per Sport */}
-      <div className="bg-gray-800 rounded-lg p-4 sm:p-6">
-        <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">Performance per Sport</h3>
+      <div className="card p-4 sm:p-6">
+        <h3 className="text-lg sm:text-xl font-bold text-primary mb-3 sm:mb-4">Performance per Sport</h3>
         
         <div className="overflow-x-auto">
           <table className="w-full text-xs sm:text-sm">
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-gray-300">Sport</th>
-                <th className="text-center py-2 sm:py-3 px-2 sm:px-4 text-gray-300">Pred.</th>
-                <th className="text-center py-2 sm:py-3 px-2 sm:px-4 text-gray-300">Win%</th>
-                <th className="text-center py-2 sm:py-3 px-2 sm:px-4 text-gray-300">Profitto</th>
-                <th className="text-center py-2 sm:py-3 px-2 sm:px-4 text-gray-300">ROI</th>
+              <tr className="border-b border-white/10">
+                <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-secondary">Sport</th>
+                <th className="text-center py-2 sm:py-3 px-2 sm:px-4 text-secondary">Pred.</th>
+                <th className="text-center py-2 sm:py-3 px-2 sm:px-4 text-secondary">Win%</th>
+                <th className="text-center py-2 sm:py-3 px-2 sm:px-4 text-secondary">Profitto</th>
+                <th className="text-center py-2 sm:py-3 px-2 sm:px-4 text-secondary">ROI</th>
               </tr>
             </thead>
             <tbody>
               {analytics.sportStats.map((sport, index) => (
-                <tr key={index} className="border-b border-gray-700/50">
-                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-white font-medium capitalize">{sport.sport}</td>
-                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-300">{sport.predictions}</td>
-                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-white">{sport.winRate.toFixed(1)}%</td>
+                <tr key={index} className="border-b border-white/10">
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-primary font-medium capitalize">{sport.sport}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-secondary">{sport.predictions}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-primary">{sport.winRate.toFixed(1)}%</td>
                   <td className={`py-2 sm:py-3 px-2 sm:px-4 text-center font-medium ${sport.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     <span className="hidden sm:inline">{sport.profit >= 0 ? '+' : ''}{sport.profit.toFixed(2)} {currency}</span>
                     <span className="sm:hidden">{sport.profit >= 0 ? '+' : ''}{sport.profit.toFixed(0)}</span>

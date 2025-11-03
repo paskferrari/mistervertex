@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Menu, X, BarChart3, Wallet, Home, Users } from 'lucide-react'
@@ -40,104 +40,11 @@ const navigationItems: NavigationItem[] = [
   }
 ]
 
-interface ColorPalette {
-  background: string
-  border: string
-  text: string
-  textHover: string
-  activeBackground: string
-  activeText: string
-  mobileBackground: string
-  mobileBorder: string
-  logoGradient: string
-  buttonHover: string
-  shadow: string
-}
-
-const palettes: Record<string, ColorPalette> = {
-  home: {
-    background: 'bg-slate-900/96 backdrop-blur-xl',
-    border: 'border-purple-400/40',
-    text: 'text-purple-50',
-    textHover: 'hover:text-purple-200 hover:bg-purple-500/10',
-    activeBackground: 'bg-gradient-to-r from-purple-500/25 to-pink-500/25',
-    activeText: 'text-purple-200',
-    mobileBackground: 'bg-slate-900/98 backdrop-blur-xl',
-    mobileBorder: 'border-purple-400/30',
-    logoGradient: 'from-purple-400 to-pink-400',
-    buttonHover: 'hover:bg-purple-500/20 hover:border-purple-400/60',
-    shadow: 'shadow-lg shadow-purple-500/10'
-  },
-  dashboard: {
-    background: 'bg-white/96 backdrop-blur-xl',
-    border: 'border-blue-300/50',
-    text: 'text-blue-900',
-    textHover: 'hover:text-blue-700 hover:bg-blue-50/80',
-    activeBackground: 'bg-gradient-to-r from-blue-100/90 to-indigo-100/90',
-    activeText: 'text-blue-800',
-    mobileBackground: 'bg-white/98 backdrop-blur-xl',
-    mobileBorder: 'border-blue-300/40',
-    logoGradient: 'from-blue-600 to-indigo-600',
-    buttonHover: 'hover:bg-blue-50/80 hover:border-blue-400/60',
-    shadow: 'shadow-lg shadow-blue-500/10'
-  },
-  xbank: {
-    background: 'bg-gradient-to-r from-amber-50/96 to-orange-50/96 backdrop-blur-xl',
-    border: 'border-amber-400/50',
-    text: 'text-amber-900',
-    textHover: 'hover:text-amber-700 hover:bg-amber-100/60',
-    activeBackground: 'bg-gradient-to-r from-amber-200/90 to-orange-200/90',
-    activeText: 'text-amber-800',
-    mobileBackground: 'bg-gradient-to-br from-amber-50/98 to-orange-50/98 backdrop-blur-xl',
-    mobileBorder: 'border-amber-400/40',
-    logoGradient: 'from-amber-600 to-orange-600',
-    buttonHover: 'hover:bg-amber-100/70 hover:border-amber-500/60',
-    shadow: 'shadow-lg shadow-amber-500/15'
-  },
-  welcome: {
-    background: 'bg-gradient-to-r from-emerald-50/96 to-green-50/96 backdrop-blur-xl',
-    border: 'border-emerald-400/50',
-    text: 'text-emerald-900',
-    textHover: 'hover:text-emerald-700 hover:bg-emerald-100/60',
-    activeBackground: 'bg-gradient-to-r from-emerald-200/90 to-green-200/90',
-    activeText: 'text-emerald-800',
-    mobileBackground: 'bg-gradient-to-br from-emerald-50/98 to-green-50/98 backdrop-blur-xl',
-    mobileBorder: 'border-emerald-400/40',
-    logoGradient: 'from-emerald-600 to-green-600',
-    buttonHover: 'hover:bg-emerald-100/70 hover:border-emerald-500/60',
-    shadow: 'shadow-lg shadow-emerald-500/15'
-  },
-  login: {
-    background: 'bg-slate-900/96 backdrop-blur-xl',
-    border: 'border-purple-400/40',
-    text: 'text-purple-50',
-    textHover: 'hover:text-purple-200 hover:bg-purple-500/10',
-    activeBackground: 'bg-gradient-to-r from-purple-500/25 to-pink-500/25',
-    activeText: 'text-purple-200',
-    mobileBackground: 'bg-slate-900/98 backdrop-blur-xl',
-    mobileBorder: 'border-purple-400/30',
-    logoGradient: 'from-purple-400 to-pink-400',
-    buttonHover: 'hover:bg-purple-500/20 hover:border-purple-400/60',
-    shadow: 'shadow-lg shadow-purple-500/10'
-  },
-  admin: {
-    background: 'bg-red-950/96 backdrop-blur-xl',
-    border: 'border-red-400/50',
-    text: 'text-red-50',
-    textHover: 'hover:text-red-200 hover:bg-red-500/10',
-    activeBackground: 'bg-gradient-to-r from-red-500/25 to-rose-500/25',
-    activeText: 'text-red-200',
-    mobileBackground: 'bg-red-950/98 backdrop-blur-xl',
-    mobileBorder: 'border-red-400/30',
-    logoGradient: 'from-red-400 to-rose-400',
-    buttonHover: 'hover:bg-red-500/20 hover:border-red-400/60',
-    shadow: 'shadow-lg shadow-red-500/15'
-  }
-}
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const navRef = useRef<HTMLElement | null>(null)
   const pathname = usePathname()
 
   // Gestione scroll per effetti dinamici
@@ -154,16 +61,24 @@ export default function Navigation() {
     setIsMobileMenuOpen(false)
   }, [pathname])
 
-  // Determina la palette di colori in base al percorso corrente
-  const currentPalette = useMemo(() => {
-    if (pathname === '/') return palettes.home
-    if (pathname.startsWith('/dashboard')) return palettes.dashboard
-    if (pathname.startsWith('/xbank')) return palettes.xbank
-    if (pathname.startsWith('/welcome')) return palettes.welcome
-    if (pathname.startsWith('/login')) return palettes.login
-    if (pathname.startsWith('/admin')) return palettes.admin
-    return palettes.home
-  }, [pathname])
+  // Navbar luxury statica: nessuna palette dinamica
+
+  // Aggiorna variabile CSS --nav-height per offset dinamico contenuto
+  useEffect(() => {
+    const updateNavHeight = () => {
+      const h = navRef.current?.offsetHeight || 64
+      document.documentElement.style.setProperty('--nav-height', `${h}px`)
+    }
+    updateNavHeight()
+    window.addEventListener('resize', updateNavHeight)
+    return () => window.removeEventListener('resize', updateNavHeight)
+  }, [])
+
+  // Aggiorna altezza al variare dello stato di scroll o apertura menu
+  useEffect(() => {
+    const h = navRef.current?.offsetHeight || 64
+    document.documentElement.style.setProperty('--nav-height', `${h}px`)
+  }, [isScrolled, isMobileMenuOpen])
 
   const isActive = (href: string) => {
     if (href === '/') {
@@ -205,15 +120,14 @@ export default function Navigation() {
       
       <nav 
         className={`
-          ${currentPalette.background} 
-          ${currentPalette.shadow} 
-          border-b ${currentPalette.border} 
-          sticky top-0 z-50 
+          lux-nav
           transition-all duration-500 ease-out
           safe-area-top safe-area-sides
           nav-container touch-optimized
-          ${isScrolled ? 'backdrop-blur-2xl bg-opacity-98 shadow-2xl' : 'backdrop-blur-xl'}
+          border-b border-white/10
+          ${isScrolled ? 'backdrop-blur-2xl shadow-2xl' : 'backdrop-blur-xl'}
         `} 
+        ref={navRef}
         role="navigation" 
         aria-label="Menu principale"
       >
@@ -224,7 +138,7 @@ export default function Navigation() {
               <Link href="/" className="flex items-center space-x-3 group">
                 <div className={`
                   ${isScrolled ? 'w-12 h-12' : 'w-14 h-14'} 
-                  bg-white 
+                  bg-white/10 backdrop-blur-sm
                   rounded-xl flex items-center justify-center 
                   shadow-lg group-hover:scale-110 
                   transition-all duration-300 ease-out
@@ -232,8 +146,8 @@ export default function Navigation() {
                   border-2 border-white/20
                 `}>
                   <Image 
-                    src="/logoVertex.png" 
-                    alt="Logo Vertex" 
+                    src="/media/logoBianco.svg" 
+                    alt="Logo Mister Vertex" 
                     width={isScrolled ? 32 : 40} 
                     height={isScrolled ? 32 : 40} 
                     className="transition-all duration-300 drop-shadow-sm"
@@ -241,13 +155,13 @@ export default function Navigation() {
                 </div>
                 <span className={`
                   ${isScrolled ? 'text-lg' : 'text-xl'} 
-                  font-bold ${currentPalette.text} 
+                  font-bold brand-gradient 
                   group-hover:opacity-80 
                   transition-all duration-300
                   hidden sm:block
                 `}>Mister Vertex</span>
                 <span className={`
-                  text-sm font-bold ${currentPalette.text} 
+                  text-sm font-bold brand-gradient 
                   group-hover:opacity-80 
                   transition-all duration-300
                   block sm:hidden
@@ -264,19 +178,13 @@ export default function Navigation() {
                   key={item.name}
                   href={item.href}
                   className={`
+                    lux-link ${isActive(item.href) ? 'active' : ''}
                     flex items-center space-x-2 
                     ${isScrolled ? 'px-3 py-2' : 'px-4 py-2.5'} 
-                    rounded-xl text-sm font-medium 
+                    text-sm font-medium 
                     transition-all duration-300 ease-out
-                    focus:outline-none focus:ring-2 focus:ring-offset-2 
-                    border border-transparent
                     hover:scale-105 active:scale-95
                     touch-optimized touch-target
-                    ${
-                      isActive(item.href)
-                        ? `${currentPalette.activeBackground} ${currentPalette.activeText} shadow-lg scale-105 border-opacity-50`
-                        : `${currentPalette.text} ${currentPalette.textHover} ${currentPalette.buttonHover} border-transparent`
-                    }
                   `}
                   title={item.description}
                   aria-current={isActive(item.href) ? 'page' : undefined}
@@ -293,7 +201,7 @@ export default function Navigation() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className={`
-                ${currentPalette.text} ${currentPalette.buttonHover} 
+                lux-link
                 focus:outline-none focus:ring-2 focus:ring-offset-2 
                 rounded-xl transition-all duration-300 
                 border border-transparent
@@ -321,9 +229,9 @@ export default function Navigation() {
         ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
       `}>
         <div className={`
-          ${currentPalette.mobileBackground} 
-          border-t ${currentPalette.mobileBorder} 
-          ${currentPalette.shadow} 
+          bg-primary 
+          border-t border-white/10 
+          shadow-lg 
           backdrop-blur-xl
           safe-area-sides
         `} id="mobile-menu">
@@ -335,18 +243,12 @@ export default function Navigation() {
                   key={item.name}
                   href={item.href}
                   className={`
+                    lux-link ${isActive(item.href) ? 'active' : ''}
                     flex items-center space-x-4 px-4 py-4 
-                    rounded-2xl text-base font-medium 
+                    text-base font-medium 
                     transition-all duration-300 ease-out
-                    focus:outline-none focus:ring-2 focus:ring-offset-2 
-                    border border-transparent
                     hover:scale-105 active:scale-95
                     transform touch-optimized touch-target
-                    ${
-                      isActive(item.href)
-                        ? `${currentPalette.activeBackground} ${currentPalette.activeText} shadow-xl scale-105`
-                        : `${currentPalette.text} ${currentPalette.textHover} ${currentPalette.buttonHover}`
-                    }
                   `}
                   style={{
                     animationDelay: `${index * 50}ms`,
@@ -358,14 +260,14 @@ export default function Navigation() {
                 >
                   <div className={`
                     p-2 rounded-xl 
-                    ${isActive(item.href) ? currentPalette.activeBackground : 'bg-opacity-20'}
+                    ${isActive(item.href) ? 'bg-accent-gold-weak' : 'bg-white/10'}
                   `}>
                     <Icon className="w-6 h-6" aria-hidden="true" />
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold">{item.name}</div>
                     {item.description && (
-                      <div className={`text-sm ${currentPalette.text} opacity-70 mt-1`}>{item.description}</div>
+                      <div className={`text-sm text-secondary opacity-70 mt-1`}>{item.description}</div>
                     )}
                   </div>
                 </Link>

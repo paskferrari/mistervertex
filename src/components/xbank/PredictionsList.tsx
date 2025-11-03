@@ -36,9 +36,10 @@ interface Prediction {
 interface PredictionsListProps {
   currency: string
   onBankrollUpdate: (amount: number) => void
+  mock?: boolean
 }
 
-const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) => {
+const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: PredictionsListProps) => {
   const [predictions, setPredictions] = useState<Prediction[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -69,25 +70,33 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
   const loadPredictions = async () => {
     try {
       setLoading(true)
-      
-      // Ottieni il token di sessione
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        console.error('Sessione non valida')
-        return
-      }
-
-      const response = await fetch('/api/xbank/predictions', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setPredictions(data.predictions || [])
+      if (mock) {
+        const sample: Prediction[] = [
+          { id: 'p1', title: 'Juve vs Milan', description: '1X', sport: 'Calcio', prediction_type: 'single', total_stake: 25, stake: 25, total_odds: 2.10, potential_win: 52.5, confidence_level: 4, status: 'pending', event_date: new Date().toISOString(), bets: [] as Bet[] },
+          { id: 'p2', title: 'Federer vs Nadal', description: 'Over 22.5', sport: 'Tennis', prediction_type: 'single', total_stake: 30, stake: 30, total_odds: 1.85, potential_win: 55.5, confidence_level: 3, status: 'won', event_date: new Date().toISOString(), bets: [] as Bet[] },
+          { id: 'p3', title: 'Lakers vs Celtics', description: 'Celtics ML', sport: 'Basket', prediction_type: 'single', total_stake: 20, stake: 20, total_odds: 2.40, potential_win: 48, confidence_level: 4, status: 'lost', event_date: new Date().toISOString(), bets: [] as Bet[] }
+        ]
+        setPredictions(sample)
       } else {
-        console.error('Errore nel caricamento:', response.status)
+        // Ottieni il token di sessione
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.access_token) {
+          console.error('Sessione non valida')
+          return
+        }
+
+        const response = await fetch('/api/xbank/predictions', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          setPredictions(data.predictions || [])
+        } else {
+          console.error('Errore nel caricamento:', response.status)
+        }
       }
     } catch (error) {
       console.error('Errore nel caricamento dei pronostici:', error)
@@ -98,6 +107,24 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
 
   const handleCreatePrediction = async (predictionData: Prediction) => {
     try {
+      if (mock) {
+        const stake = predictionData.stake || predictionData.total_stake || 0
+        const created: Prediction = {
+          ...predictionData,
+          id: `mock-${Date.now()}`,
+          status: 'pending',
+          prediction_type: predictionData.prediction_type || 'single',
+          bets: predictionData.bets || ([] as Bet[]),
+          created_at: new Date().toISOString()
+        }
+        setPredictions(prev => [created, ...prev])
+        if (onBankrollUpdate && stake) {
+          onBankrollUpdate(-Math.abs(stake))
+        }
+        setShowForm(false)
+        return
+      }
+
       // Ottieni il token di sessione
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) {
@@ -154,6 +181,13 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
 
   const handleUpdatePrediction = async (id: string, updates: Partial<Prediction>) => {
     try {
+      if (mock) {
+        setPredictions(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p))
+        if (updates.status && updates.result_profit !== undefined) {
+          onBankrollUpdate(updates.result_profit)
+        }
+        return
+      }
       // Ottieni il token di sessione
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) {
@@ -187,6 +221,10 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
     if (!confirm('Sei sicuro di voler eliminare questo pronostico?')) return
 
     try {
+      if (mock) {
+        setPredictions(prev => prev.filter(p => p.id !== id))
+        return
+      }
       const response = await fetch(`/api/xbank/predictions/${id}`, {
         method: 'DELETE'
       })
@@ -292,27 +330,27 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
     <div className="space-y-6">
       {/* Header con statistiche */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-xl p-6 border border-blue-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+        <div className="card p-6">
           <div className="text-2xl font-bold text-blue-900">{stats.total}</div>
           <div className="text-sm text-blue-700 font-medium">Totali</div>
         </div>
-        <div className="bg-gradient-to-br from-emerald-100 to-green-100 rounded-xl p-6 border border-emerald-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+        <div className="card p-6">
           <div className="text-2xl font-bold text-emerald-700">{stats.won}</div>
           <div className="text-sm text-emerald-700 font-medium">Vinte</div>
         </div>
-        <div className="bg-gradient-to-br from-red-100 to-pink-100 rounded-xl p-6 border border-red-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+        <div className="card p-6">
           <div className="text-2xl font-bold text-red-700">{stats.lost}</div>
           <div className="text-sm text-red-700 font-medium">Perse</div>
         </div>
-        <div className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl p-6 border border-amber-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+        <div className="card p-6">
           <div className="text-2xl font-bold text-amber-700">{stats.pending}</div>
           <div className="text-sm text-amber-700 font-medium">In Attesa</div>
         </div>
-        <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-6 border border-purple-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+        <div className="bg-accent-gold-weak rounded-xl p-6 border border-accent-gold-fade shadow-md hover:shadow-lg transition-shadow duration-300">
           <div className={`text-2xl font-bold ${stats.totalProfit >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
             {stats.totalProfit >= 0 ? '+' : ''}{stats.totalProfit.toFixed(2)} {currency}
           </div>
-          <div className="text-sm text-purple-700 font-medium">Profitto</div>
+          <div className="text-sm text-secondary font-medium">Profitto</div>
         </div>
       </div>
 
@@ -327,14 +365,14 @@ const PredictionsList = ({ currency, onBankrollUpdate }: PredictionsListProps) =
               placeholder="Cerca pronostici..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-amber-300 rounded-xl pl-10 pr-4 py-3 text-amber-900 placeholder-amber-400 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
+              className="lux-input w-full pl-10 pr-4 py-3"
             />
           </div>
 
           {/* Filtri */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center space-x-2 bg-white border border-amber-300 rounded-xl px-5 py-3 text-amber-700 hover:bg-amber-50 transition-colors shadow-sm font-medium"
+            className="btn-secondary flex items-center space-x-2 px-5 py-3 font-medium"
           >
             <Filter className="h-4 w-4" />
             <span>Filtri</span>

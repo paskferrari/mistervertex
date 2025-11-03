@@ -256,7 +256,7 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
       case 'prediction': return 'bg-green-500/20 text-green-400'
       case 'analysis': return 'bg-blue-500/20 text-blue-400'
       case 'tip': return 'bg-orange-500/20 text-orange-400'
-      case 'discussion': return 'bg-purple-500/20 text-purple-400'
+      case 'discussion': return 'bg-white/10 text-secondary'
       default: return 'bg-gray-500/20 text-gray-400'
     }
   }
@@ -495,9 +495,9 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
               {post.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-4">
                   {post.tags.map((tag, index) => (
-                    <span key={index} className="bg-gray-700 text-gray-300 px-2 py-1 rounded-full text-xs">
-                      #{tag}
-                    </span>
+                      <span key={index} className="bg-white/10 text-secondary border border-white/20 px-2 py-1 rounded-full text-xs">
+                        #{tag}
+                      </span>
                   ))}
                 </div>
               )}
@@ -628,7 +628,7 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
                 {newPost.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {newPost.tags.map((tag, index) => (
-                      <span key={index} className="bg-gray-700 text-gray-300 px-2 py-1 rounded-full text-xs flex items-center space-x-1">
+                      <span key={index} className="bg-white/10 text-secondary border border-white/20 px-2 py-1 rounded-full text-xs flex items-center space-x-1">
                         <span>#{tag}</span>
                         <button
                           onClick={() => removeTag(tag)}

@@ -19,9 +19,10 @@ interface BankrollTransaction {
 interface BankrollManagerProps {
   currency: string
   onBankrollUpdate: (newBankroll: number) => void
+  mock?: boolean
 }
 
-export default function BankrollManager({ currency, onBankrollUpdate }: BankrollManagerProps) {
+export default function BankrollManager({ currency, onBankrollUpdate, mock = false }: BankrollManagerProps) {
   const [transactions, setTransactions] = useState<BankrollTransaction[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
@@ -49,30 +50,40 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
   const loadTransactions = useCallback(async () => {
     try {
       setLoading(true)
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '10'
-      })
-
-      if (filterType !== 'all') {
-        params.append('type', filterType)
-      }
-
-      const response = await fetch(`/api/xbank/bankroll?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setTransactions(data.transactions)
-        setTotalPages(data.pagination.totalPages)
+      if (mock) {
+        const sample: BankrollTransaction[] = [
+          { id: 't1', user_id: 'mock', transaction_type: 'deposit', amount: 500, description: 'Deposito iniziale', balance_before: 1000, balance_after: 1500, created_at: new Date().toISOString() },
+          { id: 't2', user_id: 'mock', transaction_type: 'bet', amount: 25, description: 'Scommessa Juve-Milan', balance_before: 1500, balance_after: 1475, created_at: new Date().toISOString() },
+          { id: 't3', user_id: 'mock', transaction_type: 'win', amount: 52.5, description: 'Vincita pronostico', balance_before: 1475, balance_after: 1527.5, created_at: new Date().toISOString() }
+        ]
+        setTransactions(sample)
+        setTotalPages(1)
       } else {
-        showToast('Errore nel caricamento delle transazioni', 'error')
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return
+
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: '10'
+        })
+
+        if (filterType !== 'all') {
+          params.append('type', filterType)
+        }
+
+        const response = await fetch(`/api/xbank/bankroll?${params}`, {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setTransactions(data.transactions)
+          setTotalPages(data.pagination.totalPages)
+        } else {
+          showToast('Errore nel caricamento delle transazioni', 'error')
+        }
       }
     } catch (error) {
       console.error('Error loading transactions:', error)
@@ -80,7 +91,7 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
     } finally {
       setLoading(false)
     }
-  }, [page, filterType])
+  }, [page, filterType, mock])
 
   useEffect(() => {
     loadTransactions()
@@ -88,13 +99,34 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
 
   const addTransaction = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
       if (!newTransaction.description.trim() || newTransaction.amount === 0) {
         showToast('Compila tutti i campi', 'error')
         return
       }
+      if (mock) {
+        const delta = ['deposit','win','adjustment'].includes(newTransaction.transaction_type) ? Math.abs(newTransaction.amount) : -Math.abs(newTransaction.amount)
+        const latest = transactions[0]
+        const newBalance = (latest?.balance_after ?? 1500) + delta
+        const created: BankrollTransaction = {
+          id: `mock-${Date.now()}`,
+          user_id: 'mock',
+          transaction_type: newTransaction.transaction_type,
+          amount: newTransaction.amount,
+          description: newTransaction.description,
+          balance_before: latest?.balance_after ?? 1500,
+          balance_after: newBalance,
+          created_at: new Date().toISOString()
+        }
+        setTransactions(prev => [created, ...prev])
+        showToast('Transazione aggiunta con successo', 'success')
+        setShowAddModal(false)
+        setNewTransaction({ transaction_type: 'deposit', amount: 0, description: '' })
+        onBankrollUpdate(newBalance)
+        return
+      }
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
 
       const response = await fetch('/api/xbank/bankroll', {
         method: 'POST',
@@ -160,9 +192,9 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
     <div className="space-y-6">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl text-white ${
-          toast.type === 'success' ? 'bg-emerald-500 border border-emerald-400' : 'bg-red-500 border border-red-400'
-        } shadow-2xl transform transition-all duration-300`}>
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-2xl ${
+          toast.type === 'success' ? 'bg-white/10 border border-emerald-400 text-primary' : 'bg-white/10 border border-red-400 text-primary'
+        } shadow-2xl backdrop-blur-md transform transition-all duration-300`}>
           {toast.message}
         </div>
       )}
@@ -170,12 +202,12 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-bold text-amber-900">Gestione Bankroll</h3>
-          <p className="text-amber-700">Traccia depositi, prelievi e aggiustamenti</p>
+          <h3 className="text-xl font-bold text-primary">Gestione Bankroll</h3>
+          <p className="text-secondary">Traccia depositi, prelievi e aggiustamenti</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
+          className="flex items-center space-x-2 bg-gradient-to-r from-[var(--accent-gold)] to-[#f4d03f] hover:brightness-110 text-black px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
         >
           <Plus className="h-4 w-4" />
           <span>Nuova Transazione</span>
@@ -185,7 +217,7 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
       {/* Filtri */}
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2" role="search" aria-label="Filtri per le transazioni">
-          <Filter className="h-4 w-4 text-gray-400" aria-hidden="true" />
+          <Filter className="h-4 w-4 text-secondary" aria-hidden="true" />
           <select
             id="transaction-filter"
             value={filterType}
@@ -193,7 +225,7 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
               setFilterType(e.target.value)
               setPage(1)
             }}
-            className="bg-white/80 border border-amber-300 rounded-xl px-3 py-2 text-amber-900 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
+            className="bg-white/10 border border-[var(--border-color)] rounded-xl px-3 py-2 text-primary text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] focus:border-[var(--accent-gold)] shadow-sm backdrop-blur-md"
             aria-label="Filtra transazioni per tipo"
             aria-describedby="filter-help"
           >
@@ -209,7 +241,7 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
         </div>
         <button
           onClick={loadTransactions}
-          className="flex items-center space-x-2 text-amber-700 hover:text-amber-900 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 rounded-xl px-2 py-1"
+          className="flex items-center space-x-2 text-secondary hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] rounded-xl px-2 py-1"
           aria-label="Ricarica lista transazioni"
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -218,27 +250,27 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
       </div>
 
       {/* Lista Transazioni */}
-      <section className="bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden border border-amber-200 shadow-lg" aria-label="Lista delle transazioni">
+      <section className="bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden border border-[var(--border-color)] shadow-lg" aria-label="Lista delle transazioni">
         {loading ? (
-          <div className="p-8 text-center text-amber-700" role="status" aria-live="polite">
+          <div className="p-8 text-center text-secondary" role="status" aria-live="polite">
             <RefreshCw className="h-8 w-8 mx-auto mb-2 animate-spin" aria-hidden="true" />
             <p>Caricamento transazioni...</p>
           </div>
         ) : transactions.length === 0 ? (
-          <div className="p-8 text-center text-amber-700" role="status" aria-live="polite">
+          <div className="p-8 text-center text-secondary" role="status" aria-live="polite">
             <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" aria-hidden="true" />
             <p>Nessuna transazione trovata</p>
           </div>
         ) : (
-          <div className="divide-y divide-amber-200" role="list" aria-label={`${transactions.length} transazioni trovate`}>
+          <div className="divide-y divide-[var(--border-color)]" role="list" aria-label={`${transactions.length} transazioni trovate`}>
             {transactions.map((transaction) => (
-              <article key={transaction.id} className="p-4 hover:bg-amber-50 transition-colors" role="listitem">
+              <article key={transaction.id} className="p-4 hover:bg-white/10 transition-colors" role="listitem">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div aria-hidden="true">{getTransactionIcon(transaction.transaction_type)}</div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-amber-900 font-medium">
+                        <span className="text-primary font-medium">
                           {formatTransactionType(transaction.transaction_type)}
                         </span>
                         <span className={`text-sm font-bold ${
@@ -254,8 +286,8 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
                           {Math.abs(transaction.amount).toFixed(2)} {currency}
                         </span>
                       </div>
-                      <p className="text-amber-700 text-sm">{transaction.description}</p>
-                      <div className="flex items-center space-x-4 text-xs text-amber-600 mt-1">
+                      <p className="text-secondary text-sm">{transaction.description}</p>
+                      <div className="flex items-center space-x-4 text-xs text-secondary mt-1">
                         <span className="flex items-center space-x-1">
                           <Calendar className="h-3 w-3" aria-hidden="true" />
                           <time dateTime={transaction.created_at}>
@@ -281,18 +313,18 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
           <button
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="px-4 py-2 bg-white/80 text-amber-900 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-amber-50 transition-colors border border-amber-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+            className="px-4 py-2 bg-white/10 text-primary rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/15 transition-colors border border-[var(--border-color)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)]"
             aria-label="Vai alla pagina precedente"
           >
             Precedente
           </button>
-          <span className="text-amber-700 font-medium" aria-current="page" aria-live="polite">
+          <span className="text-secondary font-medium" aria-current="page" aria-live="polite">
             Pagina {page} di {totalPages}
           </span>
           <button
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
-            className="px-4 py-2 bg-white/80 text-amber-900 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-amber-50 transition-colors border border-amber-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+            className="px-4 py-2 bg-white/10 text-primary rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/15 transition-colors border border-[var(--border-color)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)]"
             aria-label="Vai alla pagina successiva"
           >
             Successiva
@@ -303,19 +335,19 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
       {/* Modal Nuova Transazione */}
       {showAddModal && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/60 backdrop-blur-xl z-50 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
           onClick={(e) => e.target === e.currentTarget && setShowAddModal(false)}
         >
-          <div className="bg-white rounded-xl p-6 w-full max-w-md border border-amber-200 shadow-2xl">
-            <h3 id="modal-title" className="text-xl font-bold text-amber-900 mb-4">Nuova Transazione</h3>
+          <div className="card p-6 w-full max-w-md">
+            <h3 id="modal-title" className="text-xl font-bold text-primary mb-4">Nuova Transazione</h3>
             
             <form role="form" aria-label="Form per aggiungere nuova transazione">
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="transaction-type" className="block text-sm font-medium text-amber-800 mb-2">
+                  <label htmlFor="transaction-type" className="block text-sm font-medium text-secondary mb-2">
                     Tipo di Transazione
                   </label>
                   <select
@@ -325,7 +357,7 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
                       ...newTransaction,
                       transaction_type: e.target.value as 'bet' | 'win' | 'loss' | 'adjustment' | 'deposit' | 'withdrawal'
                     })}
-                    className="w-full px-3 py-2 bg-white border border-amber-300 rounded-xl text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
+                    className="w-full px-3 py-2 bg-white/10 border border-[var(--border-color)] rounded-xl text-primary focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] shadow-sm backdrop-blur-md"
                     aria-describedby="transaction-type-help"
                   >
                     <option value="deposit">Deposito</option>
@@ -336,7 +368,7 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
                 </div>
               
                 <div>
-                  <label htmlFor="transaction-amount" className="block text-sm font-medium text-amber-800 mb-2">
+                  <label htmlFor="transaction-amount" className="block text-sm font-medium text-secondary mb-2">
                     Importo ({currency})
                   </label>
                   <input
@@ -348,7 +380,7 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
                       ...newTransaction,
                       amount: parseFloat(e.target.value) || 0
                     })}
-                    className="w-full px-3 py-2 bg-white border border-amber-300 rounded-xl text-amber-900 placeholder-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
+                    className="w-full px-3 py-2 bg-white/10 border border-[var(--border-color)] rounded-xl text-primary placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] shadow-sm backdrop-blur-md"
                     placeholder="0.00"
                     aria-describedby="amount-help"
                     required
@@ -357,7 +389,7 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
                 </div>
               
                 <div>
-                  <label htmlFor="transaction-description" className="block text-sm font-medium text-amber-800 mb-2">
+                  <label htmlFor="transaction-description" className="block text-sm font-medium text-secondary mb-2">
                     Descrizione
                   </label>
                   <input
@@ -368,7 +400,7 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
                       ...newTransaction,
                       description: e.target.value
                     })}
-                    className="w-full px-3 py-2 bg-white border border-amber-300 rounded-xl text-amber-900 placeholder-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
+                    className="w-full px-3 py-2 bg-white/10 border border-[var(--border-color)] rounded-xl text-primary placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] shadow-sm backdrop-blur-md"
                     placeholder="Descrizione della transazione"
                     aria-describedby="description-help"
                     required
@@ -382,7 +414,7 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 text-amber-700 hover:text-amber-900 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 rounded-xl"
+                className="px-4 py-2 text-secondary hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] rounded-xl"
                 aria-label="Chiudi modal senza salvare"
               >
                 Annulla
@@ -390,7 +422,7 @@ export default function BankrollManager({ currency, onBankrollUpdate }: Bankroll
               <button
                 type="button"
                 onClick={addTransaction}
-                className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+                className="px-4 py-2 bg-gradient-to-r from-[var(--accent-gold)] to-[#f4d03f] hover:brightness-110 text-black rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)]"
                 aria-label="Salva nuova transazione"
               >
                 Aggiungi

@@ -22,7 +22,7 @@ export default function LazyImage({
   height,
   className = '',
   priority = false,
-  placeholder = '/logoVertex.png',
+  placeholder = '/media/logoBianco.svg',
   onLoad,
   onError
 }: LazyImageProps) {

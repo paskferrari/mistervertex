@@ -1,0 +1,452 @@
+/* ===== RESPONSIVE DESIGN FIXES ===== */
+/* Miglioramenti per dispositivi mobile e tablet */
+
+/* ===== BANKROLL MANAGER RESPONSIVE ===== */
+.bankroll-transaction-item {
+  @apply p-3 sm:p-4;
+}
+
+.bankroll-transaction-item .transaction-details {
+  @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4;
+}
+
+.bankroll-transaction-item .transaction-info {
+  @apply flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3;
+}
+
+.bankroll-transaction-item .transaction-meta {
+  @apply flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm;
+}
+
+.bankroll-transaction-item .transaction-amount {
+  @apply text-sm sm:text-base font-bold;
+}
+
+/* ===== SCALATE MANAGER RESPONSIVE ===== */
+.scalate-grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6;
+}
+
+.scalate-card {
+  @apply p-4 sm:p-6;
+}
+
+.scalate-card .card-header {
+  @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4;
+}
+
+.scalate-card .card-actions {
+  @apply flex flex-col sm:flex-row gap-2 sm:gap-3;
+}
+
+.scalate-stats {
+  @apply grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4;
+}
+
+/* ===== PREDICTIONS LIST RESPONSIVE ===== */
+.predictions-filters {
+  @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4;
+}
+
+.predictions-actions {
+  @apply flex flex-col md:flex-row gap-3 sm:gap-4 items-start md:items-center justify-between;
+}
+
+.prediction-card {
+  @apply p-4 sm:p-6;
+}
+
+.prediction-card .prediction-header {
+  @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4;
+}
+
+.prediction-stats {
+  @apply grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4;
+}
+
+/* ===== GROUPS MANAGER RESPONSIVE ===== */
+.groups-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+}
+
+.group-card {
+  @apply p-4 sm:p-6;
+}
+
+.group-card .group-header {
+  @apply flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4;
+}
+
+.group-card .group-actions {
+  @apply flex items-center gap-2 sm:gap-3;
+}
+
+.group-stats {
+  @apply grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4;
+}
+
+.group-color-picker {
+  @apply grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2;
+}
+
+/* ===== ANALYTICS DASHBOARD RESPONSIVE ===== */
+.analytics-filters {
+  @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4;
+}
+
+.analytics-stats-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6;
+}
+
+.analytics-charts-grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6;
+}
+
+.analytics-performance-grid {
+  @apply grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4;
+}
+
+/* ===== PERSONAL BOARD RESPONSIVE ===== */
+.personal-board-header {
+  @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4;
+}
+
+.personal-board-tabs {
+  @apply flex space-x-1 bg-gray-800 rounded-lg p-1;
+}
+
+.personal-board-tab {
+  @apply flex-1 py-2 sm:py-3 px-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors min-h-[44px];
+}
+
+.personal-board-filters {
+  @apply flex flex-col sm:flex-row gap-3;
+}
+
+.post-card {
+  @apply p-4 sm:p-6;
+}
+
+.post-header {
+  @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4;
+}
+
+.post-meta {
+  @apply flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2;
+}
+
+.post-actions {
+  @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3;
+}
+
+.post-stats {
+  @apply grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4;
+}
+
+/* ===== PREDICTION FORM RESPONSIVE ===== */
+.prediction-form {
+  @apply p-3 sm:p-6 space-y-4 sm:space-y-6;
+}
+
+.prediction-form-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6;
+}
+
+.prediction-form-grid-4 {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3;
+}
+
+.prediction-form-actions {
+  @apply flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-4;
+}
+
+/* ===== BACKUP MANAGER RESPONSIVE ===== */
+.backup-actions {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.backup-settings {
+  @apply space-y-4;
+}
+
+/* ===== NOTIFICATION CENTER RESPONSIVE ===== */
+.notification-item {
+  @apply flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 sm:p-4;
+}
+
+.notification-content {
+  @apply flex-1 min-w-0;
+}
+
+.notification-actions {
+  @apply flex items-center gap-2 flex-shrink-0;
+}
+
+/* ===== PAGINATION RESPONSIVE ===== */
+.pagination-responsive {
+  @apply flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4;
+}
+
+.pagination-responsive button {
+  @apply min-w-[80px] sm:min-w-[100px];
+}
+
+.pagination-responsive span {
+  @apply px-2 py-1 text-center;
+}
+
+
+
+.metrics-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4;
+}
+
+.info-grid {
+  @apply grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mb-4;
+}
+
+.action-buttons {
+  @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2;
+}
+
+.btn-responsive-sm {
+  @apply px-3 py-2 text-sm min-h-[40px] min-w-[80px];
+}
+
+@media (max-width: 640px) {
+  .info-grid {
+    @apply grid-cols-2 gap-2;
+  }
+  
+  .action-buttons {
+    @apply flex-col items-stretch;
+  }
+  
+  .btn-responsive-sm {
+    @apply w-full justify-center;
+  }
+}
+
+/* ===== GENERAL RESPONSIVE UTILITIES ===== */
+
+/* Touch targets per mobile */
+.touch-target {
+  @apply min-h-[44px] min-w-[44px];
+}
+
+/* Bottoni responsive */
+.btn-responsive {
+  @apply px-3 sm:px-4 md:px-6 py-2 sm:py-3 text-sm sm:text-base;
+}
+
+/* Input responsive */
+.input-responsive {
+  @apply px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base min-h-[44px];
+}
+
+/* Card responsive */
+.card-responsive {
+  @apply p-4 sm:p-6;
+}
+
+/* Grid responsive per dashboard */
+.dashboard-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
+}
+
+/* Flex responsive per header */
+.header-responsive {
+  @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4;
+}
+
+/* Spacing responsive */
+.space-responsive {
+  @apply space-y-3 sm:space-y-4 md:space-y-6;
+}
+
+/* Text responsive */
+.text-responsive {
+  @apply text-sm sm:text-base;
+}
+
+.text-responsive-lg {
+  @apply text-base sm:text-lg md:text-xl;
+}
+
+.text-responsive-xl {
+  @apply text-lg sm:text-xl md:text-2xl lg:text-3xl;
+}
+
+/* ===== OVERFLOW E SCROLL FIXES ===== */
+
+/* Tabelle responsive */
+.table-responsive {
+  @apply overflow-x-auto;
+}
+
+.table-responsive table {
+  @apply min-w-full;
+}
+
+.table-responsive th,
+.table-responsive td {
+  @apply px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base;
+}
+
+/* Scroll orizzontale per filtri */
+.filters-scroll {
+  @apply flex overflow-x-auto space-x-2 sm:space-x-3 pb-2;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.filters-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.filters-scroll > * {
+  @apply flex-shrink-0;
+}
+
+/* ===== MODAL RESPONSIVE ===== */
+.modal-responsive {
+  @apply w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl;
+}
+
+.modal-responsive .modal-content {
+  @apply p-4 sm:p-6;
+}
+
+.modal-responsive .modal-header {
+  @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4;
+}
+
+.modal-responsive .modal-actions {
+  @apply flex flex-col sm:flex-row gap-3 sm:gap-4;
+}
+
+/* ===== FORM RESPONSIVE ===== */
+.form-responsive {
+  @apply space-y-4 sm:space-y-6;
+}
+
+.form-responsive .form-group {
+  @apply space-y-2;
+}
+
+.form-responsive .form-row {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4;
+}
+
+.form-responsive .form-row-3 {
+  @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4;
+}
+
+.form-responsive .form-actions {
+  @apply flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4 sm:pt-6;
+}
+
+/* ===== NAVIGATION RESPONSIVE ===== */
+.nav-responsive {
+  @apply flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4;
+}
+
+.nav-responsive .nav-links {
+  @apply flex flex-col sm:flex-row gap-2 sm:gap-4;
+}
+
+.nav-responsive .nav-actions {
+  @apply flex flex-col sm:flex-row gap-2 sm:gap-3;
+}
+
+/* ===== MEDIA QUERIES SPECIFICHE ===== */
+
+/* Mobile first approach */
+@media (max-width: 640px) {
+  /* Riduci padding e margin su mobile */
+  .mobile-compact {
+    @apply p-3 m-2;
+  }
+  
+  /* Stack elementi su mobile */
+  .mobile-stack {
+    @apply flex-col space-y-2 space-x-0;
+  }
+  
+  /* Nascondi elementi non essenziali su mobile */
+  .mobile-hidden {
+    @apply hidden;
+  }
+  
+  /* Testo più piccolo su mobile */
+  .mobile-text-sm {
+    @apply text-xs;
+  }
+  
+  /* Bottoni full-width su mobile */
+  .mobile-full-width {
+    @apply w-full;
+  }
+}
+
+/* Tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .tablet-grid-2 {
+    @apply grid-cols-2;
+  }
+  
+  .tablet-flex-row {
+    @apply flex-row;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1025px) {
+  .desktop-grid-4 {
+    @apply grid-cols-4;
+  }
+  
+  .desktop-space-x-6 {
+    @apply space-x-6;
+  }
+}
+
+/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+
+/* Focus visible per keyboard navigation */
+.focus-visible-enhanced {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .high-contrast-border {
+    @apply border-2 border-black;
+  }
+  
+  .high-contrast-text {
+    @apply text-black;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .motion-safe-only {
+    @apply transition-none transform-none;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .print-hidden {
+    @apply hidden;
+  }
+  
+  .print-visible {
+    @apply block;
+  }
+  
+  .print-break-inside-avoid {
+    break-inside: avoid;
+  }
+}

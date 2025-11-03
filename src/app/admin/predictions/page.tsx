@@ -148,7 +148,7 @@ export default function AdminPredictionsPage() {
 
   const getAccessLevelBadge = (level: number) => {
     switch (level) {
-      case 2: return <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full border border-purple-500/30">VIP</span>
+      case 2: return <span className="px-2 py-1 bg-accent-gold-weak text-white text-xs rounded-full border border-accent-gold-fade">VIP</span>
       case 1: return <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full border border-blue-500/30">Premium</span>
       case 0: return <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full border border-green-500/30">Base</span>
       default: return <span className="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs rounded-full border border-gray-500/30">Sconosciuto</span>
@@ -166,23 +166,23 @@ export default function AdminPredictionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-xl">Caricamento...</div>
+      <div className="min-h-screen bg-primary text-primary flex items-center justify-center">
+        <div className="text-xl">Caricamento...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-primary text-primary">
       {/* Header */}
       <header className="bg-white/10 backdrop-blur-sm border-b border-white/20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="logo-container p-2 bg-white rounded-full shadow-lg border-2 border-purple-400/30">
+              <div className="logo-container p-2 bg-white rounded-full shadow-lg border border-accent-gold-fade">
                 <Image 
-                  src="/logoVertex.png" 
-                  alt="Logo Vertex" 
+                  src="/media/logoBianco.svg" 
+                  alt="Logo Mister Vertex" 
                   width={40} 
                   height={40}
                   className="drop-shadow-sm"
@@ -203,7 +203,7 @@ export default function AdminPredictionsPage() {
               setEditingId(null)
               setShowForm(true)
             }}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-2 lux-cta px-4 py-2 rounded-lg transition-colors"
           >
             <Plus className="h-4 w-4" />
             Nuovo Pronostico
@@ -223,7 +223,7 @@ export default function AdminPredictionsPage() {
                     type="text"
                     value={form.title}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({...form, title: e.target.value})}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="lux-input w-full px-3 py-2"
                     required
                   />
                 </div>
@@ -233,7 +233,7 @@ export default function AdminPredictionsPage() {
                     type="text"
                     value={form.sport}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({...form, sport: e.target.value})}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="lux-input w-full px-3 py-2"
                     required
                   />
                 </div>
@@ -244,7 +244,7 @@ export default function AdminPredictionsPage() {
                 <textarea
                   value={form.description}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setForm({...form, description: e.target.value})}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="lux-input w-full px-3 py-2"
                   required
                   rows={3}
                 />
@@ -257,7 +257,7 @@ export default function AdminPredictionsPage() {
                     type="text"
                     value={form.match_info}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({...form, match_info: e.target.value})}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="lux-input w-full px-3 py-2"
                     placeholder="es. Team A vs Team B"
                   />
                 </div>
@@ -267,7 +267,7 @@ export default function AdminPredictionsPage() {
                     type="text"
                     value={form.prediction_type}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({...form, prediction_type: e.target.value})}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="lux-input w-full px-3 py-2"
                     placeholder="es. 1X2, Over/Under"
                   />
                 </div>
@@ -281,7 +281,7 @@ export default function AdminPredictionsPage() {
                     step="0.01"
                     value={form.odds}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({...form, odds: e.target.value})}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="lux-input w-full px-3 py-2"
                     required
                   />
                 </div>
@@ -290,7 +290,7 @@ export default function AdminPredictionsPage() {
                   <select
                     value={form.confidence_level}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm({...form, confidence_level: e.target.value})}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="lux-select w-full px-3 py-2"
                   >
                     <option value="1">1 - Molto Bassa</option>
                     <option value="2">2 - Bassa</option>
@@ -304,7 +304,7 @@ export default function AdminPredictionsPage() {
                   <select
                     value={form.access_level}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm({...form, access_level: e.target.value})}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="lux-select w-full px-3 py-2"
                   >
                     <option value="0">Base</option>
                     <option value="1">Premium</option>
@@ -319,7 +319,7 @@ export default function AdminPredictionsPage() {
                 <button 
                   type="submit" 
                   disabled={submitting}
-                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+                  className="flex items-center gap-2 lux-cta disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors"
                 >
                   <Save className="h-4 w-4" />
                   {submitting ? 'Salvando...' : 'Salva'}
@@ -390,7 +390,7 @@ export default function AdminPredictionsPage() {
             <p className="text-gray-400 mb-4">Nessun pronostico trovato</p>
             <button 
               onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+              className="flex items-center gap-2 lux-cta text-white px-4 py-2 rounded-lg transition-colors"
             >
               <Plus className="h-4 w-4" />
               Crea il primo pronostico

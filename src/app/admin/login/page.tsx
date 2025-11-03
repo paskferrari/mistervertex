@@ -49,15 +49,15 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-primary text-primary flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="p-2 bg-white rounded-full shadow-lg">
+            <div className="p-2 bg-white rounded-full shadow-lg border border-accent-gold-fade">
               <Image 
-                src="/logoVertex.png" 
-                alt="Logo Vertex" 
+                src="/media/logoBianco.svg" 
+                alt="Logo Mister Vertex" 
                 width={56} 
                 height={56}
                 className="drop-shadow-sm"
@@ -83,7 +83,7 @@ export default function AdminLogin() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="lux-input w-full pl-10 pr-4 py-3"
                   placeholder="admin@mistervertex.com"
                   required
                   disabled={isLoading}
@@ -102,7 +102,7 @@ export default function AdminLogin() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="lux-input w-full pl-10 pr-4 py-3"
                   placeholder="••••••••"
                   required
                   disabled={isLoading}
@@ -119,7 +119,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="lux-cta w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Accesso in corso...' : 'Accedi'}
             </button>

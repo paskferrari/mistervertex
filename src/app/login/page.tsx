@@ -72,16 +72,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-primary text-primary">
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2 text-white hover:text-purple-300 transition-colors">
+          <Link href="/" className="flex items-center space-x-2 lux-link">
             <ArrowLeft className="h-5 w-5" />
             <span>Torna alla Home</span>
           </Link>
           <div className="flex items-center space-x-2">
-            <TrendingUp className="h-8 w-8 text-purple-400" />
+            <TrendingUp className="h-8 w-8 text-accent-gold" />
             <span className="text-2xl font-bold text-white">Mister Vertex</span>
           </div>
         </div>
@@ -94,10 +94,10 @@ export default function LoginPage() {
             {/* Logo and Title */}
             <div className="text-center mb-8">
               <div className="flex items-center justify-center mb-4">
-                <div className="p-4 bg-white rounded-full border-2 border-purple-500/30 shadow-lg">
+                <div className="p-4 bg-white rounded-full border border-accent-gold-fade shadow-lg">
                   <Image 
-                    src="/logoVertex.png" 
-                    alt="Logo Vertex" 
+                    src="/media/logoBianco.svg" 
+                    alt="Logo Mister Vertex" 
                     width={48} 
                     height={48}
                     className="drop-shadow-sm"
@@ -129,7 +129,7 @@ export default function LoginPage() {
                     id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="lux-input w-full pl-10 pr-4 py-3"
                     placeholder="La tua email"
                     required
                   />
@@ -148,7 +148,7 @@ export default function LoginPage() {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="lux-input w-full pl-10 pr-12 py-3"
                     placeholder="La tua password"
                     required
                   />
@@ -166,7 +166,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
+                className="lux-cta w-full font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Accesso in corso...' : 'Accedi'}
               </button>
@@ -174,9 +174,9 @@ export default function LoginPage() {
 
             {/* Additional Links */}
             <div className="mt-6 text-center">
-              <p className="text-gray-400 text-sm">
+              <p className="text-secondary text-sm">
                 Non hai ancora un account?{' '}
-                <Link href="/" className="text-purple-400 hover:text-purple-300 transition-colors">
+                <Link href="/" className="lux-link">
                   Richiedi l&apos;accesso
                 </Link>
               </p>
@@ -201,10 +201,10 @@ export default function LoginPage() {
         <div className="text-center">
           {/* Footer Logo */}
           <div className="flex justify-center mb-4">
-            <div className="logo-container p-2 bg-white/10 rounded-full border border-white/20">
+            <div className="p-2 bg-white/10 rounded-full border border-accent-gold-fade">
                <Image 
-                 src="/logoVertex.png" 
-                 alt="Logo Vertex" 
+                 src="/media/logoBianco.svg" 
+                 alt="Logo Mister Vertex" 
                  width={32} 
                  height={32}
                  className="drop-shadow-sm"

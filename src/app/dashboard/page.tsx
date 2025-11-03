@@ -258,9 +258,9 @@ export default function UserDashboard() {
         return {
           title: 'VIP',
           icon: Crown,
-          color: 'text-purple-400',
-          bgColor: 'bg-purple-500/20',
-          borderColor: 'border-purple-500/30'
+          color: 'text-white',
+          bgColor: 'bg-accent-gold-weak',
+          borderColor: 'border-accent-gold-fade'
         }
       case 'abbonato_premium':
         return {
@@ -305,7 +305,7 @@ export default function UserDashboard() {
         )
       case 2:
         return (
-          <span className="px-2 py-1 text-xs font-medium bg-purple-500/20 text-purple-400 rounded-full border border-purple-500/30">
+          <span className="px-2 py-1 text-xs font-medium bg-accent-gold-weak text-white rounded-full border border-accent-gold-fade">
             VIP
           </span>
         )
@@ -327,7 +327,7 @@ export default function UserDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-primary flex items-center justify-center">
         <div className="text-white text-xl">Caricamento...</div>
       </div>
     )
@@ -341,7 +341,7 @@ export default function UserDashboard() {
   const IconComponent = roleInfo.icon
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-primary">
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg animate-fade-in ${
@@ -357,7 +357,7 @@ export default function UserDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <TrendingUp className="h-8 w-8 text-purple-400" />
+                <TrendingUp className="h-8 w-8 text-accent-gold" />
                 <span className="text-2xl font-bold text-white">Mister Vertex</span>
               </div>
               <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${roleInfo.bgColor} ${roleInfo.borderColor} border`}>
@@ -371,7 +371,7 @@ export default function UserDashboard() {
               {user.role === 'abbonato_vip' && (
                 <button
                   onClick={() => router.push('/xbank')}
-                  className="flex items-center space-x-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
+                  className="lux-cta inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg text-sm font-medium"
                 >
                   <Zap className="h-4 w-4" />
                   <span>X-BANK</span>
@@ -396,7 +396,7 @@ export default function UserDashboard() {
             onClick={() => setActiveTab('predictions')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 touch-optimized touch-target ${
               activeTab === 'predictions'
-                ? 'bg-purple-600 text-white shadow-lg scale-105'
+                ? 'bg-primary text-white shadow-lg scale-105'
                 : 'text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
@@ -406,7 +406,7 @@ export default function UserDashboard() {
             onClick={() => setActiveTab('wallet')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 touch-optimized touch-target ${
               activeTab === 'wallet'
-                ? 'bg-purple-600 text-white shadow-lg scale-105'
+                ? 'bg-primary text-white shadow-lg scale-105'
                 : 'text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
@@ -416,7 +416,7 @@ export default function UserDashboard() {
             onClick={() => setActiveTab('profile')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 touch-optimized touch-target ${
               activeTab === 'profile'
-                ? 'bg-purple-600 text-white shadow-lg scale-105'
+                ? 'bg-primary text-white shadow-lg scale-105'
                 : 'text-gray-300 hover:text-white hover:bg-white/10'
             }`}
           >
@@ -487,7 +487,7 @@ export default function UserDashboard() {
                           <button
                             onClick={() => copyToWallet(prediction)}
                             disabled={loadingOperation === `copy-${prediction.id}`}
-                            className="flex items-center space-x-1 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white px-3 py-1 rounded-lg text-sm transition-all duration-200 transform hover:scale-105 active:scale-95 hover:shadow-lg group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none touch-optimized touch-target"
+                            className="lux-cta flex items-center space-x-1 px-3 py-1 rounded-lg text-sm transition-all duration-200 transform hover:scale-105 active:scale-95 hover:shadow-lg group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none touch-optimized touch-target"
                           >
                             {loadingOperation === `copy-${prediction.id}` ? (
                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -652,8 +652,8 @@ export default function UserDashboard() {
                         )}
                         {user.role === 'abbonato_vip' && (
                           <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                            <span className="text-purple-400 text-sm">Pronostici VIP</span>
+                            <div className="w-2 h-2 bg-accent-gold-weak rounded-full"></div>
+                            <span className="text-secondary text-sm">Pronostici VIP</span>
                           </div>
                         )}
                       </div>
