@@ -1,4 +1,4 @@
-export async function trackEvent(name: string, payload: Record<string, any> = {}) {
+export async function trackEvent(name: string, payload: Record<string, unknown> = {}) {
   try {
     const body = JSON.stringify({ name, payload, ts: Date.now() })
     await fetch('/api/analytics', {

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseUserClient } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 // PUT - Aggiorna le impostazioni di copy-trade
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: unknown
 ) {
   try {
-    const { id } = await params
+    const { id } = (context as { params: { id: string } }).params
     const body = await request.json()
     const { copy_settings, is_active } = body
 
@@ -23,8 +23,8 @@ export async function PUT(
     }
 
     // Verifica l'utente con il token
-    const supabase = getSupabaseUserClient(token)
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    const supabase = supabaseAdmin
     
     if (authError || !user) {
       return NextResponse.json(
@@ -69,7 +69,7 @@ export async function PUT(
     }
 
     // Prepara i dati per l'aggiornamento
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString()
     }
 
@@ -123,10 +123,10 @@ export async function PUT(
 // DELETE - Smetti di seguire (unfollow)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: unknown
 ) {
   try {
-    const { id } = await params
+    const { id } = (context as { params: { id: string } }).params
 
     // Ottieni il token dall'header Authorization
     const authHeader = request.headers.get('authorization')
@@ -140,8 +140,8 @@ export async function DELETE(
     }
 
     // Verifica l'utente con il token
-    const supabase = getSupabaseUserClient(token)
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    const supabase = supabaseAdmin
     
     if (authError || !user) {
       return NextResponse.json(

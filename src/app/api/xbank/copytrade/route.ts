@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseUserClient } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 // GET - Recupera gli utenti seguiti per copy-trade
 export async function GET(request: NextRequest) {
@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Verifica l'utente con il token
-    const supabase = getSupabaseUserClient(token)
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    const supabase = supabaseAdmin
     
     if (authError || !user) {
       return NextResponse.json(
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
         let totalProfit = 0
         let totalStake = 0
         let wins = 0
-        let total = predictions?.length || 0
+        const total = predictions?.length || 0
 
         predictions?.forEach(pred => {
           totalStake += pred.stake_amount
@@ -197,8 +197,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verifica l'utente con il token
-    const supabase = getSupabaseUserClient(token)
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    const supabase = supabaseAdmin
     
     if (authError || !user) {
       return NextResponse.json(
@@ -206,6 +206,7 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
+    // utente già verificato tramite token
 
     // Verifica che l'utente sia VIP
     const { data: userData } = await supabase

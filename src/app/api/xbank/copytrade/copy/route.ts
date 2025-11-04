@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseUserClient } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 // POST - Copia un pronostico da un trader seguito
 export async function POST(request: NextRequest) {
@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verifica l'utente con il token
-    const supabase = getSupabaseUserClient(token)
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    const supabase = supabaseAdmin
     
     if (authError || !user) {
       return NextResponse.json(
@@ -233,8 +233,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Verifica l'utente con il token
-    const supabase = getSupabaseUserClient(token)
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    const supabase = supabaseAdmin
     
     if (authError || !user) {
       return NextResponse.json(

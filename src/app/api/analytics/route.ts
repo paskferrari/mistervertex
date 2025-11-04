@@ -17,8 +17,9 @@ export async function POST(request: NextRequest) {
         if (error) {
           console.warn('Analytics insert error:', error.message)
         }
-      } catch (e: any) {
-        console.warn('Analytics store failed:', e?.message)
+      } catch (e: unknown) {
+        const msg = typeof e === 'object' && e && 'message' in e ? (e as { message?: string }).message : undefined
+        console.warn('Analytics store failed:', msg)
       }
     }
 
