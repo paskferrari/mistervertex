@@ -1,4 +1,17 @@
-import { CapacitorConfig } from '@capacitor/cli'
+// Evita dipendenze di build su '@capacitor/cli' in ambienti come Vercel
+// Definiamo un tipo locale minimale per la configurazione di Capacitor
+type CapacitorConfig = {
+  appId?: string
+  appName?: string
+  webDir?: string
+  server?: {
+    url?: string
+    androidScheme?: string
+    allowNavigation?: string[]
+    cleartext?: boolean
+  }
+  plugins?: Record<string, unknown>
+}
 
 // Usa CAP_URL per puntare a un server custom (es. Android emulator 10.0.2.2:3000)
 // Usa CAP_DEV=1 per abilitare la modalità dev di default su localhost:3000
