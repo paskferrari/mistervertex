@@ -70,10 +70,8 @@ export default function RootLayout({
         <PWAManager>
           <BackgroundOrbs />
           <Navigation />
-          <main className="min-h-screen native-scroll safe-area-bottom content-offset">
-            <div className="h-full overflow-y-auto">
-              {children}
-            </div>
+          <main className="min-h-screen supports-[height:100dvh]:min-h-[100dvh] native-scroll mobile-scroll safe-area-bottom content-offset overflow-y-auto no-horizontal-scroll">
+            {children}
           </main>
         </PWAManager>
       </body>

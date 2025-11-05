@@ -14,8 +14,8 @@ export default function XBankLayout({
 }) {
   return (
     <PWAManager>
-      <div className="min-h-screen w-full overflow-hidden bg-primary text-primary">
-        <main className="h-screen w-full overflow-y-auto overflow-x-hidden">
+      <div className="min-h-screen supports-[height:100dvh]:min-h-[100dvh] w-full bg-primary text-primary no-horizontal-scroll">
+        <main className="min-h-screen supports-[height:100dvh]:min-h-[100dvh] w-full overflow-y-auto mobile-scroll safe-area-bottom">
           {children}
         </main>
       </div>
