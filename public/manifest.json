@@ -12,6 +12,12 @@
   "categories": ["sports", "entertainment", "finance"],
   "icons": [
     {
+      "src": "/media/logoBianco.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
       "src": "/icons/icon-72x72.png",
       "sizes": "72x72",
       "type": "image/png",
@@ -84,8 +90,9 @@
       "url": "/dashboard",
       "icons": [
         {
-          "src": "/icons/shortcut-dashboard.png",
-          "sizes": "96x96"
+          "src": "/media/logoBianco.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
         }
       ]
     },
@@ -96,8 +103,9 @@
       "url": "/xbank",
       "icons": [
         {
-          "src": "/icons/shortcut-xbank.png",
-          "sizes": "96x96"
+          "src": "/media/logoBianco.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
         }
       ]
     }

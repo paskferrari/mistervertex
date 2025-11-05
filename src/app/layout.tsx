@@ -55,10 +55,9 @@ export default function RootLayout({
         <meta name="application-name" content="Mister Vertex" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
-        <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#000000" />
+        <link rel="apple-touch-icon" href="/media/logoBianco.svg" />
+        <link rel="icon" type="image/svg+xml" href="/media/logoBianco.svg" />
+        <link rel="mask-icon" href="/media/logoBianco.svg" color="#000000" />
         
         {/* Preload critical resources */}
         <link rel="preload" href="/media/logoBianco.svg" as="image" />

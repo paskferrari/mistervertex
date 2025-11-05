@@ -85,20 +85,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-primary text-primary">
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-white/10 rounded-full border border-accent-gold-fade backdrop-blur-sm">
-              <LazyImage 
-                src="/media/logoBianco.svg" 
-                alt="Logo Mister Vertex" 
-                width={40} 
-                height={40}
-                className="drop-shadow-sm"
-                priority={true}
-              />
-            </div>
-            <span className="text-2xl font-bold brand-gradient">Mister Vertex</span>
-          </div>
+        <div className="flex items-center justify-end">
           <div className="flex items-center space-x-3">
             <button
               onClick={() => {
