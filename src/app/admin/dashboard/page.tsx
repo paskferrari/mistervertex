@@ -356,10 +356,10 @@ export default function AdminDashboard() {
       {/* Create User Modal */}
       {showCreateUser && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-800 border border-white/20 rounded-xl p-6 w-full max-w-md">
+          <div className="bg-slate-800 border border-white/20 rounded-xl p-6 w-full max-w-md modal-content-scroll">
             <h3 className="text-xl font-semibold text-white mb-4">Crea Nuovo Utente</h3>
             
-            <form onSubmit={handleCreateUser} className="space-y-4">
+            <form onSubmit={handleCreateUser} className="space-y-4 mobile-scroll">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
                 <input

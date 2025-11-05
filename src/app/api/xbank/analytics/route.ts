@@ -69,13 +69,13 @@ export async function GET(request: NextRequest) {
     const userId = user.id
 
     // Verifica ruolo VIP
-    const { data: user, error: userError } = await supabaseAdmin
+    const { data: userRow, error: userError } = await supabaseAdmin
       .from('users')
       .select('role')
       .eq('id', userId)
       .single()
     
-    if (userError || !user || (user.role !== 'abbonato_vip' && user.role !== 'admin')) {
+    if (userError || !userRow || (userRow.role !== 'abbonato_vip' && userRow.role !== 'admin')) {
       return NextResponse.json({ error: 'Accesso negato' }, { status: 403 })
     }
 

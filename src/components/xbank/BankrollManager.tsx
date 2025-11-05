@@ -356,11 +356,11 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
           aria-labelledby="modal-title"
           onClick={(e) => e.target === e.currentTarget && setShowAddModal(false)}
         >
-          <div className="card p-6 w-full max-w-md">
+          <div className="card p-6 w-full max-w-md modal-content-scroll">
             <h3 id="modal-title" className="text-xl font-bold text-primary mb-4">Nuova Transazione</h3>
             
             <form role="form" aria-label="Form per aggiungere nuova transazione">
-              <div className="space-y-4">
+              <div className="space-y-4 mobile-scroll">
                 <div>
                   <label htmlFor="transaction-type" className="block text-sm font-medium text-secondary mb-2">
                     Tipo di Transazione

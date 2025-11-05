@@ -45,7 +45,7 @@ export default function InstallPrompt() {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 modal-content-scroll animate-in slide-in-from-bottom-4 duration-300">
         {/* Header coerente con tema luxury */}
         <div className="bg-primary p-6 text-white">
           <div className="flex items-center space-x-3">
@@ -63,7 +63,7 @@ export default function InstallPrompt() {
         </div>
 
         {/* Contenuto */}
-        <div className="p-6">
+        <div className="p-6 mobile-scroll">
           <div className="space-y-4">
             <div className="flex items-start space-x-3">
               <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">

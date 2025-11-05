@@ -137,6 +137,37 @@ body {
   scroll-behavior: smooth;
 }
 
+/* Utility: contenuto modale scrollabile e ottimizzato per mobile */
+.modal-content-scroll {
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+@supports (height: 100dvh) {
+  .modal-content-scroll {
+    max-height: 90dvh; /* Usa viewport dinamico su mobile */
+  }
+}
+
+/* Utility: root modale per z-index e interazioni */
+.modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Evita scroll chaining su contenitori interni lunghi */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
 /* Migliora touch interactions */
 .touch-target {
   min-height: 44px;

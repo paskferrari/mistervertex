@@ -219,7 +219,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
       />
       
       {/* Modal */}
-      <div className="relative bg-primary border border-white/20 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="relative bg-primary border border-white/20 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 modal-content-scroll">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center space-x-3">
@@ -252,7 +252,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
         </div>
 
         {/* Content */}
-        <div className="p-6 min-h-[300px]">
+        <div className="p-6 min-h-[300px] mobile-scroll">
           <div className={`transition-all duration-150 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
             {currentStepData.content}
           </div>
