@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { MessageSquare, Heart, Share2, Eye, Plus, Trash2, Search } from 'lucide-react'
-import { toast } from 'react-hot-toast'
+import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
 
 interface BoardPost {
@@ -50,6 +50,13 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
+  const showFeedback = (type: 'success' | 'error', message: string) => {
+    setFeedback({ type, message })
+    setTimeout(() => setFeedback(null), 3000)
+  }
 
 
   // Form state per nuovo post
@@ -83,14 +90,17 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
   const loadPosts = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/xbank/board/posts')
+      const { data: { session } } = await supabase.auth.getSession()
+      const response = await fetch('/api/xbank/board/posts', {
+        headers: session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}
+      })
       if (!response.ok) throw new Error('Errore nel caricamento dei post')
       
       const data = await response.json()
       setPosts(data)
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nel caricamento dei post')
+      showFeedback('error', 'Errore nel caricamento dei post')
     } finally {
       setLoading(false)
     }
@@ -98,22 +108,29 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
 
   const loadMyPosts = async () => {
     try {
-      const response = await fetch('/api/xbank/board/my-posts')
+      const { data: { session } } = await supabase.auth.getSession()
+      const response = await fetch('/api/xbank/board/my-posts', {
+        headers: session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}
+      })
       if (!response.ok) throw new Error('Errore nel caricamento dei tuoi post')
       
       const data = await response.json()
       setMyPosts(data)
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nel caricamento dei tuoi post')
+      showFeedback('error', 'Errore nel caricamento dei tuoi post')
     }
   }
 
   const createPost = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch('/api/xbank/board/posts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {})
+        },
         body: JSON.stringify(newPost)
       })
       
@@ -135,17 +152,20 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
         custom_prediction_id: ''
       })
       setTagInput('')
-      toast.success('Post pubblicato con successo')
+      showFeedback('success', 'Post pubblicato con successo')
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nella creazione del post')
+      showFeedback('error', 'Errore nella creazione del post')
     }
   }
 
   const toggleLike = async (postId: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch(`/api/xbank/board/posts/${postId}/like`, {
         method: 'POST'
+        ,
+        headers: session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}
       })
       
       if (!response.ok) throw new Error('Errore nel like')
@@ -166,14 +186,17 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
       setMyPosts(updatePosts)
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nel like')
+      showFeedback('error', 'Errore nel like')
     }
   }
 
   const followUser = async (userId: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch(`/api/xbank/board/users/${userId}/follow`, {
         method: 'POST'
+        ,
+        headers: session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}
       })
       
       if (!response.ok) throw new Error('Errore nel follow')
@@ -198,29 +221,35 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
       setPosts(updatePosts)
       setMyPosts(updatePosts)
       
-      toast.success(posts.find(p => p.author.id === userId)?.is_following_author ? 'Non segui più questo utente' : 'Ora segui questo utente')
+      const nowFollowing = !(posts.find(p => p.author.id === userId)?.is_following_author)
+      showFeedback('success', nowFollowing ? 'Ora segui questo utente' : 'Non segui più questo utente')
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nel follow')
+      showFeedback('error', 'Errore nel follow')
     }
   }
 
-  const deletePost = async (postId: string) => {
-    if (!confirm('Sei sicuro di voler eliminare questo post?')) return
-    
+  const deletePost = (postId: string) => {
+    setConfirmDeleteId(postId)
+  }
+
+  const confirmDeletePost = async (postId: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch(`/api/xbank/board/posts/${postId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}
       })
       
       if (!response.ok) throw new Error('Errore nell\'eliminazione del post')
       
       await loadPosts()
       await loadMyPosts()
-      toast.success('Post eliminato')
+      setConfirmDeleteId(null)
+      showFeedback('success', 'Post eliminato')
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nell\'eliminazione del post')
+      showFeedback('error', 'Errore nell\'eliminazione del post')
     }
   }
 
@@ -276,7 +305,8 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'UTC'
     })
   }
 
@@ -290,6 +320,18 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
 
   return (
     <div className="space-y-6">
+      {/* Feedback inline */}
+      {feedback && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`rounded-lg px-3 py-2 text-sm border ${
+            feedback.type === 'success' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+          }`}
+        >
+          {feedback.message}
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl sm:text-2xl font-bold text-white">Bacheca Personale</h2>
@@ -403,7 +445,7 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
                     ) : (
                        <div className="bg-white rounded-full p-1 shadow-lg border-2 border-gray-200">
                          <Image 
-                           src="/avatarOnBoarding.png" 
+                           src="/media/logoColorato.png" 
                            alt="Avatar predefinito" 
                            width={36} 
                            height={36} 
@@ -448,6 +490,22 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
+                      {confirmDeleteId === post.id && (
+                        <div className="flex items-center space-x-2 ml-2">
+                          <button
+                            onClick={() => confirmDeletePost(post.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
+                          >
+                            Conferma
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs"
+                          >
+                            Annulla
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

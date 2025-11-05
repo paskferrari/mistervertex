@@ -29,6 +29,9 @@ interface Prediction {
   notes?: string
   bets: Bet[]
   result_profit?: number
+  result_amount?: number
+  stake_amount?: number
+  odds?: number
   stake?: number
   total_odds?: number
 }
@@ -183,8 +186,9 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
     try {
       if (mock) {
         setPredictions(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p))
-        if (updates.status && updates.result_profit !== undefined) {
-          onBankrollUpdate(updates.result_profit)
+        const profit = updates.result_profit ?? updates.result_amount
+        if (updates.status && profit !== undefined) {
+          onBankrollUpdate(profit)
         }
         return
       }
@@ -194,19 +198,29 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
         throw new Error('Sessione non valida')
       }
 
+      // Prepara payload conforme all'API (/api/xbank/predictions/[id])
+      const payload: any = {}
+      if (updates.status !== undefined) payload.status = updates.status
+      if (updates.result_amount !== undefined || updates.result_profit !== undefined) {
+        payload.result_amount = updates.result_amount !== undefined ? updates.result_amount : updates.result_profit
+      }
+      if (updates.stake_amount !== undefined) payload.stake_amount = updates.stake_amount
+      if (updates.odds !== undefined) payload.odds = updates.odds
+
       const response = await fetch(`/api/xbank/predictions/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify(updates)
+        body: JSON.stringify(payload)
       })
 
       if (response.ok) {
         await loadPredictions()
-        if (updates.status && updates.result_profit !== undefined) {
-          onBankrollUpdate(updates.result_profit)
+        const profit = payload.result_amount ?? updates.result_amount ?? updates.result_profit
+        if (updates.status && profit !== undefined) {
+          onBankrollUpdate(profit)
         }
       } else {
         const errorData = await response.json()
@@ -225,8 +239,15 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
         setPredictions(prev => prev.filter(p => p.id !== id))
         return
       }
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        throw new Error('Sessione non valida')
+      }
       const response = await fetch(`/api/xbank/predictions/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
       })
 
       if (response.ok) {
@@ -241,20 +262,26 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
 
   const markAsWon = (prediction: Prediction) => {
     if (!prediction.id) return
-    const stake = prediction.stake || prediction.total_stake || 0
-    const profit = prediction.potential_win - stake
+    const stake = prediction.stake_amount ?? prediction.stake ?? prediction.total_stake ?? 0
+    const odds = prediction.odds ?? prediction.total_odds ?? (stake > 0 && prediction.potential_win ? (prediction.potential_win / stake) : undefined)
+    const profit = (odds !== undefined && stake > 0) 
+      ? (stake * odds - stake) 
+      : (prediction.potential_win !== undefined ? (prediction.potential_win - stake) : 0)
     handleUpdatePrediction(prediction.id, {
       status: 'won',
-      result_profit: profit
+      result_amount: Number.isFinite(profit) ? profit : 0,
+      stake_amount: stake,
+      odds: odds
     })
   }
 
   const markAsLost = (prediction: Prediction) => {
     if (!prediction.id) return
-    const stake = prediction.stake || prediction.total_stake || 0
+    const stake = prediction.stake_amount ?? prediction.stake ?? prediction.total_stake ?? 0
     handleUpdatePrediction(prediction.id, {
       status: 'lost',
-      result_profit: -stake
+      result_amount: Number.isFinite(stake) ? -Math.abs(stake) : 0,
+      stake_amount: stake
     })
   }
 
@@ -262,7 +289,7 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
     if (!prediction.id) return
     handleUpdatePrediction(prediction.id, {
       status: 'void',
-      result_profit: 0
+      result_amount: 0
     })
   }
 
@@ -308,8 +335,8 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
     const lost = predictions.filter(p => p.status === 'lost').length
     const pending = predictions.filter(p => p.status === 'pending').length
     const totalProfit = predictions
-      .filter(p => p.result_profit !== undefined)
-      .reduce((sum, p) => sum + (p.result_profit || 0), 0)
+      .map(p => (p.result_amount ?? p.result_profit ?? 0))
+      .reduce((sum, v) => sum + v, 0)
     
     const winRate = total > 0 ? ((won / (won + lost)) * 100) : 0
     
@@ -331,8 +358,8 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
       {/* Header con statistiche */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="card p-6">
-          <div className="text-2xl font-bold text-blue-900">{stats.total}</div>
-          <div className="text-sm text-blue-700 font-medium">Totali</div>
+          <div className="text-2xl font-bold text-primary">{stats.total}</div>
+          <div className="text-sm text-secondary font-medium">Totali</div>
         </div>
         <div className="card p-6">
           <div className="text-2xl font-bold text-emerald-700">{stats.won}</div>
@@ -381,7 +408,7 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
 
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-medium"
+          className="btn-primary flex items-center space-x-2 px-6 py-3 font-medium"
         >
           <Target className="h-5 w-5" />
           <span>Nuovo Pronostico</span>
@@ -390,14 +417,14 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
 
       {/* Pannello filtri */}
       {showFilters && (
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200 space-y-4 shadow-lg">
+        <div className="card p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-amber-800 mb-2">Sport</label>
+              <label className="block text-sm font-medium text-secondary mb-2">Sport</label>
               <select
                 value={selectedSport}
                 onChange={(e) => setSelectedSport(e.target.value)}
-                className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-amber-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
+                className="w-full bg-white/80 border border-white/20 rounded-xl px-3 py-2 text-primary focus:ring-2 focus:ring-accent-gold focus:border-accent-gold shadow-sm"
               >
                 <option value="">Tutti gli sport</option>
                 {sports.map(sport => (
@@ -407,11 +434,11 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-amber-800 mb-2">Status</label>
+              <label className="block text-sm font-medium text-secondary mb-2">Status</label>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-amber-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
+                className="w-full bg-white/80 border border-white/20 rounded-xl px-3 py-2 text-primary focus:ring-2 focus:ring-accent-gold focus:border-accent-gold shadow-sm"
               >
                 <option value="">Tutti gli status</option>
                 {statusOptions.map(status => (
@@ -421,12 +448,12 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-amber-800 mb-2">Ordina per</label>
+              <label className="block text-sm font-medium text-secondary mb-2">Ordina per</label>
               <div className="flex space-x-2">
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="flex-1 bg-white border border-amber-300 rounded-xl px-3 py-2 text-amber-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm"
+                  className="flex-1 bg-white/80 border border-white/20 rounded-xl px-3 py-2 text-primary focus:ring-2 focus:ring-accent-gold focus:border-accent-gold shadow-sm"
                 >
                   <option value="created_at">Data Creazione</option>
                   <option value="event_date">Data Evento</option>
@@ -436,7 +463,7 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
                 </select>
                 <button
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="bg-white border border-amber-300 rounded-xl px-3 py-2 text-amber-700 hover:bg-amber-50 transition-colors shadow-sm"
+                  className="bg-white/80 border border-white/20 rounded-xl px-3 py-2 text-secondary hover:bg-white/70 transition-colors shadow-sm"
                 >
                   {sortOrder === 'asc' ? '↑' : '↓'}
                 </button>
@@ -449,24 +476,24 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
       {/* Lista pronostici */}
       <div className="space-y-4">
         {filteredPredictions.length === 0 ? (
-          <div className="text-center text-amber-700 py-12">
-            <Target className="h-16 w-16 mx-auto mb-4 opacity-50 text-amber-400" />
+          <div className="text-center text-secondary py-12">
+            <Target className="h-16 w-16 mx-auto mb-4 opacity-70 text-accent-gold" />
             <p className="text-lg font-medium">Nessun pronostico trovato.</p>
             {predictions.length === 0 && (
-              <p className="text-sm text-amber-600 mt-2">
+              <p className="text-sm text-secondary mt-2">
                 Inizia aggiungendo il tuo primo pronostico!
               </p>
             )}
           </div>
         ) : (
           filteredPredictions.map(prediction => (
-            <div key={prediction.id} className="bg-gradient-to-br from-white to-amber-50 rounded-xl border border-amber-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+            <div key={prediction.id} className="card p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
                     {getStatusIcon(prediction.status || 'pending')}
-                    <h3 className="text-lg font-semibold text-amber-900">{prediction.title}</h3>
-                    <span className="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded-full font-medium">
+                    <h3 className="text-lg font-semibold text-primary">{prediction.title}</h3>
+                    <span className="text-xs bg-white/10 text-secondary border border-white/20 px-2 py-1 rounded-full font-medium">
                       {prediction.sport}
                     </span>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(prediction.status || 'pending')}`}>
@@ -474,7 +501,7 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
                     </span>
                   </div>
                   {prediction.description && (
-                    <p className="text-amber-700 text-sm mb-3">{prediction.description}</p>
+                    <p className="text-secondary text-sm mb-3">{prediction.description}</p>
                   )}
                 </div>
 
@@ -483,21 +510,21 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
                     <>
                       <button
                         onClick={() => markAsWon(prediction)}
-                        className="text-emerald-600 hover:text-emerald-700 transition-colors p-1 rounded-lg hover:bg-emerald-100"
+                        className="text-green-400 hover:text-green-300 transition-colors p-1 rounded-lg hover:bg-white/10"
                         title="Segna come vinta"
                       >
                         <CheckCircle className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => markAsLost(prediction)}
-                        className="text-red-600 hover:text-red-700 transition-colors p-1 rounded-lg hover:bg-red-100"
+                        className="text-red-400 hover:text-red-300 transition-colors p-1 rounded-lg hover:bg-white/10"
                         title="Segna come persa"
                       >
                         <XCircle className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => markAsVoid(prediction)}
-                        className="text-amber-600 hover:text-amber-700 transition-colors p-1 rounded-lg hover:bg-amber-100"
+                        className="text-orange-400 hover:text-orange-300 transition-colors p-1 rounded-lg hover:bg-white/10"
                         title="Segna come annullata"
                       >
                         <XCircle className="h-5 w-5" />
@@ -506,7 +533,7 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
                   )}
                   <button
                     onClick={() => prediction.id && handleDeletePrediction(prediction.id)}
-                    className="text-red-600 hover:text-red-700 transition-colors p-1 rounded-lg hover:bg-red-100"
+                    className="text-red-400 hover:text-red-300 transition-colors p-1 rounded-lg hover:bg-white/10"
                     title="Elimina"
                   >
                     <Trash2 className="h-5 w-5" />
@@ -516,54 +543,60 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
 
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
                 <div>
-                  <span className="text-amber-600 font-medium">Tipo:</span>
-                  <p className="text-amber-900 font-semibold">
+                  <span className="text-secondary font-medium">Tipo:</span>
+                  <p className="text-primary font-semibold">
                     {prediction.prediction_type === 'single' ? 'Singola' : 'Multipla'}
                   </p>
                 </div>
                 <div>
-                  <span className="text-amber-600 font-medium">Quota:</span>
-                  <p className="text-amber-900 font-semibold">{(prediction.total_odds || 0).toFixed(2)}</p>
+                  <span className="text-secondary font-medium">Quota:</span>
+                  <p className="text-primary font-semibold">{(prediction.total_odds || 0).toFixed(2)}</p>
                 </div>
                 <div>
-                  <span className="text-amber-600 font-medium">Stake:</span>
-                  <p className="text-amber-900 font-semibold">{(prediction.stake || 0).toFixed(2)} {currency}</p>
+                  <span className="text-secondary font-medium">Stake:</span>
+                  <p className="text-primary font-semibold">{(prediction.stake || 0).toFixed(2)} {currency}</p>
                 </div>
                 <div>
-                  <span className="text-amber-600 font-medium">Vincita Pot.:</span>
-                  <p className="text-emerald-700 font-semibold">{(prediction.potential_win || 0).toFixed(2)} {currency}</p>
+                  <span className="text-secondary font-medium">Vincita Pot.:</span>
+                  <p className="text-green-400 font-semibold">{(prediction.potential_win || 0).toFixed(2)} {currency}</p>
                 </div>
                 <div>
-                  <span className="text-amber-600 font-medium">Confidenza:</span>
+                  <span className="text-secondary font-medium">Confidenza:</span>
                   <div className="flex items-center space-x-1">
                     {[...Array(5)].map((_, i) => (
                       <div
                         key={i}
                         className={`h-2 w-2 rounded-full ${
-                          i < prediction.confidence_level ? 'bg-amber-500' : 'bg-amber-200'
+                          i < prediction.confidence_level ? 'bg-accent-gold' : 'bg-white/20'
                         }`}
                       />
                     ))}
                   </div>
                 </div>
                 <div>
-                  <span className="text-amber-600 font-medium">Data Evento:</span>
-                  <p className="text-amber-900 font-semibold">
-                    {new Date(prediction.event_date).toLocaleDateString('it-IT')}
+                  <span className="text-secondary font-medium">Data Evento:</span>
+                  <p className="text-primary font-semibold">
+                    <time dateTime={prediction.event_date} suppressHydrationWarning>
+                      {new Date(prediction.event_date).toLocaleDateString('it-IT', { timeZone: 'UTC' })}
+                    </time>
                   </p>
                 </div>
               </div>
 
-              {prediction.result_profit !== undefined && (
-                <div className="mt-4 pt-4 border-t border-amber-200">
+              {(prediction.result_amount ?? prediction.result_profit) !== undefined && (
+                <div className="mt-4 pt-4 border-t border-white/10">
                   <div className="flex items-center justify-between">
-                    <span className="text-amber-600 font-medium">Risultato:</span>
-                    <span className={`font-bold text-lg ${
-                      prediction.result_profit > 0 ? 'text-emerald-700' : 
-                      prediction.result_profit < 0 ? 'text-red-700' : 'text-amber-600'
-                    }`}>
-                      {(prediction.result_profit || 0) > 0 ? '+' : ''}{(prediction.result_profit || 0).toFixed(2)} {currency}
-                    </span>
+                    <span className="text-secondary font-medium">Risultato:</span>
+                    {(() => {
+                      const res = prediction.result_amount ?? prediction.result_profit ?? 0
+                      const colorClass = res > 0 ? 'text-green-400' : res < 0 ? 'text-red-400' : 'text-secondary'
+                      const sign = res > 0 ? '+' : ''
+                      return (
+                        <span className={`font-bold text-lg ${colorClass}`}>
+                          {sign}{res.toFixed(2)} {currency}
+                        </span>
+                      )
+                    })()}
                   </div>
                 </div>
               )}

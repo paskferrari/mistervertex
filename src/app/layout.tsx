@@ -62,7 +62,7 @@ export default function RootLayout({
         
         {/* Preload critical resources */}
         <link rel="preload" href="/media/logoBianco.svg" as="image" />
-        <link rel="preload" href="/avatarOnBoarding.png" as="image" />
+        <link rel="preload" href="/media/logoColorato.png" as="image" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>

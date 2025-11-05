@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Target, Play, Pause, RotateCcw, Plus, Trash2, Eye } from 'lucide-react'
-import { toast } from 'react-hot-toast'
+import { shouldShowCreateCTA } from '@/lib/xbank/scalate'
+import { supabase } from '@/lib/supabase'
 
 interface ScalataStep {
   id: string
@@ -50,6 +51,13 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
   const [selectedScalata, setSelectedScalata] = useState<Scalata | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [filter, setFilter] = useState('all')
+  const [feedback, setFeedback] = useState<null | { type: 'success' | 'error' | 'info'; message: string }>(null)
+
+  const showFeedback = (type: 'success' | 'error' | 'info', message: string) => {
+    setFeedback({ type, message })
+    // Auto-hide dopo breve periodo
+    setTimeout(() => setFeedback(null), 2500)
+  }
 
   // Form state per nuova scalata
   const [newScalata, setNewScalata] = useState({
@@ -110,14 +118,18 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
         ]
         setScalate(sample)
       } else {
-        const response = await fetch('/api/xbank/scalate')
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.access_token) throw new Error('Sessione non valida')
+        const response = await fetch('/api/xbank/scalate', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        })
         if (!response.ok) throw new Error('Errore nel caricamento delle scalate')
         const data = await response.json()
         setScalate(data)
       }
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nel caricamento delle scalate')
+      showFeedback('error', 'Errore nel caricamento delle scalate')
     } finally {
       setLoading(false)
     }
@@ -161,13 +173,15 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
           max_loss: 100,
           auto_progression: false
         })
-        toast.success('Scalata creata con successo (mock)')
+        showFeedback('success', 'Scalata creata con successo (mock)')
         return
       }
 
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error('Sessione non valida')
       const response = await fetch('/api/xbank/scalate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
         body: JSON.stringify(newScalata)
       })
       
@@ -187,10 +201,10 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
         max_loss: 100,
         auto_progression: false
       })
-      toast.success('Scalata creata con successo')
+      showFeedback('success', 'Scalata creata con successo')
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nella creazione della scalata')
+      showFeedback('error', 'Errore nella creazione della scalata')
     }
   }
 
@@ -198,23 +212,25 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
     try {
       if (mock) {
         setScalate(prev => prev.map(s => s.id === id ? { ...s, status, updated_at: new Date().toISOString() } : s))
-        toast.success('Scalata aggiornata (mock)')
+        showFeedback('success', 'Scalata aggiornata (mock)')
         return
       }
 
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error('Sessione non valida')
       const response = await fetch(`/api/xbank/scalate/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
         body: JSON.stringify({ status })
       })
       
       if (!response.ok) throw new Error('Errore nell\'aggiornamento della scalata')
-      
+
       await loadScalate()
-      toast.success('Scalata aggiornata')
+      showFeedback('success', 'Scalata aggiornata')
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nell\'aggiornamento della scalata')
+      showFeedback('error', 'Errore nell\'aggiornamento della scalata')
     }
   }
 
@@ -224,21 +240,24 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
     try {
       if (mock) {
         setScalate(prev => prev.filter(s => s.id !== id))
-        toast.success('Scalata eliminata (mock)')
+        showFeedback('success', 'Scalata eliminata (mock)')
         return
       }
 
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error('Sessione non valida')
       const response = await fetch(`/api/xbank/scalate/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
       })
       
       if (!response.ok) throw new Error('Errore nell\'eliminazione della scalata')
       
       await loadScalate()
-      toast.success('Scalata eliminata')
+      showFeedback('success', 'Scalata eliminata')
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nell\'eliminazione della scalata')
+      showFeedback('error', 'Errore nell\'eliminazione della scalata')
     }
   }
 
@@ -272,11 +291,11 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'text-green-600 bg-green-100 border-green-300'
-      case 'completed': return 'text-blue-600 bg-blue-100 border-blue-300'
+      case 'active': return 'text-primary bg-white/10 border-[var(--border-color)]'
+      case 'completed': return 'text-secondary bg-white/10 border-[var(--border-color)]'
       case 'failed': return 'text-red-600 bg-red-100 border-red-300'
-      case 'paused': return 'text-amber-600 bg-amber-100 border-amber-300'
-      default: return 'text-gray-600 bg-gray-100 border-gray-300'
+      case 'paused': return 'text-secondary bg-white/10 border-[var(--border-color)]'
+      default: return 'text-secondary bg-white/10 border-[var(--border-color)]'
     }
   }
 
@@ -308,22 +327,29 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent-gold)]"></div>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
+      {feedback && (
+        <div
+          className={`card p-3 text-sm`}
+        >
+          {feedback.message}
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-amber-100">Scalate e Serie</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-primary">Scalate e Serie</h2>
         
         <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="bg-white border border-amber-300 text-gray-900 px-3 py-3 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm text-sm sm:text-base min-h-[44px]"
+            className="lux-select w-full sm:w-auto min-h-[44px]"
           >
             <option value="all">Tutte le scalate</option>
             <option value="active">Attive</option>
@@ -334,7 +360,7 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
           
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center justify-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-4 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl min-h-[44px] text-sm sm:text-base"
+            className="btn-primary flex items-center justify-center space-x-2 px-4 py-3 min-h-[44px] text-sm sm:text-base"
           >
             <Plus className="h-4 w-4" />
             <span>Nuova Scalata</span>
@@ -343,20 +369,24 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
       </div>
 
       {/* Lista Scalate */}
-      {filteredScalate.length === 0 ? (
-        <div className="text-center text-amber-200 py-12">
+      {shouldShowCreateCTA(filteredScalate) ? (
+        <div className="text-center text-secondary py-12">
           <Target className="h-16 w-16 mx-auto mb-4 opacity-50" />
-          <p>Nessuna scalata trovata. Crea la tua prima scalata per iniziare!</p>
+          <p className="mb-4">Nessuna scalata trovata. Crea la tua prima scalata per iniziare!</p>
+          <button onClick={() => setShowCreateModal(true)} className="btn-primary inline-flex items-center space-x-2 px-4 py-3">
+            <Plus className="h-4 w-4" />
+            <span>Crea Scalata</span>
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
           {filteredScalate.map((scalata) => (
-            <div key={scalata.id} className="bg-white rounded-lg p-4 sm:p-6 border border-amber-200 shadow-lg hover:shadow-xl transition-shadow">
+            <div key={scalata.id} className="card p-4 sm:p-6 hover:shadow-xl transition-shadow">
               {/* Header Scalata */}
               <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-2">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base sm:text-lg font-bold text-amber-900 mb-1 truncate">{scalata.name}</h3>
-                  <p className="text-amber-700 text-xs sm:text-sm line-clamp-2">{scalata.description}</p>
+                  <h3 className="text-base sm:text-lg font-bold text-primary mb-1 truncate">{scalata.name}</h3>
+                  <p className="text-secondary text-xs sm:text-sm line-clamp-2">{scalata.description}</p>
                 </div>
                 
                 <div className="flex items-center space-x-2 flex-shrink-0">
@@ -413,7 +443,7 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
                   {scalata.status === 'active' && (
                     <button
                       onClick={() => updateScalataStatus(scalata.id, 'paused')}
-                      className="flex items-center space-x-1 bg-gradient-to-r from-[var(--accent-gold)] to-[#f4d03f] hover:brightness-110 text-black px-3 py-1 rounded-xl text-sm transition-all shadow-md hover:-translate-y-0.5"
+                      className="btn-secondary flex items-center space-x-1 px-3 py-1 rounded-xl text-sm"
                     >
                       <Pause className="h-3 w-3" />
                       <span>Pausa</span>
@@ -423,7 +453,7 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
                   {scalata.status === 'paused' && (
                     <button
                       onClick={() => updateScalataStatus(scalata.id, 'active')}
-                      className="flex items-center space-x-1 bg-gradient-to-r from-emerald-400 to-green-500 hover:brightness-110 text-black px-3 py-1 rounded-xl text-sm transition-all shadow-md hover:-translate-y-0.5"
+                      className="btn-primary flex items-center space-x-1 px-3 py-1 rounded-xl text-sm"
                     >
                       <Play className="h-3 w-3" />
                       <span>Riprendi</span>
@@ -433,7 +463,7 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
                   {(scalata.status === 'failed' || scalata.status === 'completed') && (
                     <button
                       onClick={() => updateScalataStatus(scalata.id, 'active')}
-                      className="flex items-center space-x-1 bg-gradient-to-r from-indigo-400 to-blue-500 hover:brightness-110 text-black px-3 py-1 rounded-xl text-sm transition-all shadow-md hover:-translate-y-0.5"
+                      className="btn-secondary flex items-center space-x-1 px-3 py-1 rounded-xl text-sm"
                     >
                       <RotateCcw className="h-3 w-3" />
                       <span>Riavvia</span>
@@ -471,27 +501,27 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
           <div className="card p-4 sm:p-6 w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg sm:text-xl font-bold text-amber-900 mb-4 sm:mb-6">Crea Nuova Scalata</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-primary mb-4 sm:mb-6">Crea Nuova Scalata</h3>
             
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-amber-800 text-sm font-medium mb-2">Nome</label>
+                  <label className="block text-secondary text-sm font-medium mb-2">Nome</label>
                   <input
                     type="text"
                     value={newScalata.name}
                     onChange={(e) => setNewScalata({ ...newScalata, name: e.target.value })}
-                    className="w-full bg-amber-50 border border-amber-300 text-amber-900 px-3 py-3 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent placeholder-amber-500 text-sm sm:text-base min-h-[44px]"
+                    className="lux-input w-full text-sm sm:text-base min-h-[44px]"
                     placeholder="Nome della scalata"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-amber-800 text-sm font-medium mb-2">Tipo</label>
+                  <label className="block text-secondary text-sm font-medium mb-2">Tipo</label>
                   <select
                     value={newScalata.scalata_type}
                     onChange={(e) => setNewScalata({ ...newScalata, scalata_type: e.target.value as Scalata['scalata_type'] })}
-                    className="w-full bg-amber-50 border border-amber-300 text-amber-900 px-3 py-2 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="lux-select w-full"
                   >
                     <option value="progressive">Progressiva</option>
                     <option value="fixed">Fissa</option>
@@ -502,11 +532,11 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
               </div>
               
               <div>
-                <label className="block text-amber-800 text-sm font-medium mb-2">Descrizione</label>
+                <label className="block text-secondary text-sm font-medium mb-2">Descrizione</label>
                 <textarea
                   value={newScalata.description}
                   onChange={(e) => setNewScalata({ ...newScalata, description: e.target.value })}
-                  className="w-full bg-amber-50 border border-amber-300 text-amber-900 px-3 py-3 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent placeholder-amber-500 text-sm sm:text-base resize-none"
+                  className="lux-input w-full text-sm sm:text-base resize-none"
                   rows={3}
                   placeholder="Descrizione della scalata"
                 />
@@ -514,36 +544,36 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-amber-800 text-sm font-medium mb-2">Stake Iniziale ({currency})</label>
+                  <label className="block text-secondary text-sm font-medium mb-2">Stake Iniziale ({currency})</label>
                   <input
                       type="number"
                       value={newScalata.initial_stake}
                       onChange={(e) => setNewScalata({ ...newScalata, initial_stake: Number(e.target.value) })}
-                      className="w-full bg-amber-50 border border-amber-300 text-amber-900 px-3 py-3 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
+                      className="lux-input w-full text-sm sm:text-base min-h-[44px]"
                       min="0"
                       step="0.01"
                     />
                 </div>
                 
                 <div>
-                  <label className="block text-amber-800 text-sm font-medium mb-2">Target Profitto ({currency})</label>
+                  <label className="block text-secondary text-sm font-medium mb-2">Target Profitto ({currency})</label>
                   <input
                       type="number"
                       value={newScalata.target_profit}
                       onChange={(e) => setNewScalata({ ...newScalata, target_profit: Number(e.target.value) })}
-                      className="w-full bg-amber-50 border border-amber-300 text-amber-900 px-3 py-3 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
+                      className="lux-input w-full text-sm sm:text-base min-h-[44px]"
                       min="0"
                       step="0.01"
                     />
                 </div>
                 
                 <div>
-                  <label className="block text-amber-800 text-sm font-medium mb-2">Max Passi</label>
+                  <label className="block text-secondary text-sm font-medium mb-2">Max Passi</label>
                   <input
                       type="number"
                       value={newScalata.max_steps}
                       onChange={(e) => setNewScalata({ ...newScalata, max_steps: Number(e.target.value) })}
-                      className="w-full bg-amber-50 border border-amber-300 text-amber-900 px-3 py-3 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
+                      className="lux-input w-full text-sm sm:text-base min-h-[44px]"
                       min="1"
                       max="50"
                     />
@@ -553,24 +583,24 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
               {newScalata.scalata_type === 'progressive' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-amber-800 text-sm font-medium mb-2">Moltiplicatore</label>
+                    <label className="block text-secondary text-sm font-medium mb-2">Moltiplicatore</label>
                     <input
                         type="number"
                         value={newScalata.multiplier}
                         onChange={(e) => setNewScalata({ ...newScalata, multiplier: Number(e.target.value) })}
-                        className="w-full bg-amber-50 border border-amber-300 text-amber-900 px-3 py-3 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
+                        className="lux-input w-full text-sm sm:text-base min-h-[44px]"
                         min="1.1"
                         step="0.1"
                       />
                   </div>
                   
                   <div>
-                    <label className="block text-amber-800 text-sm font-medium mb-2">Max Perdita ({currency})</label>
+                    <label className="block text-secondary text-sm font-medium mb-2">Max Perdita ({currency})</label>
                     <input
                         type="number"
                         value={newScalata.max_loss}
                         onChange={(e) => setNewScalata({ ...newScalata, max_loss: Number(e.target.value) })}
-                        className="w-full bg-amber-50 border border-amber-300 text-amber-900 px-3 py-3 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm sm:text-base min-h-[44px]"
+                        className="lux-input w-full text-sm sm:text-base min-h-[44px]"
                         min="0"
                         step="0.01"
                       />
@@ -584,9 +614,9 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
                     type="checkbox"
                     checked={newScalata.reset_on_loss}
                     onChange={(e) => setNewScalata({ ...newScalata, reset_on_loss: e.target.checked })}
-                    className="rounded border-amber-300 text-amber-500 focus:ring-amber-500"
+                    className="rounded border-[var(--border-color)] text-[var(--accent-gold)] focus:ring-[var(--accent-gold)]"
                   />
-                  <span className="text-amber-800 text-sm">Reset su perdita</span>
+                  <span className="text-secondary text-sm">Reset su perdita</span>
                 </label>
                 
                 <label className="flex items-center space-x-2">
@@ -594,9 +624,9 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
                     type="checkbox"
                     checked={newScalata.auto_progression}
                     onChange={(e) => setNewScalata({ ...newScalata, auto_progression: e.target.checked })}
-                    className="rounded border-amber-300 text-amber-500 focus:ring-amber-500"
+                    className="rounded border-[var(--border-color)] text-[var(--accent-gold)] focus:ring-[var(--accent-gold)]"
                   />
-                  <span className="text-amber-800 text-sm">Progressione automatica</span>
+                  <span className="text-secondary text-sm">Progressione automatica</span>
                 </label>
               </div>
             </div>

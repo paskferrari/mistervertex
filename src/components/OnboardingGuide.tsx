@@ -32,7 +32,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
         <div className="text-center space-y-4">
           <div className="bg-white rounded-full p-3 w-24 h-24 mx-auto flex items-center justify-center shadow-xl border border-accent-gold-fade">
               <Image 
-               src="/avatarOnBoarding.png" 
+               src="/media/logoColorato.png" 
                alt="Avatar OnBoarding" 
                width={72} 
                height={72} 
@@ -133,7 +133,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
         <div className="text-center space-y-6">
           <div className="bg-white rounded-full p-3 w-24 h-24 mx-auto flex items-center justify-center shadow-xl border-4 border-green-200">
               <Image 
-               src="/avatarOnBoarding.png" 
+               src="/media/logoColorato.png" 
                alt="Avatar OnBoarding" 
                width={72} 
                height={72} 

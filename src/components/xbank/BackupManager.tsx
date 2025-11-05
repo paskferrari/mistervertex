@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Download, Upload, RefreshCw, Database, FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { toast } from 'react-hot-toast'
+// Rimozione toast globali in favore di feedback inline non invasivo
 
 interface BackupData {
   predictions: Array<{
@@ -57,6 +57,14 @@ export default function BackupManager({ userId }: BackupManagerProps) {
   const [autoBackup, setAutoBackup] = useState(true)
   const [backupFrequency, setBackupFrequency] = useState('weekly')
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle')
+  const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null)
+  const [showImportConfirm, setShowImportConfirm] = useState(false)
+
+  const showFeedback = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setFeedback({ message, type })
+    setTimeout(() => setFeedback(null), 3500)
+  }
 
   const loadBackupSettings = useCallback(async () => {
     try {
@@ -90,10 +98,10 @@ export default function BackupManager({ userId }: BackupManagerProps) {
         })
 
       if (error) throw error
-      toast.success('Impostazioni backup salvate')
+      showFeedback('Impostazioni backup salvate', 'success')
     } catch (error) {
       console.error('Errore nel salvataggio impostazioni:', error)
-      toast.error('Errore nel salvataggio')
+      showFeedback('Errore nel salvataggio impostazioni', 'error')
     }
   }
 
@@ -168,11 +176,11 @@ export default function BackupManager({ userId }: BackupManagerProps) {
 
       setSyncStatus('success')
       setLastBackup(new Date().toISOString())
-      toast.success('Backup esportato con successo')
+      showFeedback('Backup esportato con successo', 'success')
     } catch (error) {
       console.error('Errore nell\'esportazione:', error)
       setSyncStatus('error')
-      toast.error('Errore nell\'esportazione')
+      showFeedback('Errore nell\'esportazione', 'error')
     } finally {
       setLoading(false)
       setTimeout(() => setSyncStatus('idle'), 3000)
@@ -192,15 +200,7 @@ export default function BackupManager({ userId }: BackupManagerProps) {
         throw new Error('Formato backup non valido')
       }
 
-      // Conferma prima dell'importazione
-      const confirmed = window.confirm(
-        'Attenzione: L\'importazione sovrascriverà tutti i dati esistenti. Continuare?'
-      )
-      if (!confirmed) {
-        setSyncStatus('idle')
-        setLoading(false)
-        return
-      }
+      // La conferma viene gestita via UI inline (showImportConfirm)
 
       // Elimina i dati esistenti
       await Promise.all([
@@ -265,14 +265,14 @@ export default function BackupManager({ userId }: BackupManagerProps) {
       }
 
       setSyncStatus('success')
-      toast.success('Dati importati con successo')
+      showFeedback('Dati importati con successo', 'success')
       
       // Ricarica la pagina per aggiornare tutti i componenti
       setTimeout(() => window.location.reload(), 2000)
     } catch (error) {
       console.error('Errore nell\'importazione:', error)
       setSyncStatus('error')
-      toast.error('Errore nell\'importazione: ' + (error as Error).message)
+      showFeedback('Errore nell\'importazione: ' + (error as Error).message, 'error')
     } finally {
       setLoading(false)
       setTimeout(() => setSyncStatus('idle'), 3000)
@@ -282,7 +282,10 @@ export default function BackupManager({ userId }: BackupManagerProps) {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      importData(file)
+      // Passo di conferma inline prima di importare davvero
+      setPendingImportFile(file)
+      setShowImportConfirm(true)
+      showFeedback('File di backup caricato. Conferma per importare.', 'info')
     }
   }
 
@@ -301,6 +304,21 @@ export default function BackupManager({ userId }: BackupManagerProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6">
+      {/* Feedback inline non invasivo */}
+      {feedback && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`mb-4 px-3 py-2 rounded-lg text-sm ${
+            feedback.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
+            feedback.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
+            'bg-blue-50 text-blue-700 border border-blue-200'
+          }`}
+        >
+          {feedback.message}
+        </div>
+      )}
+
       <div className="flex items-center gap-3 mb-6">
         <Database className="w-6 h-6 text-blue-600" />
         <h2 className="text-xl font-semibold text-gray-900">Backup e Sincronizzazione</h2>
@@ -341,6 +359,39 @@ export default function BackupManager({ userId }: BackupManagerProps) {
           />
         </label>
       </div>
+
+      {/* Conferma importazione inline */}
+      {showImportConfirm && pendingImportFile && (
+        <div className="mb-6 p-4 rounded-lg border bg-yellow-50">
+          <div className="text-sm text-yellow-800 mb-3">
+            Attenzione: l'importazione sovrascriverà tutti i dati esistenti. Vuoi continuare?
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={async () => {
+                setShowImportConfirm(false)
+                if (pendingImportFile) {
+                  await importData(pendingImportFile)
+                }
+                setPendingImportFile(null)
+              }}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Continua e Sovrascrivi
+            </button>
+            <button
+              onClick={() => {
+                setShowImportConfirm(false)
+                setPendingImportFile(null)
+                showFeedback('Importazione annullata', 'info')
+              }}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Annulla
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Impostazioni backup automatico */}
       <div className="border-t pt-6">

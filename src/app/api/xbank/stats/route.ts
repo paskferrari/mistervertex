@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
 
     // Recupera il tracking del bankroll
     const { data: bankrollHistory, error: bankrollError } = await supabaseAdmin
-      .from('xbank_bankroll_tracking')
+      .from('bankroll_history')
       .select('*')
       .eq('user_id', user.id)
       .gte('created_at', startDate.toISOString())

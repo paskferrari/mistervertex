@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
 import { supabaseAdmin } from '@/lib/supabase'
 
-interface JWTPayload {
-  userId: string
-  [key: string]: string | number | boolean | undefined
-}
+// Autenticazione basata su bearer token Supabase
 
 interface DateFilter {
   userId: string
@@ -66,8 +62,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token mancante' }, { status: 401 })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload
-    const userId = decoded.userId
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Utente non autenticato' }, { status: 401 })
+    }
+    const userId = user.id
 
     // Verifica ruolo VIP
     const { data: user, error: userError } = await supabaseAdmin
@@ -76,7 +75,7 @@ export async function GET(request: NextRequest) {
       .eq('id', userId)
       .single()
     
-    if (userError || !user || user.role !== 'abbonato_vip') {
+    if (userError || !user || (user.role !== 'abbonato_vip' && user.role !== 'admin')) {
       return NextResponse.json({ error: 'Accesso negato' }, { status: 403 })
     }
 

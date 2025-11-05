@@ -599,7 +599,7 @@ export default function UserDashboard() {
               <div className="flex items-center space-x-4 mb-6">
                 <div className="bg-white p-3 rounded-full shadow-xl border-4 border-gray-200">
                     <Image 
-                     src="/avatarOnBoarding.png" 
+                     src="/media/logoColorato.png" 
                      alt="Avatar utente" 
                      width={72} 
                      height={72} 

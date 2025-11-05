@@ -23,29 +23,39 @@ export default function PWAManager({ children }: PWAManagerProps) {
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
 
   useEffect(() => {
-    // Registra il service worker
+    // In sviluppo disabilita SW e rimuovi eventuali registrazioni
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((reg) => {
-          console.log('Service Worker registrato:', reg)
-          setRegistration(reg)
-          
-          // Controlla aggiornamenti
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && typeof window !== 'undefined' && navigator.serviceWorker.controller) {
-                  setUpdateAvailable(true)
-                }
-              })
-            }
+      const isProd = process.env.NODE_ENV === 'production'
+
+      if (!isProd) {
+        navigator.serviceWorker.getRegistrations()
+          .then((regs) => {
+            regs.forEach((r) => r.unregister())
           })
-        })
-        .catch((error) => {
-          console.error('Errore registrazione Service Worker:', error)
-        })
+          .catch(() => {})
+      } else {
+        navigator.serviceWorker
+          .register('/sw.js')
+          .then((reg) => {
+            console.log('Service Worker registrato:', reg)
+            setRegistration(reg)
+            
+            // Controlla aggiornamenti
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && typeof window !== 'undefined' && navigator.serviceWorker.controller) {
+                    setUpdateAvailable(true)
+                  }
+                })
+              }
+            })
+          })
+          .catch((error) => {
+            console.error('Errore registrazione Service Worker:', error)
+          })
+      }
     }
 
     // Monitora lo stato della connessione

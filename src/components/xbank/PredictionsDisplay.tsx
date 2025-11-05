@@ -220,7 +220,9 @@ const PredictionsDisplay = ({ currency }: PredictionsDisplayProps) => {
               </div>
               
               <div className="text-sm text-gray-600">
-                {new Date(prediction.created_at).toLocaleDateString('it-IT')}
+                <time dateTime={prediction.created_at} suppressHydrationWarning>
+                  {new Date(prediction.created_at).toLocaleDateString('it-IT', { timeZone: 'UTC' })}
+                </time>
               </div>
             </div>
           </div>

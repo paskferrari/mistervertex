@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useCallback, memo } from 'react'
 import { TrendingUp, TrendingDown, Target, Award, BarChart3, PieChart, Activity, Download } from 'lucide-react'
-import { toast } from 'react-hot-toast'
+import { supabase } from '@/lib/supabase'
+
+type FeedbackType = 'success' | 'error' | null
+
+interface InlineFeedback {
+  type: FeedbackType
+  message: string
+}
 
 interface AnalyticsData {
   totalPredictions: number
@@ -59,6 +66,13 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState('all')
   const [selectedSport, setSelectedSport] = useState('all')
+  const [feedback, setFeedback] = useState<InlineFeedback | null>(null)
+
+  const showFeedback = (type: FeedbackType, message: string) => {
+    if (!type) return
+    setFeedback({ type, message })
+    setTimeout(() => setFeedback(null), 3000)
+  }
 
   const loadAnalytics = useCallback(async () => {
     try {
@@ -68,14 +82,17 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
         sport: selectedSport
       })
       
-      const response = await fetch(`/api/xbank/analytics?${params}`)
+      const { data: { session } } = await supabase.auth.getSession()
+      const response = await fetch(`/api/xbank/analytics?${params}`, {
+        headers: session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}
+      })
       if (!response.ok) throw new Error('Errore nel caricamento delle analisi')
       
       const data = await response.json()
       setAnalytics(data)
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nel caricamento delle analisi')
+      showFeedback('error', 'Errore nel caricamento delle analisi')
     } finally {
       setLoading(false)
     }
@@ -89,9 +106,13 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
 
   const exportData = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch('/api/xbank/analytics/export', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {})
+        },
         body: JSON.stringify({ timeRange, sport: selectedSport })
       })
       
@@ -107,17 +128,17 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
       
-      toast.success('Dati esportati con successo')
+      showFeedback('success', 'Dati esportati con successo')
     } catch (error) {
       console.error('Errore:', error)
-      toast.error('Errore nell\'esportazione dei dati')
+      showFeedback('error', 'Errore nell\'esportazione dei dati')
     }
   }
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-accent-gold'
     if (score >= 60) return 'text-secondary'
-    return 'text-red-500'
+    return 'text-secondary'
   }
 
   const getScoreBackground = (score: number) => {
@@ -127,14 +148,14 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent-gold)]"></div>
       </div>
     )
   }
 
   if (!analytics) {
     return (
-      <div className="text-center text-amber-700 py-12">
+      <div className="text-center text-secondary py-12">
         <BarChart3 className="h-16 w-16 mx-auto mb-4 opacity-50" />
         <p>Nessun dato disponibile per le analisi</p>
       </div>
@@ -143,15 +164,29 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
 
   return (
     <div className="space-y-6">
+      {/* Feedback inline */}
+      {feedback && feedback.type && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`rounded-lg px-3 py-2 text-sm ${
+            feedback.type === 'success'
+              ? 'bg-white/5 border border-[var(--accent-gold)] text-primary'
+              : 'bg-white/5 border border-white/10 text-secondary'
+          }`}
+        >
+          {feedback.message}
+        </div>
+      )}
       {/* Header con filtri */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-amber-900">Dashboard Analisi</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-primary">Dashboard Analisi</h2>
         
         <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="bg-white/80 border border-amber-300 text-amber-900 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm flex-1 sm:flex-none"
+            className="lux-select flex-1 sm:flex-none"
           >
             <option value="all">Tutto il periodo</option>
             <option value="7d">Ultimi 7 giorni</option>
@@ -163,7 +198,7 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
           <select
             value={selectedSport}
             onChange={(e) => setSelectedSport(e.target.value)}
-            className="bg-white/80 border border-amber-300 text-amber-900 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 shadow-sm flex-1 sm:flex-none"
+            className="lux-select flex-1 sm:flex-none"
           >
             <option value="all">Tutti gli sport</option>
             <option value="football">Calcio</option>
@@ -174,7 +209,7 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
           
           <button
             onClick={exportData}
-            className="flex items-center justify-center space-x-1 sm:space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm transition-all duration-300 shadow-lg hover:shadow-xl flex-1 sm:flex-none"
+            className="btn-secondary flex items-center justify-center space-x-1 sm:space-x-2 text-xs sm:text-sm flex-1 sm:flex-none"
           >
             <Download className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Esporta</span>
@@ -185,18 +220,18 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
 
       {/* Metriche principali */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-        <div className="bg-white/80 backdrop-blur-sm rounded-lg sm:rounded-xl p-4 sm:p-6 border border-amber-200 shadow-lg">
+        <div className="card p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-amber-700 text-xs sm:text-sm font-medium">Profitto Totale</p>
-              <p className={`text-lg sm:text-2xl font-bold ${analytics.totalProfit >= 0 ? 'text-primary' : 'text-red-600'}`}>
+              <p className="text-secondary text-xs sm:text-sm font-medium">Profitto Totale</p>
+              <p className={`text-lg sm:text-2xl font-bold ${analytics.totalProfit >= 0 ? 'text-primary' : 'text-secondary'}`}>
                 {analytics.totalProfit >= 0 ? '+' : ''}{analytics.totalProfit.toFixed(2)} {currency}
               </p>
             </div>
             {analytics.totalProfit >= 0 ? (
               <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-accent-gold" />
             ) : (
-              <TrendingDown className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
+              <TrendingDown className="h-6 w-6 sm:h-8 sm:w-8 text-secondary" />
             )}
           </div>
         </div>
@@ -204,18 +239,18 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
         <div className="card p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-amber-700 text-xs sm:text-sm font-medium">Win Rate</p>
-              <p className="text-lg sm:text-2xl font-bold text-amber-900">{analytics.winRate.toFixed(1)}%</p>
+              <p className="text-secondary text-xs sm:text-sm font-medium">Win Rate</p>
+              <p className="text-lg sm:text-2xl font-bold text-primary">{analytics.winRate.toFixed(1)}%</p>
             </div>
-            <Target className="h-6 w-6 sm:h-8 sm:w-8 text-amber-500" />
+            <Target className="h-6 w-6 sm:h-8 sm:w-8 text-accent-gold" />
           </div>
         </div>
 
         <div className="card p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-amber-700 text-xs sm:text-sm font-medium">ROI</p>
-              <p className={`text-lg sm:text-2xl font-bold ${analytics.roi >= 0 ? 'text-primary' : 'text-red-600'}`}>
+              <p className="text-secondary text-xs sm:text-sm font-medium">ROI</p>
+              <p className={`text-lg sm:text-2xl font-bold ${analytics.roi >= 0 ? 'text-primary' : 'text-secondary'}`}>
                 {analytics.roi >= 0 ? '+' : ''}{analytics.roi.toFixed(1)}%
               </p>
             </div>
@@ -227,11 +262,11 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-secondary text-xs sm:text-sm">Streak Attuale</p>
-              <p className={`text-lg sm:text-2xl font-bold ${analytics.streak.type === 'win' ? 'text-green-400' : 'text-red-400'}`}>
+              <p className={`text-lg sm:text-2xl font-bold ${analytics.streak.type === 'win' ? 'text-accent-gold' : 'text-secondary'}`}>
                 {analytics.streak.current} {analytics.streak.type === 'win' ? 'W' : 'L'}
               </p>
             </div>
-            <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-orange-400" />
+            <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-accent-gold" />
           </div>
         </div>
       </div>
@@ -241,7 +276,7 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
         {/* Quality Score */}
         <div className="card p-4 sm:p-6">
           <h3 className="text-lg sm:text-xl font-bold text-primary mb-3 sm:mb-4 flex items-center">
-            <Award className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-orange-400" />
+            <Award className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-accent-gold" />
             Quality Score
           </h3>
           
@@ -271,7 +306,7 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
                     </div>
                     <div className="w-full bg-white/10 rounded-full h-2">
                       <div
-                        className={`h-2 rounded-full ${score >= 80 ? 'bg-accent-gold' : score >= 60 ? 'bg-white/40' : 'bg-red-500'}`}
+                        className={`h-2 rounded-full ${score >= 80 ? 'bg-accent-gold' : score >= 60 ? 'bg-white/40' : 'bg-white/20'}`}
                         style={{ width: `${score}%` }}
                       ></div>
                     </div>
@@ -285,7 +320,7 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
         {/* Indici */}
         <div className="card p-4 sm:p-6">
           <h3 className="text-lg sm:text-xl font-bold text-primary mb-3 sm:mb-4 flex items-center">
-            <PieChart className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-blue-400" />
+            <PieChart className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-accent-gold" />
             Indici di Performance
           </h3>
           
@@ -331,11 +366,11 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
                   <td className="py-2 sm:py-3 px-2 sm:px-4 text-primary font-medium capitalize">{sport.sport}</td>
                   <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-secondary">{sport.predictions}</td>
                   <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-primary">{sport.winRate.toFixed(1)}%</td>
-                  <td className={`py-2 sm:py-3 px-2 sm:px-4 text-center font-medium ${sport.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <td className={`py-2 sm:py-3 px-2 sm:px-4 text-center font-medium ${sport.profit >= 0 ? 'text-accent-gold' : 'text-secondary'}`}>
                     <span className="hidden sm:inline">{sport.profit >= 0 ? '+' : ''}{sport.profit.toFixed(2)} {currency}</span>
                     <span className="sm:hidden">{sport.profit >= 0 ? '+' : ''}{sport.profit.toFixed(0)}</span>
                   </td>
-                  <td className={`py-2 sm:py-3 px-2 sm:px-4 text-center font-medium ${sport.roi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <td className={`py-2 sm:py-3 px-2 sm:px-4 text-center font-medium ${sport.roi >= 0 ? 'text-accent-gold' : 'text-secondary'}`}>
                     {sport.roi >= 0 ? '+' : ''}{sport.roi.toFixed(1)}%
                   </td>
                 </tr>
@@ -346,27 +381,27 @@ function AnalyticsDashboard({ currency }: AnalyticsDashboardProps) {
       </div>
 
       {/* Statistiche per Livello di Confidenza */}
-      <div className="bg-gray-800 rounded-lg p-4 sm:p-6">
-        <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">Performance per Confidenza</h3>
+      <div className="card p-4 sm:p-6">
+        <h3 className="text-lg sm:text-xl font-bold text-primary mb-3 sm:mb-4">Performance per Confidenza</h3>
         
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {analytics.confidenceStats.map((conf, index) => (
-            <div key={index} className="bg-gray-700 rounded-lg p-3 sm:p-4 text-center">
-              <div className="text-base sm:text-lg font-bold text-orange-400 mb-2">
+            <div key={index} className="bg-white/5 rounded-lg p-3 sm:p-4 text-center border border-white/10">
+              <div className="text-base sm:text-lg font-bold text-accent-gold mb-2">
                 {conf.level} ⭐
               </div>
               <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
-                <div className="text-gray-300">
+                <div className="text-secondary">
                   {conf.predictions} pred.
                 </div>
-                <div className="text-white font-medium">
+                <div className="text-primary font-medium">
                   {conf.winRate.toFixed(1)}%
                 </div>
-                <div className={`font-medium ${conf.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <div className={`font-medium ${conf.profit >= 0 ? 'text-accent-gold' : 'text-secondary'}`}>
                   <span className="hidden sm:inline">{conf.profit >= 0 ? '+' : ''}{conf.profit.toFixed(2)} {currency}</span>
                   <span className="sm:hidden">{conf.profit >= 0 ? '+' : ''}{conf.profit.toFixed(0)}</span>
                 </div>
-                <div className="text-gray-400 hidden sm:block">
+                <div className="text-secondary hidden sm:block">
                   Quota: {conf.avgOdds.toFixed(2)}
                 </div>
               </div>

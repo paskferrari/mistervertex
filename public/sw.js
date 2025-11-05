@@ -8,8 +8,8 @@ const STATIC_ASSETS = [
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
-  '/logoVertex.png',
-  '/avatarOnBoarding.png',
+  '/media/logoColorato.png',
+  '/media/logoBianco.svg',
   '/_next/static/css/app/layout.css',
   '/_next/static/css/app/globals.css'
 ];
@@ -109,7 +109,7 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           // Fallback per immagini
           if (request.destination === 'image') {
-            return caches.match('/logoVertex.png');
+            return caches.match('/media/logoColorato.png');
           }
         })
     );

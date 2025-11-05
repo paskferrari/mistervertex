@@ -1,20 +1,21 @@
 'use client'
 
-import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react'
+import { useEffect, useState, useMemo, useCallback, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Settings, TrendingUp, Target, Users, BarChart3, Plus, ArrowLeft, Save, Wallet, MessageSquare } from 'lucide-react'
-import NotificationCenter from '@/components/xbank/NotificationCenter'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 
-// Lazy load dei componenti pesanti per migliorare le performance
-const BankrollManager = lazy(() => import('@/components/xbank/BankrollManager'))
-const PredictionsList = lazy(() => import('@/components/xbank/PredictionsList'))
-const GroupsManager = lazy(() => import('@/components/xbank/GroupsManager'))
-const AnalyticsDashboard = lazy(() => import('@/components/xbank/AnalyticsDashboard'))
-const ScalateManager = lazy(() => import('@/components/xbank/ScalateManager'))
-const PersonalBoard = lazy(() => import('@/components/xbank/PersonalBoard'))
-const BackupManager = lazy(() => import('@/components/xbank/BackupManager'))
+// Dynamic import dei componenti pesanti per migliorare stabilità in dev
+const BankrollManager = dynamic(() => import('@/components/xbank/BankrollManager'), { ssr: false })
+const PredictionsList = dynamic(() => import('@/components/xbank/PredictionsList'), { ssr: false })
+const GroupsManager = dynamic(() => import('@/components/xbank/GroupsManager'), { ssr: false })
+const AnalyticsDashboard = dynamic(() => import('@/components/xbank/AnalyticsDashboard'), { ssr: false })
+const ScalateManager = dynamic(() => import('@/components/xbank/ScalateManager'), { ssr: false })
+const PersonalBoard = dynamic(() => import('@/components/xbank/PersonalBoard'), { ssr: false })
+const BackupManager = dynamic(() => import('@/components/xbank/BackupManager'), { ssr: false })
+const InitialBudgetModal = dynamic(() => import('@/components/xbank/InitialBudgetModal'), { ssr: false })
 
 interface UserData {
   id: string
@@ -38,6 +39,7 @@ export default function XBankPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [mockEnabled, setMockEnabled] = useState(false)
+  const [showInitialModal, setShowInitialModal] = useState(false)
   
   // Sidebar: sezioni disponibili (sostituisce i tab)
   const menuItems = [
@@ -136,6 +138,26 @@ export default function XBankPage() {
       if (response.ok) {
         const data = await response.json()
         setSettings(data)
+
+        // Mostra il modal al primo accesso: nessuna transazione e bankroll invariato
+        try {
+          const token = (await supabase.auth.getSession()).data.session?.access_token
+          if (token) {
+            const txRes = await fetch('/api/xbank/bankroll?limit=1', {
+              method: 'GET',
+              headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (txRes.ok) {
+              const txData = await txRes.json()
+              const txCount = txData?.pagination?.total ?? (Array.isArray(txData?.transactions) ? txData.transactions.length : 0)
+              const shouldShow = (Number(data?.initial_bankroll) === Number(data?.current_bankroll)) && txCount === 0
+              if (shouldShow) setShowInitialModal(true)
+            }
+          }
+        } catch (e) {
+          // Se il controllo transazioni fallisce, non bloccare la pagina
+          console.warn('Controllo transazioni iniziali fallito:', e)
+        }
       }
     } catch (error) {
       console.error('Errore nel caricamento impostazioni:', error)
@@ -197,15 +219,15 @@ export default function XBankPage() {
   // Componente di loading per Suspense
   const LoadingComponent = ({ message }: { message: string }) => (
     <div className="flex items-center justify-center py-8 sm:py-12">
-      <div className="text-blue-700 text-base sm:text-lg font-medium animate-pulse">{message}</div>
+      <div className="text-secondary text-base sm:text-lg font-medium animate-pulse">{message}</div>
     </div>
   )
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-primary flex items-center justify-center">
         <div className="text-center">
-          <div className="text-blue-800 text-lg sm:text-xl font-medium animate-pulse">Caricamento X-BANK...</div>
+          <div className="text-secondary text-lg sm:text-xl font-medium animate-pulse">Caricamento X-BANK...</div>
         </div>
       </div>
     )
@@ -215,19 +237,11 @@ export default function XBankPage() {
 
   return (
     <div className="min-h-screen bg-primary text-primary supports-[height:100dvh]:min-h-[100dvh]">
-      <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6 max-w-7xl">
-        {/* Toast Notification */}
-        <div 
-          id="toast-container" 
-          className="fixed top-4 right-4 z-50" 
-          role="region" 
-          aria-label="Notifiche"
-          aria-live="polite"
-        ></div>
+      <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-2 max-w-7xl">
 
         {/* Header sezione (non fisso, separato dalla topbar globale) */}
         <header className="bg-white/10 backdrop-blur-sm border-b border-white/10 text-primary rounded-xl">
-          <div className="container mx-auto px-4 py-4">
+          <div className="px-3 py-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <button
@@ -238,25 +252,13 @@ export default function XBankPage() {
                   <ArrowLeft className="h-5 w-5" aria-hidden="true" />
                 </button>
                 
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center border border-accent-gold-fade">
-                    <Image
-                      src="/media/logoBianco.svg"
-                      alt="Logo Mister Vertex"
-                      width={32}
-                      height={32}
-                      className="drop-shadow-sm"
-                    />
-                  </div>
-                  <div>
-                    <h1 className="text-xl font-bold">X-BANK</h1>
-                    <p className="text-sm text-secondary">Gestione Avanzata</p>
-                  </div>
+                <div>
+                  <h1 className="text-lg font-bold">X-BANK</h1>
+                  <p className="text-xs text-secondary">Gestione avanzata</p>
                 </div>
               </div>
               
               <div className="flex items-center space-x-3">
-                <NotificationCenter userId={user.id} />
                 <div className="card p-3">
                   <div className="text-xs text-secondary font-medium mb-1">Bankroll</div>
                   <div className="text-lg font-bold">
@@ -302,24 +304,24 @@ export default function XBankPage() {
             {/* Content */}
             <main className="card p-4 lg:p-6" tabIndex={-1}>
             {activeTab === 'dashboard' && (
-              <section id="panel-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
+             <section id="panel-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-blue-900 mb-2">Dashboard</h2>
-                  <p className="text-blue-600 text-sm">Panoramica del tuo portafoglio</p>
+                  <h2 className="text-2xl font-bold text-primary mb-2">Dashboard</h2>
+                  <p className="text-secondary text-sm">Panoramica del tuo portafoglio</p>
                 </div>
                 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="touch-target bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 border border-blue-200/50 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 gpu-accelerated" role="article" aria-labelledby="initial-bankroll-label">
+                  <div className="touch-target card p-4 transition-all duration-300 hover:scale-105 gpu-accelerated" role="article" aria-labelledby="initial-bankroll-label">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-                        <Wallet className="h-5 w-5 text-white" />
+                      <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                        <Wallet className="h-5 w-5 text-primary" />
                       </div>
                     </div>
-                    <div id="initial-bankroll-label" className="text-blue-700 text-xs font-medium mb-1">Bankroll Iniziale</div>
-                    <div className="text-lg font-bold text-blue-900" aria-describedby="initial-bankroll-label">
+                    <div id="initial-bankroll-label" className="text-secondary text-xs font-medium mb-1">Bankroll Iniziale</div>
+                    <div className="text-lg font-bold text-primary" aria-describedby="initial-bankroll-label">
                       {settings?.initial_bankroll?.toFixed(2) || '0.00'}
                     </div>
-                    <div className="text-xs text-blue-600">{settings?.currency || 'EUR'}</div>
+                    <div className="text-xs text-secondary">{settings?.currency || 'EUR'}</div>
                   </div>
                   
                   <div className="touch-target card p-4 transition-all duration-300 hover:scale-105 gpu-accelerated" role="article" aria-labelledby="current-bankroll-label">
@@ -376,10 +378,10 @@ export default function XBankPage() {
                       <Wallet className="h-8 w-8 text-white" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-2">Benvenuto in X-BANK</h3>
-                    <p className="text-blue-700 text-sm mb-4">Il tuo sistema di gestione avanzato per il betting professionale</p>
+                    <p className="text-secondary text-sm mb-4">Il tuo sistema di gestione avanzato per il betting professionale</p>
                     <div className="flex flex-wrap justify-center gap-2">
-                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">Gestione Bankroll</span>
-                      <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">Analytics</span>
+                      <span className="px-3 py-1 bg-white/10 text-primary rounded-full text-xs font-medium">Gestione Bankroll</span>
+                      <span className="px-3 py-1 bg-white/10 text-primary rounded-full text-xs font-medium">Analytics</span>
                       <span className="px-3 py-1 bg-accent-gold-weak text-white rounded-full text-xs font-medium">Pronostici</span>
                     </div>
                   </div>
@@ -404,7 +406,7 @@ export default function XBankPage() {
              {activeTab === 'predictions' && (
                  <div>
                    <div className="mb-6 sm:mb-8">
-                     <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-900">I Tuoi Pronostici</h2>
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary">I Tuoi Pronostici</h2>
                    </div>
                    <Suspense fallback={<LoadingComponent message="Caricamento pronostici..." />}>
                      <PredictionsList 
@@ -610,9 +612,17 @@ export default function XBankPage() {
 
             {activeTab === 'backup' && (
               <div>
-                <BackupManager userId={user.id} />
+                <Suspense fallback={<LoadingComponent message="Caricamento backup..." />}>
+                  <BackupManager userId={user.id} />
+                </Suspense>
               </div>
             )}
+            {/* Modal di budget iniziale */}
+            <InitialBudgetModal
+              isOpen={showInitialModal}
+              onClose={() => setShowInitialModal(false)}
+              onSaved={(s) => setSettings(s)}
+            />
             </main>
           </div>
         </div>

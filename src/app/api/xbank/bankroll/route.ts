@@ -1,307 +1,203 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
-import jwt from 'jsonwebtoken'
+import { supabaseAdmin } from '@/lib/supabase'
 
-interface DecodedToken {
-  sub: string
-  email?: string
-  iat?: number
-  exp?: number
+type TransactionType = 'deposit' | 'withdrawal' | 'adjustment'
+
+interface CreateTransactionBody {
+  transaction_type: TransactionType
+  amount: number
+  description: string
 }
 
-// GET - Recupera lo storico delle transazioni bankroll
+// GET /api/xbank/bankroll?page=1&limit=10&type=deposit|withdrawal|bet|win|loss|adjustment
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Token di autorizzazione mancante' }, { status: 401 })
+    const token = authHeader?.replace('Bearer ', '')
+    if (!token) {
+      return NextResponse.json({ error: 'Token di autenticazione mancante' }, { status: 401 })
     }
 
-    const token = authHeader.substring(7)
-    const decoded = jwt.decode(token) as DecodedToken | null
-    
-    if (!decoded || !decoded.sub) {
-      return NextResponse.json({ error: 'Token non valido' }, { status: 401 })
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Utente non autenticato' }, { status: 401 })
     }
 
-    const userId = decoded.sub
-
-    // Verifica che l'utente sia VIP
-    const { data: userData, error: userError } = await supabase
+    // Verifica ruolo VIP o admin
+    const { data: userData } = await supabaseAdmin
       .from('users')
       .select('role')
-      .eq('id', userId)
+      .eq('id', user.id)
       .single()
 
-    if (userError || !userData || (userData.role !== 'abbonato_vip' && userData.role !== 'admin')) {
-      return NextResponse.json({ error: 'Accesso negato' }, { status: 403 })
+    if (!userData || (userData.role !== 'abbonato_vip' && userData.role !== 'admin')) {
+      return NextResponse.json({ error: 'Accesso negato: X-BANK disponibile solo per utenti VIP' }, { status: 403 })
     }
 
-    const url = new URL(request.url)
-    const page = parseInt(url.searchParams.get('page') || '1')
-    const limit = parseInt(url.searchParams.get('limit') || '20')
-    const type = url.searchParams.get('type')
-    const offset = (page - 1) * limit
+    const { searchParams } = new URL(request.url)
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10))
+    const limit = Math.max(1, Math.min(50, parseInt(searchParams.get('limit') || '10', 10)))
+    const type = searchParams.get('type') || undefined
 
-    let query = supabase
-      .from('xbank_bankroll_tracking')
-      .select('*')
-      .eq('user_id', userId)
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+
+    let query = supabaseAdmin
+      .from('bankroll_history')
+      .select('*', { count: 'exact' })
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
 
-    if (type) {
+    if (type && type !== 'all') {
       query = query.eq('transaction_type', type)
     }
 
-    const { data: transactions, error } = await query
-
+    const { data: transactions, error, count } = await query.range(from, to)
     if (error) {
-      console.error('Error fetching bankroll transactions:', error)
+      // Fallback: tabella mancante (PGRST205) -> ritorna lista vuota
+      if ((error as any).code === 'PGRST205') {
+        console.warn('bankroll_history non presente: ritorno lista vuota')
+        return NextResponse.json({
+          transactions: [],
+          pagination: { page, limit, total: 0, totalPages: 1 },
+          note: 'Tabella bankroll_history assente: tracking transazioni disabilitato temporaneamente'
+        })
+      }
+      console.error('Errore nel recupero transazioni:', error)
       return NextResponse.json({ error: 'Errore nel recupero delle transazioni' }, { status: 500 })
     }
 
-    // Conta il totale per la paginazione
-    let countQuery = supabase
-      .from('xbank_bankroll_tracking')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-
-    if (type) {
-      countQuery = countQuery.eq('transaction_type', type)
-    }
-
-    const { count } = await countQuery
+    const total = count || 0
+    const totalPages = Math.max(1, Math.ceil(total / limit))
 
     return NextResponse.json({
-      transactions,
-      pagination: {
-        page,
-        limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit)
-      }
+      transactions: transactions || [],
+      pagination: { page, limit, total, totalPages }
     })
-
   } catch (error) {
-    console.error('Error in bankroll GET:', error)
+    console.error('API Error:', error)
     return NextResponse.json({ error: 'Errore interno del server' }, { status: 500 })
   }
 }
 
-// POST - Crea una nuova transazione bankroll
+// POST /api/xbank/bankroll
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Token di autorizzazione mancante' }, { status: 401 })
+    const token = authHeader?.replace('Bearer ', '')
+    if (!token) {
+      return NextResponse.json({ error: 'Token di autenticazione mancante' }, { status: 401 })
     }
 
-    const token = authHeader.substring(7)
-    const decoded = jwt.decode(token) as DecodedToken | null
-    
-    if (!decoded || !decoded.sub) {
-      return NextResponse.json({ error: 'Token non valido' }, { status: 401 })
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Utente non autenticato' }, { status: 401 })
     }
 
-    const userId = decoded.sub
-
-    // Verifica che l'utente sia VIP
-    const { data: userData, error: userError } = await supabase
+    // Verifica ruolo VIP o admin
+    const { data: userData } = await supabaseAdmin
       .from('users')
       .select('role')
-      .eq('id', userId)
+      .eq('id', user.id)
       .single()
 
-    if (userError || !userData || (userData.role !== 'abbonato_vip' && userData.role !== 'admin')) {
-      return NextResponse.json({ error: 'Accesso negato' }, { status: 403 })
+    if (!userData || (userData.role !== 'abbonato_vip' && userData.role !== 'admin')) {
+      return NextResponse.json({ error: 'Accesso negato: X-BANK disponibile solo per utenti VIP' }, { status: 403 })
     }
 
-    const body = await request.json()
-    const { transaction_type, amount, description, prediction_id } = body
+    const body = await request.json() as CreateTransactionBody
+    const { transaction_type, amount, description } = body
 
-    // Validazione
-    if (!transaction_type || amount === undefined || !description) {
-      return NextResponse.json({ error: 'Dati mancanti' }, { status: 400 })
-    }
-
-    if (!['bet', 'win', 'loss', 'adjustment', 'deposit', 'withdrawal'].includes(transaction_type)) {
+    // Validazione input
+    const validTypes: TransactionType[] = ['deposit', 'withdrawal', 'adjustment']
+    if (!transaction_type || !validTypes.includes(transaction_type)) {
       return NextResponse.json({ error: 'Tipo di transazione non valido' }, { status: 400 })
     }
 
-    // Ottieni il bankroll attuale
-    const { data: settings, error: settingsError } = await supabase
+    if (typeof amount !== 'number' || isNaN(amount)) {
+      return NextResponse.json({ error: 'Importo non valido' }, { status: 400 })
+    }
+
+    if (transaction_type !== 'adjustment' && amount <= 0) {
+      return NextResponse.json({ error: 'L\'importo deve essere maggiore di 0' }, { status: 400 })
+    }
+
+    if (!description || !description.trim()) {
+      return NextResponse.json({ error: 'Descrizione obbligatoria' }, { status: 400 })
+    }
+
+    // Recupera impostazioni utente (current_bankroll)
+    const { data: settings, error: settingsError } = await supabaseAdmin
       .from('xbank_user_settings')
-      .select('current_bankroll')
-      .eq('user_id', userId)
+      .select('*')
+      .eq('user_id', user.id)
       .single()
 
     if (settingsError || !settings) {
-      return NextResponse.json({ error: 'Impostazioni utente non trovate' }, { status: 404 })
+      console.error('Errore nel recupero impostazioni X-BANK:', settingsError)
+      return NextResponse.json({ error: 'Impostazioni utente non trovate' }, { status: 400 })
     }
 
-    const balanceBefore = settings.current_bankroll
-    let balanceAfter = balanceBefore
+    const currentBalance = parseFloat(String(settings.current_bankroll)) || 0
+    const delta = transaction_type === 'deposit' 
+      ? Math.abs(amount)
+      : transaction_type === 'withdrawal' 
+        ? -Math.abs(amount)
+        : amount // adjustment può essere positivo o negativo
 
-    // Calcola il nuovo balance in base al tipo di transazione
-    switch (transaction_type) {
-      case 'bet':
-        balanceAfter = balanceBefore - Math.abs(amount)
-        break
-      case 'win':
-        balanceAfter = balanceBefore + Math.abs(amount)
-        break
-      case 'loss':
-        // Per le perdite, l'importo è già stato sottratto con la bet
-        balanceAfter = balanceBefore
-        break
-      case 'deposit':
-      case 'adjustment':
-        balanceAfter = balanceBefore + amount
-        break
-      case 'withdrawal':
-        balanceAfter = balanceBefore - Math.abs(amount)
-        break
+    const newBalance = Math.round((currentBalance + delta) * 100) / 100
+
+    if (newBalance < 0) {
+      return NextResponse.json({ error: 'Fondi insufficienti per l\'operazione' }, { status: 400 })
     }
 
-    // Verifica che il balance non diventi negativo (eccetto per adjustments)
-    if (balanceAfter < 0 && transaction_type !== 'adjustment') {
-      return NextResponse.json({ error: 'Fondi insufficienti' }, { status: 400 })
-    }
-
-    // Inizia una transazione
-    const { data: transaction, error: transactionError } = await supabase
-      .from('xbank_bankroll_tracking')
+    // Registra transazione
+    let inserted: any = null
+    const { data: insData, error: insertError } = await supabaseAdmin
+      .from('bankroll_history')
       .insert({
-        user_id: userId,
-        prediction_id,
+        user_id: user.id,
         transaction_type,
-        amount,
-        description,
-        balance_before: balanceBefore,
-        balance_after: balanceAfter
+        amount: Math.round(Math.abs(amount) * 100) / 100,
+        description: description.trim(),
+        balance_before: currentBalance,
+        balance_after: newBalance
       })
       .select()
       .single()
 
-    if (transactionError) {
-      console.error('Error creating transaction:', transactionError)
-      return NextResponse.json({ error: 'Errore nella creazione della transazione' }, { status: 500 })
+    if (insertError) {
+      // Fallback: tabella mancante -> aggiorna solo il saldo
+      if ((insertError as any).code === 'PGRST205') {
+        console.warn('bankroll_history non presente: aggiorno solo il saldo corrente')
+        inserted = null
+      } else {
+        console.error('Errore nel salvataggio transazione:', insertError)
+        return NextResponse.json({ error: 'Errore nel salvataggio della transazione' }, { status: 500 })
+      }
+    } else {
+      inserted = insData
     }
 
-    // Aggiorna il bankroll nelle impostazioni
-    const { error: updateError } = await supabase
+    // Aggiorna bankroll corrente
+    const { error: updateError } = await supabaseAdmin
       .from('xbank_user_settings')
-      .update({ current_bankroll: balanceAfter })
-      .eq('user_id', userId)
+      .update({ current_bankroll: newBalance, updated_at: new Date().toISOString() })
+      .eq('user_id', user.id)
 
     if (updateError) {
-      console.error('Error updating bankroll:', updateError)
-      // Rollback della transazione se l'aggiornamento fallisce
-      await supabase
-        .from('xbank_bankroll_tracking')
-        .delete()
-        .eq('id', transaction.id)
-      
+      console.error('Errore nell\'aggiornamento del bankroll:', updateError)
       return NextResponse.json({ error: 'Errore nell\'aggiornamento del bankroll' }, { status: 500 })
     }
 
-    return NextResponse.json({
-      transaction,
-      new_balance: balanceAfter
+    return NextResponse.json({ 
+      message: 'Transazione aggiunta con successo',
+      new_balance: newBalance,
+      transaction: inserted,
+      note: inserted ? undefined : 'Tabella bankroll_history assente: transazione non registrata nello storico'
     }, { status: 201 })
-
   } catch (error) {
-    console.error('Error in bankroll POST:', error)
-    return NextResponse.json({ error: 'Errore interno del server' }, { status: 500 })
-  }
-}
-
-// PUT - Aggiorna una transazione esistente (solo adjustments)
-export async function PUT(request: NextRequest) {
-  try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Token di autorizzazione mancante' }, { status: 401 })
-    }
-
-    const token = authHeader.substring(7)
-    const decoded = jwt.decode(token) as DecodedToken | null
-    
-    if (!decoded || !decoded.sub) {
-      return NextResponse.json({ error: 'Token non valido' }, { status: 401 })
-    }
-
-    const userId = decoded.sub
-
-    // Verifica che l'utente sia VIP
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', userId)
-      .single()
-
-    if (userError || !userData || (userData.role !== 'abbonato_vip' && userData.role !== 'admin')) {
-      return NextResponse.json({ error: 'Accesso negato' }, { status: 403 })
-    }
-
-    const body = await request.json()
-    const { transaction_id, amount, description } = body
-
-    if (!transaction_id || amount === undefined) {
-      return NextResponse.json({ error: 'Dati mancanti' }, { status: 400 })
-    }
-
-    // Verifica che la transazione esista e sia di tipo adjustment
-    const { data: existingTransaction, error: fetchError } = await supabase
-      .from('xbank_bankroll_tracking')
-      .select('*')
-      .eq('id', transaction_id)
-      .eq('user_id', userId)
-      .eq('transaction_type', 'adjustment')
-      .single()
-
-    if (fetchError || !existingTransaction) {
-      return NextResponse.json({ error: 'Transazione non trovata o non modificabile' }, { status: 404 })
-    }
-
-    // Calcola la differenza
-    const difference = amount - existingTransaction.amount
-    const newBalanceAfter = existingTransaction.balance_after + difference
-
-    // Aggiorna la transazione
-    const { error: updateTransactionError } = await supabase
-      .from('xbank_bankroll_tracking')
-      .update({
-        amount,
-        description: description || existingTransaction.description,
-        balance_after: newBalanceAfter
-      })
-      .eq('id', transaction_id)
-
-    if (updateTransactionError) {
-      console.error('Error updating transaction:', updateTransactionError)
-      return NextResponse.json({ error: 'Errore nell\'aggiornamento della transazione' }, { status: 500 })
-    }
-
-    // Aggiorna il bankroll corrente
-    const { error: updateBankrollError } = await supabase
-      .from('xbank_user_settings')
-      .update({ current_bankroll: newBalanceAfter })
-      .eq('user_id', userId)
-
-    if (updateBankrollError) {
-      console.error('Error updating bankroll:', updateBankrollError)
-      return NextResponse.json({ error: 'Errore nell\'aggiornamento del bankroll' }, { status: 500 })
-    }
-
-    return NextResponse.json({
-      message: 'Transazione aggiornata con successo',
-      new_balance: newBalanceAfter
-    })
-
-  } catch (error) {
-    console.error('Error in bankroll PUT:', error)
+    console.error('API Error:', error)
     return NextResponse.json({ error: 'Errore interno del server' }, { status: 500 })
   }
 }

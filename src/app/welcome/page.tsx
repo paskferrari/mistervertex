@@ -155,7 +155,7 @@ export default function WelcomePage() {
               <div className="relative">
                 <div className="p-4 bg-white rounded-full shadow-2xl border-4 border-green-400/50">
                   <Image 
-                    src="/avatarOnBoarding.png" 
+                    src="/media/logoColorato.png" 
                     alt="Avatar Welcome" 
                     width={100} 
                     height={100}

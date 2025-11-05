@@ -130,7 +130,7 @@ export default function LandingPage() {
             <div className="relative">
               <div className="avatar-container p-4 bg-white rounded-full shadow-2xl border border-accent-gold-fade">
                 <Image 
-                  src="/avatarOnBoarding.png" 
+                  src="/media/logoColorato.png" 
                   alt="Avatar Mister Vertex" 
                   width={120} 
                   height={120}

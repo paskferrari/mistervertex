@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { Bell, X, Check, AlertCircle, Info, TrendingUp, Users, Target } from 'lucide-react'
-import { toast } from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
 
 interface Notification {
@@ -41,7 +40,7 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
       // Ottieni il token di sessione
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) {
-        toast.error('Sessione non valida')
+        // Evita toast globali: feedback silenzioso
         return
       }
       
@@ -62,7 +61,7 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
       setUnreadCount(data.unread_count || 0)
     } catch (error) {
       console.error('Errore nel caricamento notifiche:', error)
-      toast.error('Errore nel caricamento delle notifiche')
+      // Evita toast globali: log silenzioso
     } finally {
       setLoading(false)
     }
@@ -73,7 +72,7 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
       // Ottieni il token di sessione
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) {
-        toast.error('Sessione non valida')
+        // Evita toast globali: feedback silenzioso
         return
       }
       
@@ -96,7 +95,7 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
       setUnreadCount(prev => Math.max(0, prev - 1))
     } catch (error) {
       console.error('Errore nel segnare come letta:', error)
-      toast.error('Errore nell\'aggiornamento della notifica')
+      // Evita toast globali: log silenzioso
     }
   }
 
@@ -107,7 +106,7 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
       // Ottieni il token di sessione
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) {
-        toast.error('Sessione non valida')
+        // Evita toast globali: feedback silenzioso
         return
       }
       
@@ -125,10 +124,10 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
 
       setNotifications(prev => prev.map(n => ({ ...n, read: true })))
       setUnreadCount(0)
-      toast.success('Tutte le notifiche segnate come lette')
+      // Rimosso toast globale per evitare sovrapposizioni
     } catch (error) {
       console.error('Errore nel segnare tutte come lette:', error)
-      toast.error('Errore nell\'aggiornamento delle notifiche')
+      // Evita toast globali: log silenzioso
     } finally {
       setLoading(false)
     }
@@ -160,7 +159,7 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
     if (diffMins < 60) return `${diffMins}m fa`
     if (diffHours < 24) return `${diffHours}h fa`
     if (diffDays < 7) return `${diffDays}g fa`
-    return date.toLocaleDateString('it-IT')
+    return date.toLocaleDateString('it-IT', { timeZone: 'UTC' })
   }
 
   return (

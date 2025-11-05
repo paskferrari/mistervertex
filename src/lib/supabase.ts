@@ -4,8 +4,14 @@ import { createBrowserClient } from '@supabase/ssr'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
 
-// Client per il browser
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+// Client per il browser (disabilita auto refresh dei token in dev)
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
+})
 
 // Client per il server (con service role key)
 export const supabaseAdmin = createClient(
@@ -52,7 +58,18 @@ export const safeSupabaseAuth = {
     if (!isSupabaseConfigured()) {
       return { data: { user: null }, error: null }
     }
-    return await supabase.auth.getUser()
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const session = sessionData?.session
+      if (!session) {
+        // Evita di innescare un refresh token quando la sessione è assente/invalidata
+        return { data: { user: null }, error: null }
+      }
+      return await supabase.auth.getUser()
+    } catch (error) {
+      console.warn('Errore durante getUser:', error)
+      return { data: { user: null }, error: null }
+    }
   }
 }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 interface ScalataUpdateData {
   name?: string
@@ -14,25 +14,27 @@ interface ScalataUpdateData {
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    // Verifica autenticazione
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Verifica autenticazione via bearer token
+    const authHeader = request.headers.get('authorization')
+    const token = authHeader?.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
     if (authError || !user) {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
     }
 
-    // Verifica ruolo VIP
-    const { data: profile } = await supabase
-      .from('profiles')
+    // Verifica ruolo VIP o admin
+    const { data: userData } = await supabaseAdmin
+      .from('users')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (profile?.role !== 'vip') {
+    if (!userData || (userData.role !== 'abbonato_vip' && userData.role !== 'admin')) {
       return NextResponse.json({ error: 'Accesso riservato agli utenti VIP' }, { status: 403 })
     }
 
     // Recupera la scalata con i passi
-    const { data: scalata, error } = await supabase
+    const { data: scalata, error } = await supabaseAdmin
       .from('scalate')
       .select(`
         *,
@@ -73,25 +75,27 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    // Verifica autenticazione
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Verifica autenticazione via bearer token
+    const authHeader = request.headers.get('authorization')
+    const token = authHeader?.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
     if (authError || !user) {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
     }
 
-    // Verifica ruolo VIP
-    const { data: profile } = await supabase
-      .from('profiles')
+    // Verifica ruolo VIP o admin
+    const { data: userData } = await supabaseAdmin
+      .from('users')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (profile?.role !== 'vip') {
+    if (!userData || (userData.role !== 'abbonato_vip' && userData.role !== 'admin')) {
       return NextResponse.json({ error: 'Accesso riservato agli utenti VIP' }, { status: 403 })
     }
 
     // Verifica che la scalata appartenga all'utente
-    const { data: existingScalata } = await supabase
+    const { data: existingScalata } = await supabaseAdmin
       .from('scalate')
       .select('id, user_id')
       .eq('id', id)
@@ -117,7 +121,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (body.settings !== undefined) updates.settings = body.settings
 
     // Aggiorna la scalata
-    const { data: scalata, error } = await supabase
+    const { data: scalata, error } = await supabaseAdmin
       .from('scalate')
       .update(updates)
       .eq('id', id)
@@ -140,25 +144,27 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    // Verifica autenticazione
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Verifica autenticazione via bearer token
+    const authHeader = request.headers.get('authorization')
+    const token = authHeader?.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
     if (authError || !user) {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
     }
 
-    // Verifica ruolo VIP
-    const { data: profile } = await supabase
-      .from('profiles')
+    // Verifica ruolo VIP o admin
+    const { data: userData } = await supabaseAdmin
+      .from('users')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (profile?.role !== 'vip') {
+    if (!userData || (userData.role !== 'abbonato_vip' && userData.role !== 'admin')) {
       return NextResponse.json({ error: 'Accesso riservato agli utenti VIP' }, { status: 403 })
     }
 
     // Verifica che la scalata appartenga all'utente
-    const { data: existingScalata } = await supabase
+    const { data: existingScalata } = await supabaseAdmin
       .from('scalate')
       .select('id, user_id')
       .eq('id', id)
@@ -170,13 +176,13 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     // Elimina prima i passi della scalata (se esistono)
-    await supabase
+    await supabaseAdmin
       .from('scalata_steps')
       .delete()
       .eq('scalata_id', id)
 
     // Elimina la scalata
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('scalate')
       .delete()
       .eq('id', id)

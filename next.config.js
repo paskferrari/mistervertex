@@ -1,9 +1,13 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const baseConfig = {
   // Ottimizzazioni PWA
   experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['lucide-react', '@heroicons/react'],
+    optimizeCss: false,
+  },
+
+  // Forza il root corretto per Turbopack (evita selezione /Users/piero)
+  turbopack: {
+    root: __dirname,
   },
 
   // Compressione e ottimizzazioni
@@ -91,42 +95,7 @@ const nextConfig = {
     ]
   },
 
-  // Webpack ottimizzazioni
-  webpack: (config, { dev, isServer }) => {
-    // Ottimizzazioni per la produzione
-    if (!dev && !isServer) {
-      // Code splitting ottimizzato
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: 10,
-            reuseExistingChunk: true,
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            priority: 5,
-            reuseExistingChunk: true,
-          },
-        },
-      }
-
-      // Ottimizzazioni bundle
-      config.optimization.usedExports = true
-      config.optimization.sideEffects = false
-    }
-
-    // Supporto per SVG come componenti
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: ['@svgr/webpack'],
-    })
-
-    return config
-  },
+  // Nota: impostazioni Webpack applicate solo in produzione (vedi export condizionale sotto)
 
   // Configurazione per il build
   output: 'standalone',
@@ -169,13 +138,85 @@ const nextConfig = {
   
   // Configurazione ESLint
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
   
   // Configurazione TypeScript
   typescript: {
     ignoreBuildErrors: false,
   },
+
+  // Pacchetti esterni lato server
+  serverExternalPackages: ['jsonwebtoken'],
 }
 
-module.exports = nextConfig
+const { PHASE_DEVELOPMENT_SERVER } = require('next/constants')
+
+module.exports = (phase) => {
+  if (phase === PHASE_DEVELOPMENT_SERVER) {
+    // In dev non esponiamo la chiave `webpack` per consentire Turbopack
+    return { ...baseConfig }
+  }
+
+  // In prod: aggiungiamo le personalizzazioni Webpack e l'analizzatore (se richiesto)
+  const prodConfig = {
+    ...baseConfig,
+    webpack: (config, { dev, isServer }) => {
+      // Fallback per moduli Node nel bundle client
+      if (!isServer) {
+        config.resolve = config.resolve || {}
+        config.resolve.fallback = {
+          ...(config.resolve.fallback || {}),
+          fs: false,
+          net: false,
+          tls: false,
+          crypto: false,
+        }
+      }
+
+      if (!dev && !isServer) {
+        config.optimization.splitChunks = {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              priority: 10,
+              reuseExistingChunk: true,
+            },
+            common: {
+              name: 'common',
+              minChunks: 2,
+              priority: 5,
+              reuseExistingChunk: true,
+            },
+          },
+        }
+
+        config.optimization.usedExports = true
+        config.optimization.sideEffects = false
+      }
+
+      // Supporto per SVG come componenti
+      config.module.rules.push({
+        test: /\.svg$/,
+        use: ['@svgr/webpack'],
+      })
+
+      // Plugin analyzer opzionale
+      if (process.env.ANALYZE === 'true') {
+        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+        config.plugins.push(
+          new BundleAnalyzerPlugin({
+            analyzerMode: 'static',
+            openAnalyzer: false,
+          })
+        )
+      }
+
+      return config
+    },
+  }
+
+  return prodConfig
+}

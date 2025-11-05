@@ -535,3 +535,17 @@ Questo design system è **premium**, **coeso** e **professionale**. Ogni element
 Non improvvisare. Segui OGNI dettaglio. Il risultato finale deve essere **indistinguibile da un prodotto Apple** ma con personalità luxury unica per bet trading.
 
 **Obiettivo**: Design che fa sentire l'utente in una piattaforma da €10,000/mese di membership.
+
+---
+
+## Aggiornamenti X-BANK (UI + Test)
+
+- Uniformati i componenti di caricamento: rimossi gradienti/sfondi celesti e testi blu; ora usano `text-primary`, `text-secondary`, `card`, `btn-primary` coerenti con la palette e glassmorphism.
+- Allineati i modali (Scalate, Bankroll) agli stili del prompt: blur 20px, border `var(--border-color)`, radius 24px, tipografia Inter e pulsanti `btn-primary`/`btn-secondary`.
+- Stato vuoto coerente e guidato:
+  - Bankroll: messaggio esplicito e CTA per aggiungere transazione anche con saldo a zero.
+  - Scalate: CTA chiara per creare una nuova scalata quando la lista è vuota.
+- Aggiunti test Vitest:
+  - Bankroll a saldo zero (deposito OK, prelievo/adjustment negativo bloccati; adjustment positivo OK).
+  - Empty-state scalate tramite `shouldShowCreateCTA`.
+- Verificata responsiveness: controlli e layout ottimizzati per mobile (min-height touch target 44px, griglie adattive).

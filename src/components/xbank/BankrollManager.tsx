@@ -43,6 +43,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
   })
 
   const showToast = (message: string, type: 'success' | 'error') => {
+    // Mostra feedback inline non invasivo; evita overlay fissi
     setToast({ message, type })
     setTimeout(() => setToast(null), 3000)
   }
@@ -99,8 +100,16 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
 
   const addTransaction = async () => {
     try {
-      if (!newTransaction.description.trim() || newTransaction.amount === 0) {
+      if (!newTransaction.description.trim()) {
+        showToast('La descrizione è obbligatoria', 'error')
+        return
+      }
+      if (newTransaction.amount === 0) {
         showToast('Compila tutti i campi', 'error')
+        return
+      }
+      if ((newTransaction.transaction_type === 'deposit' || newTransaction.transaction_type === 'withdrawal') && newTransaction.amount <= 0) {
+        showToast('Importo deve essere maggiore di 0', 'error')
         return
       }
       if (mock) {
@@ -139,7 +148,6 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
 
       if (response.ok) {
         const data = await response.json()
-        showToast('Transazione aggiunta con successo', 'success')
         setShowAddModal(false)
         setNewTransaction({
           transaction_type: 'deposit',
@@ -162,15 +170,15 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
     switch (type) {
       case 'deposit':
       case 'win':
-        return <TrendingUp className="h-4 w-4 text-green-400" />
+        return <TrendingUp className="h-4 w-4 text-[var(--accent-gold)]" />
       case 'withdrawal':
       case 'bet':
       case 'loss':
-        return <TrendingDown className="h-4 w-4 text-red-400" />
+        return <TrendingDown className="h-4 w-4 text-secondary" />
       case 'adjustment':
-        return <DollarSign className="h-4 w-4 text-orange-400" />
+        return <DollarSign className="h-4 w-4 text-secondary" />
       default:
-        return <DollarSign className="h-4 w-4 text-gray-400" />
+        return <DollarSign className="h-4 w-4 text-secondary" />
     }
   }
 
@@ -192,9 +200,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
     <div className="space-y-6">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-2xl ${
-          toast.type === 'success' ? 'bg-white/10 border border-emerald-400 text-primary' : 'bg-white/10 border border-red-400 text-primary'
-        } shadow-2xl backdrop-blur-md transform transition-all duration-300`}>
+        <div className={`mb-3 p-3 rounded-xl bg-white/5 border border-[var(--accent-gold)] text-primary`} role="status" aria-live="polite">
           {toast.message}
         </div>
       )}
@@ -207,7 +213,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center space-x-2 bg-gradient-to-r from-[var(--accent-gold)] to-[#f4d03f] hover:brightness-110 text-black px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
+          className="btn-primary flex items-center space-x-2 min-h-[44px]"
         >
           <Plus className="h-4 w-4" />
           <span>Nuova Transazione</span>
@@ -225,7 +231,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
               setFilterType(e.target.value)
               setPage(1)
             }}
-            className="bg-white/10 border border-[var(--border-color)] rounded-xl px-3 py-2 text-primary text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] focus:border-[var(--accent-gold)] shadow-sm backdrop-blur-md"
+            className="lux-select px-3 py-2 text-sm min-h-[44px]"
             aria-label="Filtra transazioni per tipo"
             aria-describedby="filter-help"
           >
@@ -241,7 +247,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
         </div>
         <button
           onClick={loadTransactions}
-          className="flex items-center space-x-2 text-secondary hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] rounded-xl px-2 py-1"
+          className="btn-secondary flex items-center space-x-2 px-2 py-1 min-h-[44px]"
           aria-label="Ricarica lista transazioni"
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -259,7 +265,16 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
         ) : transactions.length === 0 ? (
           <div className="p-8 text-center text-secondary" role="status" aria-live="polite">
             <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" aria-hidden="true" />
-            <p>Nessuna transazione trovata</p>
+            <p className="mb-3">Il tuo bankroll è vuoto. Puoi iniziare aggiungendo una transazione.</p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="btn-primary px-4 py-2 rounded-xl"
+                aria-label="Apri il form per aggiungere una nuova transazione"
+              >
+                Aggiungi Transazione
+              </button>
+            </div>
           </div>
         ) : (
           <div className="divide-y divide-[var(--border-color)]" role="list" aria-label={`${transactions.length} transazioni trovate`}>
@@ -276,7 +291,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
                         <span className={`text-sm font-bold ${
                           transaction.transaction_type === 'deposit' || transaction.transaction_type === 'win' || 
                           (transaction.transaction_type === 'adjustment' && transaction.amount > 0)
-                            ? 'text-emerald-600' : 'text-red-600'
+                            ? 'text-[var(--accent-gold)]' : 'text-secondary'
                         }`}
                         aria-label={`${transaction.transaction_type === 'deposit' || transaction.transaction_type === 'win' || 
                            (transaction.transaction_type === 'adjustment' && transaction.amount > 0) ? 'Entrata' : 'Uscita'} di ${Math.abs(transaction.amount).toFixed(2)} ${currency}`}
@@ -290,8 +305,8 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
                       <div className="flex items-center space-x-4 text-xs text-secondary mt-1">
                         <span className="flex items-center space-x-1">
                           <Calendar className="h-3 w-3" aria-hidden="true" />
-                          <time dateTime={transaction.created_at}>
-                            {new Date(transaction.created_at).toLocaleDateString('it-IT')}
+                          <time dateTime={transaction.created_at} suppressHydrationWarning>
+                            {new Date(transaction.created_at).toLocaleDateString('it-IT', { timeZone: 'UTC' })}
                           </time>
                         </span>
                         <span aria-label={`Saldo dopo la transazione: ${transaction.balance_after.toFixed(2)} ${currency}`}>
@@ -313,7 +328,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
           <button
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="px-4 py-2 bg-white/10 text-primary rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/15 transition-colors border border-[var(--border-color)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)]"
+            className="btn-secondary px-4 py-2 rounded-xl min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Vai alla pagina precedente"
           >
             Precedente
@@ -324,7 +339,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
           <button
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
-            className="px-4 py-2 bg-white/10 text-primary rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/15 transition-colors border border-[var(--border-color)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)]"
+            className="btn-secondary px-4 py-2 rounded-xl min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Vai alla pagina successiva"
           >
             Successiva
@@ -357,7 +372,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
                       ...newTransaction,
                       transaction_type: e.target.value as 'bet' | 'win' | 'loss' | 'adjustment' | 'deposit' | 'withdrawal'
                     })}
-                    className="w-full px-3 py-2 bg-white/10 border border-[var(--border-color)] rounded-xl text-primary focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] shadow-sm backdrop-blur-md"
+                    className="lux-select w-full px-3 py-2 min-h-[44px]"
                     aria-describedby="transaction-type-help"
                   >
                     <option value="deposit">Deposito</option>
@@ -380,7 +395,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
                       ...newTransaction,
                       amount: parseFloat(e.target.value) || 0
                     })}
-                    className="w-full px-3 py-2 bg-white/10 border border-[var(--border-color)] rounded-xl text-primary placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] shadow-sm backdrop-blur-md"
+                    className="lux-input w-full px-3 py-2 min-h-[44px]"
                     placeholder="0.00"
                     aria-describedby="amount-help"
                     required
@@ -400,7 +415,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
                       ...newTransaction,
                       description: e.target.value
                     })}
-                    className="w-full px-3 py-2 bg-white/10 border border-[var(--border-color)] rounded-xl text-primary placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] shadow-sm backdrop-blur-md"
+                    className="lux-input w-full px-3 py-2 min-h-[44px]"
                     placeholder="Descrizione della transazione"
                     aria-describedby="description-help"
                     required
@@ -414,7 +429,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 text-secondary hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)] rounded-xl"
+                className="btn-secondary px-4 py-2 rounded-xl min-h-[44px]"
                 aria-label="Chiudi modal senza salvare"
               >
                 Annulla
@@ -422,7 +437,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
               <button
                 type="button"
                 onClick={addTransaction}
-                className="px-4 py-2 bg-gradient-to-r from-[var(--accent-gold)] to-[#f4d03f] hover:brightness-110 text-black rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[var(--accent-gold)]"
+                className="btn-primary px-4 py-2 rounded-2xl min-h-[44px]"
                 aria-label="Salva nuova transazione"
               >
                 Aggiungi

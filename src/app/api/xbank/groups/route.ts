@@ -268,18 +268,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Crea il gruppo
-    const { data, error } = await supabaseAdmin
+    // Crea il gruppo con fallback in caso di PGRST204 (colonna non presente nella cache)
+    let insertPayload: Record<string, unknown> = {
+      user_id: user.id,
+      name,
+      description,
+      color: color || '#8B5CF6',
+      is_public: is_public || false,
+    }
+
+    let { data, error } = await supabaseAdmin
       .from('xbank_prediction_groups')
-      .insert({
-        user_id: user.id,
-        name,
-        description,
-        color: color || '#8B5CF6',
-        is_public: is_public || false
-      })
+      .insert(insertPayload)
       .select()
       .single()
+
+    if (error && String(error.message || '').includes('schema cache')) {
+      console.warn('PGRST204 su is_public, riprovo senza il campo is_public')
+      // Riprova senza il campo problematico
+      const { is_public: _ignored, ...safePayload } = insertPayload
+      const retry = await supabaseAdmin
+        .from('xbank_prediction_groups')
+        .insert(safePayload)
+        .select()
+        .single()
+      data = retry.data
+      error = retry.error
+    }
 
     if (error) {
       console.error('Error creating prediction group:', error)
@@ -305,6 +320,124 @@ export async function POST(request: NextRequest) {
           win_rate: 0
         }
       }
+    })
+  } catch (error) {
+    console.error('API Error:', error)
+    return NextResponse.json(
+      { error: 'Errore interno del server' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - Aggiorna un gruppo esistente (nome/descrizione/colore/visibilità)
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { id, name, description, color, is_public } = body
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'ID del gruppo obbligatorio' },
+        { status: 400 }
+      )
+    }
+
+    // Ottieni il token dall'header Authorization
+    const authHeader = request.headers.get('authorization')
+    const token = authHeader?.replace('Bearer ', '')
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Token di autenticazione mancante' },
+        { status: 401 }
+      )
+    }
+
+    // Verifica l'utente con il token
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Utente non autenticato' },
+        { status: 401 }
+      )
+    }
+
+    // Verifica che l'utente sia VIP o admin
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!userData || (userData.role !== 'abbonato_vip' && userData.role !== 'admin')) {
+      return NextResponse.json(
+        { error: 'Accesso negato: X-BANK disponibile solo per utenti VIP' },
+        { status: 403 }
+      )
+    }
+
+    // Verifica che il gruppo appartenga all'utente
+    const { data: groupData, error: groupError } = await supabaseAdmin
+      .from('xbank_prediction_groups')
+      .select('id, user_id')
+      .eq('id', id)
+      .single()
+
+    if (groupError || !groupData) {
+      return NextResponse.json(
+        { error: 'Gruppo non trovato' },
+        { status: 404 }
+      )
+    }
+
+    if (groupData.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'Non autorizzato ad aggiornare questo gruppo' },
+        { status: 403 }
+      )
+    }
+
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    if (name !== undefined) updates.name = name
+    if (description !== undefined) updates.description = description
+    if (color !== undefined) updates.color = color
+    if (is_public !== undefined) updates.is_public = is_public
+
+    // Aggiorna con fallback in caso di PGRST204 su is_public
+    let { data: updated, error: updateError } = await supabaseAdmin
+      .from('xbank_prediction_groups')
+      .update(updates)
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select()
+      .single()
+
+    if (updateError && String(updateError.message || '').includes('schema cache')) {
+      console.warn('PGRST204 su is_public in UPDATE, riprovo senza il campo is_public')
+      const { is_public: _ignored, ...safeUpdates } = updates
+      const retry = await supabaseAdmin
+        .from('xbank_prediction_groups')
+        .update(safeUpdates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single()
+      updated = retry.data
+      updateError = retry.error
+    }
+
+    if (updateError) {
+      console.error('Errore nell\'aggiornamento del gruppo:', updateError)
+      return NextResponse.json(
+        { error: 'Errore nell\'aggiornamento del gruppo' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      message: 'Gruppo aggiornato con successo',
+      group: updated
     })
   } catch (error) {
     console.error('API Error:', error)

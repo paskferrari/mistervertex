@@ -123,8 +123,8 @@ export async function PUT(
     }
     if (result_amount !== undefined) updateData.result_amount = parseFloat(result_amount)
 
-    // Aggiorna il pronostico
-    const { data, error } = await supabaseAdmin
+    // Aggiorna il pronostico con fallback per PGRST204 su settled_at
+    let { data, error } = await supabaseAdmin
       .from('xbank_custom_predictions')
       .update(updateData)
       .eq('id', id)
@@ -133,6 +133,22 @@ export async function PUT(
         xbank_prediction_groups(name, color)
       `)
       .single()
+
+    if (error && String(error.message || '').includes('schema cache')) {
+      console.warn('PGRST204 su settled_at, riprovo senza il campo settled_at')
+      const { settled_at: _ignored, ...safeUpdate } = updateData
+      const retry = await supabaseAdmin
+        .from('xbank_custom_predictions')
+        .update(safeUpdate)
+        .eq('id', id)
+        .select(`
+          *,
+          xbank_prediction_groups(name, color)
+        `)
+        .single()
+      data = retry.data
+      error = retry.error
+    }
 
     if (error) {
       console.error('Error updating custom prediction:', error)
@@ -144,27 +160,52 @@ export async function PUT(
 
     // Se il pronostico è stato chiuso, aggiorna il bankroll
     if (status && status !== 'pending' && existingPrediction.status === 'pending') {
-      const profit = status === 'won' 
-        ? (parseFloat(result_amount) || (parseFloat(stake_amount) * parseFloat(odds) - parseFloat(stake_amount)))
-        : -parseFloat(stake_amount)
+      // Calcola il profitto usando i dati AGGIORNATI del pronostico
+      const stake = parseFloat(String(data.stake_amount)) || 0
+      const quota = parseFloat(String(data.odds)) || 0
+      const result = data.result_amount !== null && data.result_amount !== undefined
+        ? parseFloat(String(data.result_amount))
+        : undefined
 
-      // Aggiorna il bankroll dell'utente
-      await supabaseAdmin.rpc('update_user_bankroll', {
-        p_user_id: user.id,
-        p_amount: profit
-      })
+      const computedProfit = status === 'won'
+        ? (typeof result === 'number' && !isNaN(result)
+            ? result
+            : (stake > 0 && quota > 0 ? (stake * quota - stake) : 0))
+        : -stake
 
-      // Registra la transazione nel bankroll tracking
-      await supabaseAdmin
-        .from('xbank_bankroll_tracking')
-        .insert({
-          user_id: user.id,
-          prediction_id: id,
-          transaction_type: status === 'won' ? 'win' : 'loss',
-          amount: Math.abs(profit),
-          description: `${status === 'won' ? 'Vincita' : 'Perdita'} pronostico: ${title}`,
-          balance_after: 0 // Verrà aggiornato dal trigger
-        })
+      // Recupera impostazioni utente per calcolare saldo corrente
+      const { data: settings, error: settingsError } = await supabaseAdmin
+        .from('xbank_user_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!settingsError && settings) {
+        const currentBalance = parseFloat(String(settings.current_bankroll)) || 0
+        const newBalance = Math.round((currentBalance + computedProfit) * 100) / 100
+
+        // Registra la transazione nel bankroll history
+        await supabaseAdmin
+          .from('bankroll_history')
+          .insert({
+            user_id: user.id,
+            transaction_type: status === 'won' ? 'win' : 'loss',
+            amount: Math.round(Math.abs(computedProfit) * 100) / 100,
+            description: `${status === 'won' ? 'Vincita' : 'Perdita'} pronostico: ${data.title || ''}`,
+            balance_before: currentBalance,
+            balance_after: newBalance,
+            reference_id: id,
+            reference_type: 'custom_prediction'
+          })
+
+        // Aggiorna il bankroll corrente nelle impostazioni
+        await supabaseAdmin
+          .from('xbank_user_settings')
+          .update({ current_bankroll: newBalance, updated_at: new Date().toISOString() })
+          .eq('user_id', user.id)
+      } else {
+        console.warn('Impostazioni utente non disponibili, salto update bankroll in PUT predictions')
+      }
     }
 
     return NextResponse.json({

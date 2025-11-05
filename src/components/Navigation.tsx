@@ -44,6 +44,7 @@ const navigationItems: NavigationItem[] = [
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const navRef = useRef<HTMLElement | null>(null)
   const pathname = usePathname()
 
@@ -60,6 +61,11 @@ export default function Navigation() {
   useEffect(() => {
     setIsMobileMenuOpen(false)
   }, [pathname])
+
+  // Evita mismatch SSR/CSR: applica classi dinamiche solo dopo il mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Navbar luxury statica: nessuna palette dinamica
 
@@ -80,12 +86,32 @@ export default function Navigation() {
     document.documentElement.style.setProperty('--nav-height', `${h}px`)
   }, [isScrolled, isMobileMenuOpen])
 
-  const isActive = (href: string) => {
-    if (href === '/') {
-      return pathname === '/'
-    }
-    return pathname.startsWith(href)
-  }
+  // Applica stato "active" e aria-current post-mount per evitare mismatch SSR/CSR
+  useEffect(() => {
+    if (!mounted || !navRef.current) return
+    const links = navRef.current.querySelectorAll('a[href]')
+    links.forEach((a) => {
+      const href = a.getAttribute('href') || ''
+      const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
+      if (active) {
+        a.classList.add('active')
+        a.setAttribute('aria-current', 'page')
+        const pill = a.querySelector('.p-2.rounded-xl') as HTMLElement | null
+        if (pill) {
+          pill.classList.add('bg-accent-gold-weak')
+          pill.classList.remove('bg-white/10')
+        }
+      } else {
+        a.classList.remove('active')
+        a.removeAttribute('aria-current')
+        const pill = a.querySelector('.p-2.rounded-xl') as HTMLElement | null
+        if (pill) {
+          pill.classList.remove('bg-accent-gold-weak')
+          pill.classList.add('bg-white/10')
+        }
+      }
+    })
+  }, [mounted, pathname])
 
   return (
     <>
@@ -125,19 +151,20 @@ export default function Navigation() {
           safe-area-top safe-area-sides
           nav-container touch-optimized
           border-b border-white/10
-          ${isScrolled ? 'backdrop-blur-2xl shadow-2xl' : 'backdrop-blur-xl'}
+          ${mounted && isScrolled ? 'backdrop-blur-2xl shadow-2xl' : 'backdrop-blur-xl'}
         `} 
         ref={navRef}
         role="navigation" 
         aria-label="Menu principale"
+        suppressHydrationWarning
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`flex justify-between transition-all duration-300 ${isScrolled ? 'h-14' : 'h-16'}`}>
+          <div className={`flex justify-between transition-all duration-300 ${mounted && isScrolled ? 'h-14' : 'h-16'}`}>
             {/* Logo e brand */}
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-3 group">
                 <div className={`
-                  ${isScrolled ? 'w-12 h-12' : 'w-14 h-14'} 
+                  ${mounted && isScrolled ? 'w-12 h-12' : 'w-14 h-14'} 
                   bg-white/10 backdrop-blur-sm
                   rounded-xl flex items-center justify-center 
                   shadow-lg group-hover:scale-110 
@@ -148,13 +175,13 @@ export default function Navigation() {
                   <Image 
                     src="/media/logoBianco.svg" 
                     alt="Logo Mister Vertex" 
-                    width={isScrolled ? 32 : 40} 
-                    height={isScrolled ? 32 : 40} 
+                    width={mounted && isScrolled ? 32 : 40} 
+                    height={mounted && isScrolled ? 32 : 40} 
                     className="transition-all duration-300 drop-shadow-sm"
                   />
                 </div>
                 <span className={`
-                  ${isScrolled ? 'text-lg' : 'text-xl'} 
+                  ${mounted && isScrolled ? 'text-lg' : 'text-xl'} 
                   font-bold brand-gradient 
                   group-hover:opacity-80 
                   transition-all duration-300
@@ -178,16 +205,16 @@ export default function Navigation() {
                   key={item.name}
                   href={item.href}
                   className={`
-                    lux-link ${isActive(item.href) ? 'active' : ''}
+                    lux-link
                     flex items-center space-x-2 
-                    ${isScrolled ? 'px-3 py-2' : 'px-4 py-2.5'} 
+                    ${mounted && isScrolled ? 'px-3 py-2' : 'px-4 py-2.5'} 
                     text-sm font-medium 
                     transition-all duration-300 ease-out
                     hover:scale-105 active:scale-95
                     touch-optimized touch-target
                   `}
                   title={item.description}
-                  aria-current={isActive(item.href) ? 'page' : undefined}
+                  aria-current={undefined}
                 >
                   <Icon className={`${isScrolled ? 'w-4 h-4' : 'w-4 h-4'} transition-all duration-300`} aria-hidden="true" />
                   <span className="hidden lg:block">{item.name}</span>
@@ -207,7 +234,7 @@ export default function Navigation() {
                 border border-transparent
                 hover:scale-110 active:scale-95
                 touch-optimized touch-target
-                ${isScrolled ? 'p-2' : 'p-3'}
+                ${mounted && isScrolled ? 'p-2' : 'p-3'}
               `}
               aria-label={isMobileMenuOpen ? 'Chiudi menu' : 'Apri menu'}
               aria-expanded={isMobileMenuOpen}
@@ -243,7 +270,7 @@ export default function Navigation() {
                   key={item.name}
                   href={item.href}
                   className={`
-                    lux-link ${isActive(item.href) ? 'active' : ''}
+                    lux-link
                     flex items-center space-x-4 px-4 py-4 
                     text-base font-medium 
                     transition-all duration-300 ease-out
@@ -256,11 +283,11 @@ export default function Navigation() {
                   }}
                   onClick={() => setIsMobileMenuOpen(false)}
                   role="menuitem"
-                  aria-current={isActive(item.href) ? 'page' : undefined}
+                  aria-current={undefined}
                 >
                   <div className={`
                     p-2 rounded-xl 
-                    ${isActive(item.href) ? 'bg-accent-gold-weak' : 'bg-white/10'}
+                    bg-white/10
                   `}>
                     <Icon className="w-6 h-6" aria-hidden="true" />
                   </div>
