@@ -43,7 +43,6 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "lightningcss": "^1.30.2",
-    "lightningcss-darwin-arm64": "^1.30.2",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^2.1.4"
@@ -52,7 +51,6 @@
     "@tailwindcss/node": {
       "lightningcss": "^1.30.2"
     },
-    "lightningcss": "^1.30.2",
-    "lightningcss-darwin-arm64": "^1.30.2"
+    "lightningcss": "^1.30.2"
   }
 }
