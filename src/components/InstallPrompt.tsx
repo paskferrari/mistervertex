@@ -44,10 +44,15 @@ export default function InstallPrompt() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 modal-content-scroll animate-in slide-in-from-bottom-4 duration-300">
+    <div className="modal-root bg-black/50 backdrop-blur-sm safe-area-sides">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="install-prompt-title"
+        className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 modal-responsive modal-content-scroll animate-in slide-in-from-bottom-4 duration-300"
+      >
         {/* Header coerente con tema luxury */}
-        <div className="bg-primary p-6 text-white">
+        <div className="bg-primary p-6 text-white modal-header">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -56,7 +61,7 @@ export default function InstallPrompt() {
               </svg>
             </div>
             <div>
-              <h3 className="font-bold text-lg">Installa Mister Vertex</h3>
+              <h3 id="install-prompt-title" className="font-bold text-lg">Installa Mister Vertex</h3>
               <p className="text-white/90 text-sm">Accesso rapido e offline</p>
             </div>
           </div>
@@ -104,16 +109,16 @@ export default function InstallPrompt() {
         </div>
 
         {/* Azioni */}
-        <div className="p-6 pt-0 flex space-x-3">
+        <div className="modal-actions p-6 pt-0 flex space-x-3">
           <button
             onClick={handleDismiss}
-            className="flex-1 px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+            className="flex-1 px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors min-h-[44px] touch-target"
           >
             Non ora
           </button>
           <button
             onClick={handleInstall}
-            className="flex-1 lux-cta text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="flex-1 lux-cta text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 min-h-[44px] touch-target"
           >
             Installa
           </button>

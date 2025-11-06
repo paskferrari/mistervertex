@@ -332,13 +332,19 @@ const GroupsManager = ({ currency }: GroupsManagerProps) => {
 
       {/* Modal creazione gruppo */}
       {showCreateForm && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-primary rounded-xl border border-white/20 w-full max-w-2xl shadow-2xl max-h-[95vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
-              <h3 className="text-lg sm:text-xl font-bold text-primary">Nuovo Gruppo</h3>
+        <div className="modal-root bg-black/50 backdrop-blur-sm safe-area-sides">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-group-title"
+            className="relative bg-primary border border-white/20 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 modal-responsive modal-content-scroll"
+          >
+            <div className="modal-header flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
+              <h3 id="create-group-title" className="modal-title text-lg sm:text-xl font-bold text-primary">Nuovo Gruppo</h3>
               <button
                 onClick={() => setShowCreateForm(false)}
-                className="btn-secondary p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="btn-secondary p-1 min-h-[44px] min-w-[44px] flex items-center justify-center touch-target"
+                aria-label="Chiudi modale creazione gruppo"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -392,17 +398,17 @@ const GroupsManager = ({ currency }: GroupsManagerProps) => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
+              <div className="modal-actions flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
-                  className="w-full sm:w-auto btn-secondary px-4 py-3 min-h-[44px] order-2 sm:order-1"
+                  className="w-full sm:w-auto btn-secondary px-4 py-3 min-h-[44px] order-2 sm:order-1 touch-target"
                 >
                   Annulla
                 </button>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto btn-primary flex items-center justify-center space-x-2 px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 min-h-[44px] order-1 sm:order-2"
+                  className="w-full sm:w-auto btn-primary flex items-center justify-center space-x-2 px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 min-h-[44px] order-1 sm:order-2 touch-target"
                 >
                   <Users className="h-4 w-4" />
                   <span>Crea Gruppo</span>
@@ -415,19 +421,25 @@ const GroupsManager = ({ currency }: GroupsManagerProps) => {
 
       {/* Modal dettagli gruppo */}
       {showGroupDetails && selectedGroup && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-primary rounded-xl border border-white/20 w-full max-w-6xl max-h-[95vh] overflow-y-auto shadow-2xl">
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
+        <div className="modal-root bg-black/50 backdrop-blur-sm safe-area-sides">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="group-details-title"
+            className="relative bg-primary border border-white/20 rounded-2xl shadow-2xl w-full max-w-6xl mx-4 modal-responsive modal-content-scroll"
+          >
+            <div className="modal-header flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
               <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                 <div 
                   className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex-shrink-0"
                   style={{ backgroundColor: selectedGroup.color }}
                 />
-                <h3 className="text-lg sm:text-2xl font-bold text-primary truncate">{selectedGroup.name}</h3>
+                <h3 id="group-details-title" className="text-lg sm:text-2xl font-bold text-primary truncate">{selectedGroup.name}</h3>
               </div>
               <button
                 onClick={() => setShowGroupDetails(null)}
-                className="btn-secondary p-1 min-h-[44px] min-w-[44px] flex items-center justify-center flex-shrink-0"
+                className="btn-secondary p-1 min-h-[44px] min-w-[44px] flex items-center justify-center flex-shrink-0 touch-target"
+                aria-label="Chiudi modale dettagli gruppo"
               >
                 <X className="h-6 w-6" />
               </button>

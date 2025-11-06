@@ -259,6 +259,37 @@
   @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4;
 }
 
+/* ===== DESKTOP SECTION SCROLL UTILITY ===== */
+/* Contenitore scrollabile per pannelli/section su desktop e mobile */
+.section-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(100vh - var(--nav-height) - 120px);
+}
+
+@supports (height: 100dvh) {
+  .section-scroll {
+    max-height: calc(100dvh - var(--nav-height) - 120px);
+  }
+}
+
+/* Stile scrollbar sottile su desktop */
+.section-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.4) transparent;
+}
+.section-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.section-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.section-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(212, 175, 55, 0.35);
+  border-radius: 8px;
+}
+
 /* Spacing responsive */
 .space-responsive {
   @apply space-y-3 sm:space-y-4 md:space-y-6;

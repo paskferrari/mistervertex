@@ -607,11 +607,25 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
 
       {/* Modal Creazione Post */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-gray-900/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-gray-800/95 to-gray-700/95 backdrop-blur-sm rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-600/40 shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-6">Crea Nuovo Post</h3>
+        <div className="modal-root bg-black/60 backdrop-blur-md safe-area-sides">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-post-title"
+            className="bg-gradient-to-br from-gray-800/95 to-gray-700/95 backdrop-blur-sm rounded-2xl w-full max-w-2xl border border-gray-600/40 shadow-2xl modal-responsive modal-content-scroll mx-4"
+          >
+            <div className="modal-header flex items-center justify-between p-6 border-b border-gray-600/40">
+              <h3 id="create-post-title" className="text-xl font-bold text-white">Crea Nuovo Post</h3>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-gray-300 hover:text-white p-2 rounded-lg min-h-[44px] min-w-[44px] touch-target"
+                aria-label="Chiudi modale crea post"
+              >
+                ✕
+              </button>
+            </div>
             
-            <div className="space-y-4">
+            <div className="space-y-4 p-6 mobile-scroll">
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-2">Titolo</label>
                 <input
@@ -701,17 +715,17 @@ export default function PersonalBoard({ currency }: PersonalBoardProps) {
               </div>
             </div>
             
-            <div className="flex justify-end space-x-3 mt-6">
+            <div className="modal-actions flex justify-end space-x-3 p-6 pt-0">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors min-h-[44px] touch-target"
               >
                 Annulla
               </button>
               <button
                 onClick={createPost}
                 disabled={!newPost.title.trim() || !newPost.content.trim()}
-                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors min-h-[44px] touch-target"
               >
                 Pubblica
               </button>

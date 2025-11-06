@@ -102,14 +102,24 @@ export default function InitialBudgetModal({ isOpen, onClose, onSaved }: Initial
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="w-full max-w-lg rounded-2xl bg-white/90 border border-white/20 shadow-xl">
-        <div className="px-6 py-5 border-b border-white/20">
-          <h2 className="text-lg font-semibold text-primary">Configura il budget iniziale</h2>
-          <p className="mt-1 text-sm text-secondary">Imposta ora il tuo budget iniziale per utilizzare tutte le funzionalità di X‑BANK.</p>
+    <div className="modal-root bg-black/60 backdrop-blur-sm safe-area-sides">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="initial-budget-title"
+        className="w-full max-w-lg mx-4 rounded-2xl bg-white/90 border border-white/20 shadow-xl modal-responsive modal-content-scroll"
+      >
+        <div className="modal-header px-6 py-5 border-b border-white/20 flex items-center justify-between">
+          <div>
+            <h2 id="initial-budget-title" className="text-lg font-semibold text-primary">Configura il budget iniziale</h2>
+            <p className="mt-1 text-sm text-secondary">Imposta ora il tuo budget iniziale per utilizzare tutte le funzionalità di X‑BANK.</p>
+          </div>
+          <button onClick={onClose} className="btn-secondary p-2 min-h-[44px] min-w-[44px] touch-target" aria-label="Chiudi modale configurazione iniziale">
+            ✕
+          </button>
         </div>
 
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 space-y-4 mobile-scroll">
           {error && (
             <div className="rounded-lg px-3 py-2 bg-red-50 text-red-700 border border-red-200">{error}</div>
           )}
@@ -121,7 +131,11 @@ export default function InitialBudgetModal({ isOpen, onClose, onSaved }: Initial
               min={1}
               step="0.01"
               value={initialBankroll}
-              onChange={(e) => setInitialBankroll(parseFloat(e.target.value))}
+              onChange={(e) => {
+                const raw = e.target.value.replace(',', '.')
+                const parsed = parseFloat(raw)
+                setInitialBankroll(Number.isNaN(parsed) ? initialBankroll : parsed)
+              }}
               className="lux-input w-full"
               placeholder="Es. 1000"
             />
@@ -150,18 +164,22 @@ export default function InitialBudgetModal({ isOpen, onClose, onSaved }: Initial
                 min={1}
                 step="0.01"
                 value={unitValue}
-                onChange={(e) => setUnitValue(parseFloat(e.target.value))}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(',', '.')
+                  const parsed = parseFloat(raw)
+                  setUnitValue(Number.isNaN(parsed) ? unitValue : parsed)
+                }}
                 className="lux-input w-full"
               />
             </div>
           </div>
         </div>
 
-        <div className="px-6 py-5 border-t border-white/20 flex items-center justify-between">
+        <div className="modal-actions px-6 py-5 border-t border-white/20 flex items-center justify-between">
           <button
             type="button"
             onClick={handleConfigureLater}
-            className="btn-secondary px-4 py-2"
+            className="btn-secondary px-4 py-2 min-h-[44px] touch-target"
             disabled={saving}
           >
             Configura più tardi
@@ -170,7 +188,7 @@ export default function InitialBudgetModal({ isOpen, onClose, onSaved }: Initial
             <button
               type="button"
               onClick={onClose}
-              className="btn-secondary px-4 py-2"
+              className="btn-secondary px-4 py-2 min-h-[44px] touch-target"
               disabled={saving}
             >
               Annulla
@@ -178,7 +196,7 @@ export default function InitialBudgetModal({ isOpen, onClose, onSaved }: Initial
             <button
               type="button"
               onClick={handleSave}
-              className="btn-primary px-4 py-2"
+              className="btn-primary px-4 py-2 min-h-[44px] touch-target"
               disabled={saving}
             >
               {saving ? 'Salvataggio…' : 'Salva'}

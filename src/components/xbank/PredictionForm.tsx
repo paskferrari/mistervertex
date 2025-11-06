@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Plus, Trash2, DollarSign, Target, TrendingUp } from 'lucide-react'
 
 interface Prediction {
@@ -22,6 +22,8 @@ interface PredictionFormProps {
   onClose: () => void
   onSubmit: (prediction: Prediction) => void
   currency: string
+  mode?: 'create' | 'edit'
+  initialPrediction?: Partial<Prediction>
 }
 
 interface Bet {
@@ -32,24 +34,58 @@ interface Bet {
   odds: number
 }
 
-const PredictionForm = ({ isOpen, onClose, onSubmit, currency }: PredictionFormProps) => {
+const PredictionForm = ({ isOpen, onClose, onSubmit, currency, mode = 'create', initialPrediction }: PredictionFormProps) => {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    sport: '',
-    stake: 0,
-    confidence_level: 3,
-    prediction_type: 'single' as 'single' | 'multiple',
-    event_date: '',
-    notes: ''
+    title: initialPrediction?.title || '',
+    description: initialPrediction?.description || '',
+    sport: initialPrediction?.sport || '',
+    stake: typeof initialPrediction?.stake === 'number' ? initialPrediction.stake : 0,
+    confidence_level: typeof initialPrediction?.confidence_level === 'number' ? initialPrediction.confidence_level : 3,
+    prediction_type: (initialPrediction?.prediction_type || 'single') as 'single' | 'multiple',
+    event_date: initialPrediction?.event_date || '',
+    notes: initialPrediction?.notes || ''
   })
 
-  const [bets, setBets] = useState<Bet[]>([
-    { id: '1', match: '', market: '', selection: '', odds: 1.0 }
-  ])
+  const [bets, setBets] = useState<Bet[]>(
+    Array.isArray(initialPrediction?.bets) && initialPrediction?.bets?.length
+      ? (initialPrediction.bets as any[]).map((b, idx) => ({
+          id: String(idx + 1),
+          match: (b as any).match || '',
+          market: (b as any).market || '',
+          selection: (b as any).selection || '',
+          odds: typeof (b as any).odds === 'number' ? (b as any).odds : 1.0
+        }))
+      : [{ id: '1', match: '', market: '', selection: '', odds: 1.0 }]
+  )
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
+
+  // Sincronizza i dati iniziali quando si apre in modalità modifica
+  useEffect(() => {
+    if (mode === 'edit' && initialPrediction) {
+      setFormData({
+        title: initialPrediction.title || '',
+        description: initialPrediction.description || '',
+        sport: initialPrediction.sport || '',
+        stake: typeof initialPrediction.stake === 'number' ? initialPrediction.stake : 0,
+        confidence_level: typeof initialPrediction.confidence_level === 'number' ? initialPrediction.confidence_level : 3,
+        prediction_type: (initialPrediction.prediction_type || 'single') as 'single' | 'multiple',
+        event_date: initialPrediction.event_date || '',
+        notes: initialPrediction.notes || ''
+      })
+      if (Array.isArray(initialPrediction.bets) && initialPrediction.bets.length) {
+        setBets((initialPrediction.bets as any[]).map((b: any, idx: number) => ({
+          id: String(idx + 1),
+          match: b.match || '',
+          market: b.market || '',
+          selection: b.selection || '',
+          odds: typeof b.odds === 'number' ? b.odds : 1.0
+        })))
+      }
+    }
+    // Dipendenze limitate per evitare trigger non necessari durante la digitazione
+  }, [mode, initialPrediction])
 
   const sports = [
     'Calcio', 'Tennis', 'Basket', 'Pallavolo', 'Rugby', 
@@ -68,6 +104,11 @@ const PredictionForm = ({ isOpen, onClose, onSubmit, currency }: PredictionFormP
       market: '',
       selection: '',
       odds: 1.0
+    }
+    // Se l'utente aggiunge una seconda scommessa mentre il tipo è "singola",
+    // convertiamo automaticamente il tipo in "multipla".
+    if (formData.prediction_type === 'single') {
+      setFormData({ ...formData, prediction_type: 'multiple' })
     }
     setBets([...bets, newBet])
   }
@@ -176,18 +217,20 @@ const PredictionForm = ({ isOpen, onClose, onSubmit, currency }: PredictionFormP
       
       await onSubmit(predictionData)
       
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        sport: '',
-        stake: 0,
-        confidence_level: 3,
-        prediction_type: 'single',
-        event_date: '',
-        notes: ''
-      })
-      setBets([{ id: '1', match: '', market: '', selection: '', odds: 1.0 }])
+      // Reset form solo in creazione
+      if (mode === 'create') {
+        setFormData({
+          title: '',
+          description: '',
+          sport: '',
+          stake: 0,
+          confidence_level: 3,
+          prediction_type: 'single',
+          event_date: '',
+          notes: ''
+        })
+        setBets([{ id: '1', match: '', market: '', selection: '', odds: 1.0 }])
+      }
       setErrors([])
       onClose()
     } catch (error) {
@@ -205,23 +248,29 @@ const PredictionForm = ({ isOpen, onClose, onSubmit, currency }: PredictionFormP
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xl flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-primary rounded-xl border border-white/20 w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-xl">
-        <div className="flex items-center justify-between p-3 sm:p-6 border-b border-white/10">
-          <h2 className="text-lg sm:text-2xl font-bold text-primary flex items-center space-x-2">
+    <div className="modal-root bg-black/50 backdrop-blur-sm safe-area-sides">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="prediction-form-title"
+        className="bg-primary rounded-2xl border border-white/20 w-full max-w-4xl shadow-xl modal-responsive modal-content-scroll mx-4"
+      >
+        <div className="modal-header flex items-center justify-between p-3 sm:p-6 border-b border-white/10">
+          <h2 id="prediction-form-title" className="text-lg sm:text-2xl font-bold text-primary flex items-center space-x-2">
             <Target className="h-5 w-5 sm:h-6 sm:w-6 text-accent-gold" />
-            <span className="hidden sm:inline">Nuovo Pronostico</span>
-            <span className="sm:hidden">Pronostico</span>
+            <span className="hidden sm:inline">{mode === 'edit' ? 'Modifica Schedina' : 'Nuova Schedina'}</span>
+            <span className="sm:hidden">{mode === 'edit' ? 'Modifica' : 'Schedina'}</span>
           </h2>
           <button
             onClick={onClose}
-            className="btn-secondary px-2 py-2"
+            className="btn-secondary px-2 py-2 min-h-[44px] min-w-[44px] touch-target"
+            aria-label="Chiudi modale schedina"
           >
             <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+        <form onSubmit={handleSubmit} className="p-3 sm:p-6 space-y-4 sm:space-y-6 mobile-scroll">
           {/* Errori di validazione */}
           {errors.length > 0 && (
             <div className="card p-3 sm:p-4">
@@ -249,7 +298,7 @@ const PredictionForm = ({ isOpen, onClose, onSubmit, currency }: PredictionFormP
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
             <div>
               <label className="block text-xs sm:text-sm font-medium text-secondary mb-1 sm:mb-2">
-                Titolo Pronostico *
+                Titolo Schedina *
               </label>
               <input
                 type="text"
@@ -293,7 +342,7 @@ const PredictionForm = ({ isOpen, onClose, onSubmit, currency }: PredictionFormP
 
             <div>
               <label className="block text-xs sm:text-sm font-medium text-secondary mb-1 sm:mb-2">
-                Tipo Pronostico
+                Tipo Schedina
               </label>
               <select
                 value={formData.prediction_type}
@@ -324,17 +373,15 @@ const PredictionForm = ({ isOpen, onClose, onSubmit, currency }: PredictionFormP
           <div>
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h3 className="text-base sm:text-lg font-semibold text-primary">Scommesse</h3>
-              {formData.prediction_type === 'multiple' && (
-                <button
-                  type="button"
-                  onClick={addBet}
-                  className="btn-secondary flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm"
-                >
-                  <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Aggiungi Scommessa</span>
-                  <span className="sm:hidden">Aggiungi</span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={addBet}
+                className="btn-secondary flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm"
+              >
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Aggiungi Scommessa</span>
+                <span className="sm:hidden">Aggiungi</span>
+              </button>
             </div>
 
             <div className="space-y-4">
@@ -411,7 +458,12 @@ const PredictionForm = ({ isOpen, onClose, onSubmit, currency }: PredictionFormP
                         min="1.01"
                         step="0.01"
                         value={bet.odds}
-                        onChange={(e) => updateBet(bet.id, 'odds', parseFloat(e.target.value) || 1.0)}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(',', '.')
+                          const parsed = parseFloat(raw)
+                          const safe = Number.isNaN(parsed) ? bet.odds : parsed
+                          updateBet(bet.id, 'odds', safe)
+                        }}
                         className="lux-input w-full px-3 py-2 text-xs sm:text-sm"
                       />
                     </div>
@@ -435,7 +487,11 @@ const PredictionForm = ({ isOpen, onClose, onSubmit, currency }: PredictionFormP
                   min="0.01"
                   step="0.01"
                   value={formData.stake}
-                  onChange={(e) => setFormData({ ...formData, stake: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(',', '.')
+                    const parsed = parseFloat(raw)
+                    setFormData({ ...formData, stake: Number.isNaN(parsed) ? formData.stake : parsed })
+                  }}
                   className="lux-input w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm sm:text-base"
                   placeholder="0.00"
                 />
@@ -520,7 +576,7 @@ const PredictionForm = ({ isOpen, onClose, onSubmit, currency }: PredictionFormP
               ) : (
                 <>
                   <Target className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Salva Pronostico</span>
+                  <span>Salva Schedina</span>
                 </>
               )}
             </button>

@@ -279,8 +279,13 @@ export default function AdminPredictionsPage() {
                   <input
                     type="number"
                     step="0.01"
+                    min="1.01"
                     value={form.odds}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({...form, odds: e.target.value})}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const raw = e.target.value.replace(',', '.')
+                      // Non normalizziamo in fixed qui per permettere editing libero; salviamo stringa pulita
+                      setForm({ ...form, odds: raw })
+                    }}
                     className="lux-input w-full px-3 py-2"
                     required
                   />

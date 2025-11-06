@@ -350,14 +350,23 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
       {/* Modal Nuova Transazione */}
       {showAddModal && (
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-xl z-50 flex items-center justify-center p-4"
+          className="modal-root bg-black/60 backdrop-blur-xl safe-area-sides"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
           onClick={(e) => e.target === e.currentTarget && setShowAddModal(false)}
         >
-          <div className="card p-6 w-full max-w-md modal-content-scroll">
-            <h3 id="modal-title" className="text-xl font-bold text-primary mb-4">Nuova Transazione</h3>
+          <div className="card modal-responsive modal-content-scroll w-full max-w-md">
+            <div className="modal-header p-6 border-b border-[var(--border-color)]">
+              <h3 id="modal-title" className="text-xl font-bold text-primary">Nuova Transazione</h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-secondary hover:text-primary touch-target"
+                aria-label="Chiudi modale"
+              >
+                ✕
+              </button>
+            </div>
             
             <form role="form" aria-label="Form per aggiungere nuova transazione">
               <div className="space-y-4 mobile-scroll">
@@ -391,10 +400,14 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
                     type="number"
                     step="0.01"
                     value={newTransaction.amount}
-                    onChange={(e) => setNewTransaction({
-                      ...newTransaction,
-                      amount: parseFloat(e.target.value) || 0
-                    })}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(',', '.')
+                      const parsed = parseFloat(raw)
+                      setNewTransaction({
+                        ...newTransaction,
+                        amount: Number.isNaN(parsed) ? newTransaction.amount : parsed
+                      })
+                    }}
                     className="lux-input w-full px-3 py-2 min-h-[44px]"
                     placeholder="0.00"
                     aria-describedby="amount-help"
@@ -425,11 +438,11 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
               </div>
             </form>
             
-            <div className="flex items-center justify-end space-x-3 mt-6">
+            <div className="modal-actions flex items-center justify-end space-x-3 p-6 pt-0">
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="btn-secondary px-4 py-2 rounded-xl min-h-[44px]"
+                className="btn-secondary px-4 py-2 rounded-xl min-h-[44px] touch-target"
                 aria-label="Chiudi modal senza salvare"
               >
                 Annulla
@@ -437,7 +450,7 @@ export default function BankrollManager({ currency, onBankrollUpdate, mock = fal
               <button
                 type="button"
                 onClick={addTransaction}
-                className="btn-primary px-4 py-2 rounded-2xl min-h-[44px]"
+                className="btn-primary px-4 py-2 rounded-2xl min-h-[44px] touch-target"
                 aria-label="Salva nuova transazione"
               >
                 Aggiungi

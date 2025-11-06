@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo, useCallback, Suspense } from 'react'
+import { useEffect, useState, useMemo, useCallback, Suspense, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Settings, TrendingUp, Target, Users, BarChart3, Plus, ArrowLeft, Save, Wallet, MessageSquare } from 'lucide-react'
@@ -40,12 +40,13 @@ export default function XBankPage() {
   const [saving, setSaving] = useState(false)
   const [mockEnabled, setMockEnabled] = useState(false)
   const [showInitialModal, setShowInitialModal] = useState(false)
+  const mainRef = useRef<HTMLDivElement>(null)
   
   // Sidebar: sezioni disponibili (sostituisce i tab)
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'bankroll', label: 'Bankroll', icon: Wallet },
-    { id: 'predictions', label: 'Pronostici', icon: Target },
+    { id: 'predictions', label: 'Schedine', icon: Target },
     { id: 'groups', label: 'Gruppi', icon: Users },
     { id: 'scalate', label: 'Scalate', icon: TrendingUp },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -54,6 +55,20 @@ export default function XBankPage() {
     { id: 'settings', label: 'Impostazioni', icon: Settings },
     { id: 'backup', label: 'Backup', icon: Plus }
   ]
+
+  // Migliora navigazione tra sezioni: porta focus al contenuto e scrolla in alto
+  useEffect(() => {
+    const el = mainRef.current
+    if (el) {
+      try {
+        el.scrollTo({ top: 0, behavior: 'smooth' })
+        el.focus()
+      } catch {
+        // fallback
+        el.scrollTop = 0
+      }
+    }
+  }, [activeTab])
 
 
   const checkUser = useCallback(async () => {
@@ -275,7 +290,7 @@ export default function XBankPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
             {/* Sidebar */}
             <aside 
-              role="navigation" 
+              role="tablist" 
               aria-label="Selezione sezioni X-BANK" 
               className="card p-3 lg:p-4" 
               style={{ position: 'sticky', top: 'calc(var(--nav-height) + 12px)' }}
@@ -287,8 +302,11 @@ export default function XBankPage() {
                   return (
                     <button
                       key={item.id}
+                      id={`tab-${item.id}`}
                       onClick={() => setActiveTab(item.id)}
-                      aria-current={active ? 'page' : undefined}
+                      role="tab"
+                      aria-selected={active}
+                      aria-controls={`panel-${item.id}`}
                       className={`list-card w-full flex items-center gap-3 px-3 py-2 ${active ? 'bg-accent-gold-weak border-accent-gold-fade' : ''}`}
                     >
                       <div className={`p-2 rounded-xl ${active ? 'bg-white/10' : 'bg-white/5'}`}>
@@ -302,7 +320,7 @@ export default function XBankPage() {
             </aside>
 
             {/* Content */}
-            <main className="card p-4 lg:p-6" tabIndex={-1}>
+            <main ref={mainRef} className="card p-4 lg:p-6 section-scroll" tabIndex={-1}>
             {activeTab === 'dashboard' && (
              <section id="panel-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
                 <div className="mb-6">
@@ -390,7 +408,8 @@ export default function XBankPage() {
             )}
 
             {activeTab === 'bankroll' && (
-             <Suspense fallback={<LoadingComponent message="Caricamento gestione bankroll..." />}>
+             <section id="panel-bankroll" role="tabpanel" aria-labelledby="tab-bankroll">
+               <Suspense fallback={<LoadingComponent message="Caricamento gestione bankroll..." />}>
                  <BankrollManager 
                    currency={settings?.currency || 'EUR'}
                    mock={mockEnabled}
@@ -401,48 +420,55 @@ export default function XBankPage() {
                    }}
                  />
                </Suspense>
-             )}
+             </section>
+            )}
 
              {activeTab === 'predictions' && (
-                 <div>
-                   <div className="mb-6 sm:mb-8">
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary">I Tuoi Pronostici</h2>
-                   </div>
-                   <Suspense fallback={<LoadingComponent message="Caricamento pronostici..." />}>
-                     <PredictionsList 
-                       currency={settings?.currency || 'EUR'}
-                       mock={mockEnabled}
-                       onBankrollUpdate={(amount) => {
-                         if (settings) {
-                           const newBankroll = settings.current_bankroll + amount
-                           setSettings({ ...settings, current_bankroll: newBankroll })
-                         }
-                       }}
-                     />
-                   </Suspense>
+               <section id="panel-predictions" role="tabpanel" aria-labelledby="tab-predictions">
+                 <div className="mb-6 sm:mb-8">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary">I Tuoi Pronostici</h2>
                  </div>
-               )}
+                 <Suspense fallback={<LoadingComponent message="Caricamento pronostici..." />}>
+                   <PredictionsList 
+                     currency={settings?.currency || 'EUR'}
+                     mock={mockEnabled}
+                     onBankrollUpdate={(amount) => {
+                       if (settings) {
+                         const newBankroll = settings.current_bankroll + amount
+                         setSettings({ ...settings, current_bankroll: newBankroll })
+                       }
+                     }}
+                   />
+                 </Suspense>
+               </section>
+             )}
 
             {activeTab === 'groups' && (
-              <Suspense fallback={<LoadingComponent message="Caricamento gruppi..." />}>
-                <GroupsManager currency={settings?.currency || 'EUR'} />
-              </Suspense>
+              <section id="panel-groups" role="tabpanel" aria-labelledby="tab-groups">
+                <Suspense fallback={<LoadingComponent message="Caricamento gruppi..." />}>
+                  <GroupsManager currency={settings?.currency || 'EUR'} />
+                </Suspense>
+              </section>
             )}
 
             {activeTab === 'scalate' && (
-              <Suspense fallback={<LoadingComponent message="Caricamento scalate..." />}>
-                <ScalateManager currency={settings?.currency || 'EUR'} mock={mockEnabled} />
-              </Suspense>
+              <section id="panel-scalate" role="tabpanel" aria-labelledby="tab-scalate">
+                <Suspense fallback={<LoadingComponent message="Caricamento scalate..." />}>
+                  <ScalateManager currency={settings?.currency || 'EUR'} mock={mockEnabled} />
+                </Suspense>
+              </section>
             )}
 
             {activeTab === 'analytics' && (
-              <Suspense fallback={<LoadingComponent message="Caricamento analytics..." />}>
-                <AnalyticsDashboard currency={settings?.currency || 'EUR'} />
-              </Suspense>
+              <section id="panel-analytics" role="tabpanel" aria-labelledby="tab-analytics">
+                <Suspense fallback={<LoadingComponent message="Caricamento analytics..." />}>
+                  <AnalyticsDashboard currency={settings?.currency || 'EUR'} />
+                </Suspense>
+              </section>
             )}
 
             {activeTab === 'board' && (
-              <div>
+              <section id="panel-board" role="tabpanel" aria-labelledby="tab-board">
                 <div className="card p-4 sm:p-6 mb-4 sm:mb-6">
                   <h2 className="text-xl sm:text-2xl font-bold text-primary mb-3 sm:mb-4 flex items-center">
                     <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-accent-gold" />
@@ -456,42 +482,44 @@ export default function XBankPage() {
                 <Suspense fallback={<LoadingComponent message="Caricamento bacheca..." />}>
                   <PersonalBoard currency={settings?.currency || 'EUR'} />
                 </Suspense>
-              </div>
+              </section>
             )}
 
             {activeTab === 'community' && (
-              <div>
-                <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-100 p-4 sm:p-6 mb-4 sm:mb-6">
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-3 sm:mb-4 flex items-center">
-                    <Users className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-indigo-600" />
-                    Community Utenti
-                  </h2>
-                  <p className="text-sm sm:text-base text-slate-600 mb-3 sm:mb-4">
-                    Spazio dedicato allo scambio di opinioni tra utenti sui pronostici. 
-                    Condividi le tue analisi e discuti con la community.
-                  </p>
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-6">
-                     <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3">Funzionalità Community</h3>
-                     <ul className="space-y-2 text-sm sm:text-base text-slate-600">
-                       <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0"></span>Discussioni sui pronostici</li>
-                       <li className="flex items-center"><span className="w-2 h-2 bg-indigo-500 rounded-full mr-3 flex-shrink-0"></span>Condivisione strategie</li>
-                       <li className="flex items-center"><span className="w-2 h-2 bg-accent-gold-weak rounded-full mr-3 flex-shrink-0"></span>Valutazioni collaborative</li>
-                       <li className="flex items-center"><span className="w-2 h-2 bg-teal-500 rounded-full mr-3 flex-shrink-0"></span>Forum di discussione</li>
-                     </ul>
-                     <div className="mt-4 p-3 sm:p-4 bg-white rounded-lg border border-blue-200">
-                       <p className="text-xs sm:text-sm text-slate-600 italic">
-                         🚧 Sezione in sviluppo - Presto disponibili nuove funzionalità per la community!
-                       </p>
+              <section id="panel-community" role="tabpanel" aria-labelledby="tab-community">
+                <div>
+                  <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-100 p-4 sm:p-6 mb-4 sm:mb-6">
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-3 sm:mb-4 flex items-center">
+                      <Users className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-indigo-600" />
+                      Community Utenti
+                    </h2>
+                    <p className="text-sm sm:text-base text-slate-600 mb-3 sm:mb-4">
+                      Spazio dedicato allo scambio di opinioni tra utenti sui pronostici. 
+                      Condividi le tue analisi e discuti con la community.
+                    </p>
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-6">
+                       <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-3">Funzionalità Community</h3>
+                       <ul className="space-y-2 text-sm sm:text-base text-slate-600">
+                         <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0"></span>Discussioni sui pronostici</li>
+                         <li className="flex items-center"><span className="w-2 h-2 bg-indigo-500 rounded-full mr-3 flex-shrink-0"></span>Condivisione strategie</li>
+                         <li className="flex items-center"><span className="w-2 h-2 bg-accent-gold-weak rounded-full mr-3 flex-shrink-0"></span>Valutazioni collaborative</li>
+                         <li className="flex items-center"><span className="w-2 h-2 bg-teal-500 rounded-full mr-3 flex-shrink-0"></span>Forum di discussione</li>
+                       </ul>
+                       <div className="mt-4 p-3 sm:p-4 bg-white rounded-lg border border-blue-200">
+                         <p className="text-xs sm:text-sm text-slate-600 italic">
+                           🚧 Sezione in sviluppo - Presto disponibili nuove funzionalità per la community!
+                         </p>
+                       </div>
                      </div>
                    </div>
                 </div>
-              </div>
+              </section>
             )}
 
             {activeTab === 'settings' && (
               <section id="panel-settings" role="tabpanel" aria-labelledby="tab-settings">
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-900 mb-4 sm:mb-6 lg:mb-8 flex items-center">
-                  <Settings className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 mr-2 sm:mr-3 text-blue-600" aria-hidden="true" />
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-primary mb-4 sm:mb-6 lg:mb-8 flex items-center">
+                  <Settings className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 mr-2 sm:mr-3 text-accent-gold" aria-hidden="true" />
                   Impostazioni X-BANK
                 </h2>
                 
@@ -500,7 +528,7 @@ export default function XBankPage() {
                     <legend className="sr-only">Impostazioni finanziarie</legend>
                     
                     <div>
-                      <label htmlFor="initial-bankroll" className="block text-blue-800 text-sm sm:text-base font-medium mb-2 sm:mb-3">
+                      <label htmlFor="initial-bankroll" className="block text-secondary text-sm sm:text-base font-medium mb-2 sm:mb-3">
                         Bankroll Iniziale ({settings?.currency || 'EUR'})
                       </label>
                       <input
@@ -508,9 +536,16 @@ export default function XBankPage() {
                         type="number"
                         step="0.01"
                         min="0"
-                        value={settings?.initial_bankroll || 0}
-                        onChange={(e) => setSettings(prev => prev ? {...prev, initial_bankroll: parseFloat(e.target.value) || 0} : null)}
-                        className="w-full px-4 py-3 sm:py-4 border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-blue-900 placeholder-blue-400 text-base sm:text-lg touch-manipulation"
+                        value={settings?.initial_bankroll ?? ''}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(',', '.')
+                          const parsed = parseFloat(raw)
+                          setSettings(prev => prev ? {
+                            ...prev,
+                            initial_bankroll: Number.isNaN(parsed) ? prev.initial_bankroll : parsed
+                          } : null)
+                        }}
+                        className="lux-input w-full px-4 py-3 sm:py-4 text-base sm:text-lg"
                         placeholder="Inserisci il bankroll iniziale"
                         aria-describedby="initial-bankroll-help"
                         inputMode="decimal"
@@ -520,7 +555,7 @@ export default function XBankPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="current-bankroll" className="block text-blue-800 text-sm sm:text-base font-medium mb-2 sm:mb-3">
+                      <label htmlFor="current-bankroll" className="block text-secondary text-sm sm:text-base font-medium mb-2 sm:mb-3">
                         Bankroll Attuale ({settings?.currency || 'EUR'})
                       </label>
                       <input
@@ -528,9 +563,16 @@ export default function XBankPage() {
                         type="number"
                         step="0.01"
                         min="0"
-                        value={settings?.current_bankroll || 0}
-                        onChange={(e) => setSettings(prev => prev ? {...prev, current_bankroll: parseFloat(e.target.value) || 0} : null)}
-                        className="w-full px-4 py-3 sm:py-4 border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-blue-900 placeholder-blue-400 text-base sm:text-lg touch-manipulation"
+                        value={settings?.current_bankroll ?? ''}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(',', '.')
+                          const parsed = parseFloat(raw)
+                          setSettings(prev => prev ? {
+                            ...prev,
+                            current_bankroll: Number.isNaN(parsed) ? prev.current_bankroll : parsed
+                          } : null)
+                        }}
+                        className="lux-input w-full px-4 py-3 sm:py-4 text-base sm:text-lg"
                         placeholder="Inserisci il bankroll attuale"
                         aria-describedby="current-bankroll-help"
                         inputMode="decimal"
@@ -540,14 +582,14 @@ export default function XBankPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="currency" className="block text-blue-800 text-sm sm:text-base font-medium mb-2 sm:mb-3">
+                      <label htmlFor="currency" className="block text-secondary text-sm sm:text-base font-medium mb-2 sm:mb-3">
                         Valuta
                       </label>
                       <select
                         id="currency"
                         value={settings?.currency || 'EUR'}
                         onChange={(e) => setSettings(prev => prev ? {...prev, currency: e.target.value} : null)}
-                        className="w-full px-4 py-3 sm:py-4 border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-blue-900 text-base sm:text-lg touch-manipulation"
+                        className="lux-select w-full px-4 py-3 sm:py-4 text-base sm:text-lg"
                         aria-describedby="currency-help"
                       >
                         <option value="EUR">EUR (€)</option>
@@ -558,14 +600,14 @@ export default function XBankPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="unit-type" className="block text-blue-800 text-sm sm:text-base font-medium mb-2 sm:mb-3">
+                      <label htmlFor="unit-type" className="block text-secondary text-sm sm:text-base font-medium mb-2 sm:mb-3">
                         Tipo Unità
                       </label>
                       <select
                         id="unit-type"
                         value={settings?.unit_type || 'currency'}
                         onChange={(e) => setSettings(prev => prev ? {...prev, unit_type: e.target.value} : null)}
-                        className="w-full px-4 py-3 sm:py-4 border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-blue-900 text-base sm:text-lg touch-manipulation"
+                        className="lux-select w-full px-4 py-3 sm:py-4 text-base sm:text-lg"
                         aria-describedby="unit-type-help"
                       >
                         <option value="currency">Valuta</option>
@@ -576,7 +618,7 @@ export default function XBankPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="unit-value" className="block text-blue-800 text-sm sm:text-base font-medium mb-2 sm:mb-3">
+                      <label htmlFor="unit-value" className="block text-secondary text-sm sm:text-base font-medium mb-2 sm:mb-3">
                         Valore Unità
                       </label>
                       <input
@@ -584,9 +626,16 @@ export default function XBankPage() {
                         type="number"
                         step="0.01"
                         min="0"
-                        value={settings?.unit_value || 1}
-                        onChange={(e) => setSettings(prev => prev ? {...prev, unit_value: parseFloat(e.target.value) || 1} : null)}
-                        className="w-full px-4 py-3 sm:py-4 border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-blue-900 placeholder-blue-400 text-base sm:text-lg touch-manipulation"
+                        value={settings?.unit_value ?? ''}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(',', '.')
+                          const parsed = parseFloat(raw)
+                          setSettings(prev => prev ? {
+                            ...prev,
+                            unit_value: Number.isNaN(parsed) ? prev.unit_value : parsed
+                          } : null)
+                        }}
+                        className="lux-input w-full px-4 py-3 sm:py-4 text-base sm:text-lg"
                         placeholder="Inserisci il valore di una unità"
                         aria-describedby="unit-value-help"
                         inputMode="decimal"
@@ -599,7 +648,7 @@ export default function XBankPage() {
                       type="submit"
                       disabled={saving}
                       aria-describedby="save-button-help"
-                      className="flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:via-indigo-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-medium text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 touch-manipulation w-full sm:w-auto"
+                      className="btn-primary flex items-center justify-center space-x-2 px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto"
                     >
                       <Save className="h-5 w-5" aria-hidden="true" />
                       <span>{saving ? 'Salvando...' : 'Salva Impostazioni'}</span>
@@ -611,11 +660,11 @@ export default function XBankPage() {
             )}
 
             {activeTab === 'backup' && (
-              <div>
+              <section id="panel-backup" role="tabpanel" aria-labelledby="tab-backup">
                 <Suspense fallback={<LoadingComponent message="Caricamento backup..." />}>
                   <BackupManager userId={user.id} />
                 </Suspense>
-              </div>
+              </section>
             )}
             {/* Modal di budget iniziale */}
             <InitialBudgetModal

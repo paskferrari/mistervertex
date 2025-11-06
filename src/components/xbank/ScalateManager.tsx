@@ -291,6 +291,9 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'pending': return 'text-secondary bg-white/10 border-[var(--border-color)]'
+      case 'won': return 'text-green-500 bg-green-100 border-green-300'
+      case 'lost': return 'text-red-600 bg-red-100 border-red-300'
       case 'active': return 'text-primary bg-white/10 border-[var(--border-color)]'
       case 'completed': return 'text-secondary bg-white/10 border-[var(--border-color)]'
       case 'failed': return 'text-red-600 bg-red-100 border-red-300'
@@ -301,6 +304,9 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
 
   const getStatusLabel = (status: string) => {
     switch (status) {
+      case 'pending': return 'In attesa'
+      case 'won': return 'Vinta'
+      case 'lost': return 'Persa'
       case 'active': return 'Attiva'
       case 'completed': return 'Completata'
       case 'failed': return 'Fallita'
@@ -499,9 +505,11 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
 
       {/* Modal Creazione Scalata */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="card p-4 sm:p-6 w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg sm:text-xl font-bold text-primary mb-4 sm:mb-6">Crea Nuova Scalata</h3>
+        <div className="modal-root bg-black/60 backdrop-blur-md safe-area-sides">
+          <div className="card modal-responsive modal-content-scroll w-full">
+            <div className="modal-header">
+              <h3 className="text-lg sm:text-xl font-bold text-primary">Crea Nuova Scalata</h3>
+            </div>
             
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -548,7 +556,11 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
                   <input
                       type="number"
                       value={newScalata.initial_stake}
-                      onChange={(e) => setNewScalata({ ...newScalata, initial_stake: Number(e.target.value) })}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(',', '.')
+                        const parsed = parseFloat(raw)
+                        setNewScalata({ ...newScalata, initial_stake: Number.isNaN(parsed) ? newScalata.initial_stake : parsed })
+                      }}
                       className="lux-input w-full text-sm sm:text-base min-h-[44px]"
                       min="0"
                       step="0.01"
@@ -560,7 +572,11 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
                   <input
                       type="number"
                       value={newScalata.target_profit}
-                      onChange={(e) => setNewScalata({ ...newScalata, target_profit: Number(e.target.value) })}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(',', '.')
+                        const parsed = parseFloat(raw)
+                        setNewScalata({ ...newScalata, target_profit: Number.isNaN(parsed) ? newScalata.target_profit : parsed })
+                      }}
                       className="lux-input w-full text-sm sm:text-base min-h-[44px]"
                       min="0"
                       step="0.01"
@@ -572,7 +588,11 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
                   <input
                       type="number"
                       value={newScalata.max_steps}
-                      onChange={(e) => setNewScalata({ ...newScalata, max_steps: Number(e.target.value) })}
+                      onChange={(e) => {
+                        const raw = e.target.value
+                        const parsed = parseInt(raw)
+                        setNewScalata({ ...newScalata, max_steps: Number.isNaN(parsed) ? newScalata.max_steps : parsed })
+                      }}
                       className="lux-input w-full text-sm sm:text-base min-h-[44px]"
                       min="1"
                       max="50"
@@ -587,7 +607,11 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
                     <input
                         type="number"
                         value={newScalata.multiplier}
-                        onChange={(e) => setNewScalata({ ...newScalata, multiplier: Number(e.target.value) })}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(',', '.')
+                          const parsed = parseFloat(raw)
+                          setNewScalata({ ...newScalata, multiplier: Number.isNaN(parsed) ? newScalata.multiplier : parsed })
+                        }}
                         className="lux-input w-full text-sm sm:text-base min-h-[44px]"
                         min="1.1"
                         step="0.1"
@@ -599,7 +623,11 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
                     <input
                         type="number"
                         value={newScalata.max_loss}
-                        onChange={(e) => setNewScalata({ ...newScalata, max_loss: Number(e.target.value) })}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(',', '.')
+                          const parsed = parseFloat(raw)
+                          setNewScalata({ ...newScalata, max_loss: Number.isNaN(parsed) ? newScalata.max_loss : parsed })
+                        }}
                         className="lux-input w-full text-sm sm:text-base min-h-[44px]"
                         min="0"
                         step="0.01"
@@ -631,7 +659,7 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+            <div className="modal-actions justify-end pt-4">
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
@@ -655,9 +683,9 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
 
       {/* Modal Dettagli Scalata */}
       {showDetailsModal && selectedScalata && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="card p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
+        <div className="modal-root bg-black/60 backdrop-blur-md safe-area-sides">
+          <div className="card modal-responsive modal-content-scroll w-full">
+            <div className="modal-header">
               <h3 className="text-xl font-bold text-primary">{selectedScalata.name}</h3>
               <button
                 onClick={() => setShowDetailsModal(false)}
@@ -668,7 +696,7 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
             </div>
             
             {/* Contenuto dettagli scalata */}
-            <div className="space-y-6">
+            <div className="space-y-6 mobile-scroll">
               {/* Informazioni generali */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white/5 rounded-xl p-4 border border-[var(--border-color)]">
@@ -702,6 +730,101 @@ export default function ScalateManager({ currency, mock = false }: ScalateManage
                         <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(step.status)}`}>
                           {getStatusLabel(step.status)}
                         </span>
+                        {step.status === 'pending' ? (
+                          <div className="flex items-center gap-2 ml-4">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const { data: { session } } = await supabase.auth.getSession()
+                                  if (!session?.access_token) throw new Error('Sessione non valida')
+                                  const res = await fetch(`/api/xbank/scalate/${selectedScalata.id}/steps/${step.id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                                    body: JSON.stringify({ status: 'won' })
+                                  })
+                                  if (!res.ok) throw new Error('Aggiornamento stato step fallito')
+                                  // ricarica scalata selezionata
+                                  const refreshed = await fetch(`/api/xbank/scalate/${selectedScalata.id}`, {
+                                    headers: { 'Authorization': `Bearer ${session.access_token}` }
+                                  })
+                                  if (refreshed.ok) {
+                                    const scalata = await refreshed.json()
+                                    setSelectedScalata(scalata)
+                                  }
+                                  await loadScalate()
+                                  showFeedback('success', 'Step segnato come Vinta')
+                                } catch (e) {
+                                  console.error('Errore:', e)
+                                  showFeedback('error', 'Errore nell\'aggiornamento dello step')
+                                }
+                              }}
+                              className="btn-primary px-3 py-1 rounded-xl text-xs touch-target"
+                            >
+                              Segna Vinta
+                            </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const { data: { session } } = await supabase.auth.getSession()
+                                  if (!session?.access_token) throw new Error('Sessione non valida')
+                                  const res = await fetch(`/api/xbank/scalate/${selectedScalata.id}/steps/${step.id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                                    body: JSON.stringify({ status: 'lost' })
+                                  })
+                                  if (!res.ok) throw new Error('Aggiornamento stato step fallito')
+                                  const refreshed = await fetch(`/api/xbank/scalate/${selectedScalata.id}`, {
+                                    headers: { 'Authorization': `Bearer ${session.access_token}` }
+                                  })
+                                  if (refreshed.ok) {
+                                    const scalata = await refreshed.json()
+                                    setSelectedScalata(scalata)
+                                  }
+                                  await loadScalate()
+                                  showFeedback('success', 'Step segnato come Persa')
+                                } catch (e) {
+                                  console.error('Errore:', e)
+                                  showFeedback('error', 'Errore nell\'aggiornamento dello step')
+                                }
+                              }}
+                              className="btn-secondary px-3 py-1 rounded-xl text-xs touch-target"
+                            >
+                              Segna Persa
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="ml-4">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const { data: { session } } = await supabase.auth.getSession()
+                                  if (!session?.access_token) throw new Error('Sessione non valida')
+                                  const res = await fetch(`/api/xbank/scalate/${selectedScalata.id}/steps/${step.id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                                    body: JSON.stringify({ status: 'pending' })
+                                  })
+                                  if (!res.ok) throw new Error('Aggiornamento stato step fallito')
+                                  const refreshed = await fetch(`/api/xbank/scalate/${selectedScalata.id}`, {
+                                    headers: { 'Authorization': `Bearer ${session.access_token}` }
+                                  })
+                                  if (refreshed.ok) {
+                                    const scalata = await refreshed.json()
+                                    setSelectedScalata(scalata)
+                                  }
+                                  await loadScalate()
+                                  showFeedback('success', 'Step riportato In attesa')
+                                } catch (e) {
+                                  console.error('Errore:', e)
+                                  showFeedback('error', 'Errore nell\'aggiornamento dello step')
+                                }
+                              }}
+                              className="btn-secondary px-3 py-1 rounded-xl text-xs touch-target"
+                            >
+                              Ripristina
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

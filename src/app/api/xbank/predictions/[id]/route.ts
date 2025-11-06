@@ -285,13 +285,7 @@ export async function DELETE(
       )
     }
 
-    // Non permettere l'eliminazione di pronostici già chiusi
-    if (existingPrediction.status !== 'pending') {
-      return NextResponse.json(
-        { error: 'Non è possibile eliminare pronostici già chiusi' },
-        { status: 400 }
-      )
-    }
+    // Consenti l'eliminazione indipendentemente dallo stato del pronostico
 
     // Elimina il pronostico
     const { error } = await supabaseAdmin

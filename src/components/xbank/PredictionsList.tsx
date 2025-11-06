@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, Target, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Search, Filter, Target, Trash2, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp, Edit } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import PredictionForm from './PredictionForm'
 
@@ -34,6 +34,20 @@ interface Prediction {
   odds?: number
   stake?: number
   total_odds?: number
+  xbank_prediction_odds?: XBankPredictionOdd[]
+}
+
+interface XBankPredictionOdd {
+  id: string
+  prediction_id: string
+  label?: string | null
+  market_type?: string | null
+  selection?: string | null
+  odds: number
+  status: 'pending' | 'won' | 'lost' | 'void'
+  result_amount?: number | null
+  created_at?: string
+  updated_at?: string
 }
 
 interface PredictionsListProps {
@@ -50,9 +64,37 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
   const [selectedStatus, setSelectedStatus] = useState('')
   const [sortBy, setSortBy] = useState('created_at')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [showForm, setShowForm] = useState(false)
+const [showForm, setShowForm] = useState(false)
+const [editingPrediction, setEditingPrediction] = useState<Prediction | null>(null)
+  const [expandedPredictionId, setExpandedPredictionId] = useState<string | null>(null)
+  const [newOdd, setNewOdd] = useState<{ label: string; market_type: string; selection: string; odds: string }>({ label: '', market_type: '', selection: '', odds: '' })
+  const [addingOdd, setAddingOdd] = useState<boolean>(false)
+  const [addOddError, setAddOddError] = useState<string>('')
 
   const [showFilters, setShowFilters] = useState(false)
+
+  // Adatta la schedina selezionata alla forma attesa dal PredictionForm
+  const toFormInitial = (p: Prediction) => {
+    return {
+      title: p.title || '',
+      description: p.description || '',
+      sport: p.sport || '',
+      stake: typeof p.stake === 'number' ? p.stake : (typeof p.total_stake === 'number' ? p.total_stake : 0),
+      confidence_level: typeof p.confidence_level === 'number' ? p.confidence_level : 3,
+      prediction_type: (p.prediction_type || 'single') as 'single' | 'multiple',
+      event_date: p.event_date || '',
+      notes: p.notes || '',
+      bets: Array.isArray(p.bets) && p.bets.length
+        ? p.bets.map((b, idx) => ({
+            id: String(idx + 1),
+            match: p.match || '',
+            market: b.market || '',
+            selection: b.selection || '',
+            odds: typeof b.odds === 'number' ? b.odds : 1.0
+          }))
+        : []
+    }
+  }
 
   const sports = [
     'Calcio', 'Tennis', 'Basket', 'Pallavolo', 'Rugby', 
@@ -170,6 +212,36 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
       })
 
       if (response.ok) {
+        const created = await response.json()
+        const createdPrediction = created?.prediction
+
+        // Se ci sono scommesse nel form, salvarle come quote del pronostico appena creato
+        if (createdPrediction?.id && Array.isArray(predictionData.bets) && predictionData.bets.length > 0) {
+          const oddsPayloads = predictionData.bets
+            .filter((b: Bet) => Number(b.odds) > 1)
+            .map((b: Bet) => ({
+              label: `${b.market || ''} ${b.selection || ''}`.trim() || null,
+              market_type: b.market || null,
+              selection: b.selection || null,
+              odds: Number(b.odds)
+            }))
+
+          for (const payload of oddsPayloads) {
+            try {
+              await fetch(`/api/xbank/predictions/${createdPrediction.id}/odds`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify(payload)
+              })
+            } catch (e) {
+              console.warn('Errore nel salvataggio quota:', e)
+            }
+          }
+        }
+
         await loadPredictions()
         setShowForm(false)
       } else {
@@ -232,7 +304,7 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
   }
 
   const handleDeletePrediction = async (id: string) => {
-    if (!confirm('Sei sicuro di voler eliminare questo pronostico?')) return
+    if (!confirm('Sei sicuro di voler eliminare questa schedina?')) return
 
     try {
       if (mock) {
@@ -257,6 +329,173 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
       }
     } catch (error) {
       console.error('Errore:', error)
+    }
+  }
+
+  const openEditPrediction = (prediction: Prediction) => {
+    setEditingPrediction(prediction)
+    setShowForm(true)
+  }
+
+  const handleEditSubmit = async (updated: Prediction) => {
+    try {
+      if (!editingPrediction?.id) throw new Error('ID schedina mancante')
+
+      if (mock) {
+        setPredictions(prev => prev.map(p => p.id === editingPrediction.id ? {
+          ...p,
+          ...updated,
+          total_odds: updated.total_odds,
+          stake: updated.stake,
+          description: updated.description,
+          title: updated.title,
+          sport: updated.sport,
+          prediction_type: updated.prediction_type,
+          event_date: updated.event_date
+        } : p))
+        setEditingPrediction(null)
+        setShowForm(false)
+        return
+      }
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error('Sessione non valida')
+
+      const payload = {
+        title: updated.title,
+        description: updated.description,
+        odds: updated.total_odds,
+        stake_amount: updated.stake,
+        confidence: String(Math.round(updated.confidence_level * 20)),
+        event_date: updated.event_date,
+        bookmaker: updated.sport,
+        market_type: updated.prediction_type,
+        tags: updated.bets?.map(b => b.market).filter(Boolean) || []
+      }
+
+      const response = await fetch(`/api/xbank/predictions/${editingPrediction.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+          body: JSON.stringify(payload)
+        }
+      )
+      if (!response.ok) {
+        const err = await response.json().catch(() => null)
+        throw new Error(err?.error || 'Errore nell\'aggiornamento della schedina')
+      }
+      await loadPredictions()
+      setEditingPrediction(null)
+      setShowForm(false)
+    } catch (error) {
+      console.error('Errore:', error)
+      throw error
+    }
+  }
+
+  const updateOddStatus = async (
+    predictionId: string,
+    oddId: string,
+    status: 'pending' | 'won' | 'lost' | 'void',
+    result_amount?: number
+  ) => {
+    try {
+      if (mock) {
+        setPredictions(prev => prev.map(p => {
+          if (p.id !== predictionId) return p
+          const odds = (p.xbank_prediction_odds || []).map(o => o.id === oddId ? { ...o, status, result_amount } : o)
+          return { ...p, xbank_prediction_odds: odds }
+        }))
+        return
+      }
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error('Sessione non valida')
+
+      const response = await fetch(`/api/xbank/predictions/${predictionId}/odds`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          odds_updates: [{ id: oddId, status, result_amount }]
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Errore nell\'aggiornare la quota')
+      }
+      await loadPredictions()
+    } catch (error) {
+      console.error('Errore aggiornamento quota:', error)
+    }
+  }
+
+  const addOddToPrediction = async (predictionId: string) => {
+    try {
+      setAddOddError('')
+      setAddingOdd(true)
+      // Normalizza decimali (supporta virgola) e limita a 2 decimali
+      const normalized = (newOdd.odds || '').replace(',', '.')
+      const parsed = parseFloat(normalized)
+      const oddsValue = Number.isFinite(parsed) ? Number(parsed.toFixed(2)) : NaN
+      if (!Number.isFinite(oddsValue) || oddsValue <= 1) {
+        throw new Error('Inserisci una quota valida (> 1.00)')
+      }
+
+      if (mock) {
+        const createdOdd: XBankPredictionOdd = {
+          id: `mock-odd-${Date.now()}`,
+          prediction_id: predictionId,
+          label: newOdd.label || null,
+          market_type: newOdd.market_type || null,
+          selection: newOdd.selection || null,
+          odds: oddsValue,
+          status: 'pending',
+          result_amount: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        setPredictions(prev => prev.map(p => p.id === predictionId ? { ...p, xbank_prediction_odds: [...(p.xbank_prediction_odds || []), createdOdd] } : p))
+        setNewOdd({ label: '', market_type: '', selection: '', odds: '' })
+        return
+      }
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error('Sessione non valida')
+
+      const response = await fetch(`/api/xbank/predictions/${predictionId}/odds`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          label: newOdd.label || null,
+          market_type: newOdd.market_type || null,
+          selection: newOdd.selection || null,
+          odds: oddsValue
+        })
+      })
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        const statusText = response.status === 401 ? 'Non autenticato' : response.status === 403 ? 'Accesso negato' : 'Errore'
+        throw new Error(err.error ? `${statusText}: ${err.error}` : `Errore nell'aggiunta della quota (HTTP ${response.status})`)
+      }
+      const { odd } = await response.json()
+      if (odd) {
+        setPredictions(prev => prev.map(p => p.id === predictionId ? { ...p, xbank_prediction_odds: [...(p.xbank_prediction_odds || []), odd] } : p))
+      } else {
+        await loadPredictions()
+      }
+      setNewOdd({ label: '', market_type: '', selection: '', odds: '' })
+    } catch (error: any) {
+      console.error('Errore aggiunta quota:', error)
+      setAddOddError(error?.message || 'Errore sconosciuto')
+    } finally {
+      setAddingOdd(false)
     }
   }
 
@@ -389,7 +628,7 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Cerca pronostici..."
+              placeholder="Cerca schedine..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="lux-input w-full pl-10 pr-4 py-3"
@@ -407,11 +646,11 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
         </div>
 
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => { setEditingPrediction(null); setShowForm(true) }}
           className="btn-primary flex items-center space-x-2 px-6 py-3 font-medium"
         >
           <Target className="h-5 w-5" />
-          <span>Nuovo Pronostico</span>
+          <span>Nuova Schedina</span>
         </button>
       </div>
 
@@ -532,6 +771,20 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
                     </>
                   )}
                   <button
+                    onClick={() => setExpandedPredictionId(expandedPredictionId === prediction.id ? null : (prediction.id || null))}
+                    className="text-secondary hover:text-primary transition-colors p-1 rounded-lg hover:bg-white/10"
+                    title={expandedPredictionId === prediction.id ? 'Chiudi dettaglio' : 'Apri dettaglio'}
+                  >
+                    {expandedPredictionId === prediction.id ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  </button>
+                  <button
+                    onClick={() => openEditPrediction(prediction)}
+                    className="text-secondary hover:text-primary transition-colors p-1 rounded-lg hover:bg-white/10"
+                    title="Modifica"
+                  >
+                    <Edit className="h-5 w-5" />
+                  </button>
+                  <button
                     onClick={() => prediction.id && handleDeletePrediction(prediction.id)}
                     className="text-red-400 hover:text-red-300 transition-colors p-1 rounded-lg hover:bg-white/10"
                     title="Elimina"
@@ -543,7 +796,7 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
 
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
                 <div>
-                  <span className="text-secondary font-medium">Tipo:</span>
+                  <span className="text-secondary font-medium">Tipo Schedina:</span>
                   <p className="text-primary font-semibold">
                     {prediction.prediction_type === 'single' ? 'Singola' : 'Multipla'}
                   </p>
@@ -600,17 +853,113 @@ const PredictionsList = ({ currency, onBankrollUpdate, mock = false }: Predictio
                   </div>
                 </div>
               )}
+
+              {expandedPredictionId === prediction.id && (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-secondary font-medium">Quote del pronostico</span>
+                    <span className="text-xs text-secondary">
+                      {(prediction.xbank_prediction_odds || []).length} elemento/i
+                    </span>
+                  </div>
+                  {(prediction.xbank_prediction_odds || []).length === 0 ? (
+                    <div className="text-sm text-secondary">Nessuna quota associata.</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(prediction.xbank_prediction_odds || []).map(odd => (
+                        <div key={odd.id} className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-primary font-semibold truncate">
+                                {odd.label || odd.selection || odd.market_type || 'Quota'}
+                              </span>
+                              <span className="text-xs text-secondary">@ {odd.odds.toFixed(2)}</span>
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(odd.status)} border border-white/10`}>
+                                {statusOptions.find(s => s.value === odd.status)?.label}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => prediction.id && updateOddStatus(prediction.id, odd.id, 'pending')}
+                              className="text-orange-400 hover:text-orange-300 transition-colors px-2 py-1 rounded-lg hover:bg-white/10 text-xs"
+                            >In Attesa</button>
+                            <button
+                              onClick={() => prediction.id && updateOddStatus(prediction.id, odd.id, 'won')}
+                              className="text-green-400 hover:text-green-300 transition-colors px-2 py-1 rounded-lg hover:bg-white/10 text-xs"
+                            >Vinta</button>
+                            <button
+                              onClick={() => prediction.id && updateOddStatus(prediction.id, odd.id, 'lost')}
+                              className="text-red-400 hover:text-red-300 transition-colors px-2 py-1 rounded-lg hover:bg-white/10 text-xs"
+                            >Persa</button>
+                            <button
+                              onClick={() => prediction.id && updateOddStatus(prediction.id, odd.id, 'void')}
+                              className="text-secondary hover:text-primary transition-colors px-2 py-1 rounded-lg hover:bg-white/10 text-xs"
+                            >Annullata</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Form aggiunta nuova quota */}
+                  <div className="mt-4 bg-white/5 border border-white/10 rounded-xl p-3">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Etichetta"
+                        value={newOdd.label}
+                        onChange={(e) => setNewOdd(prev => ({ ...prev, label: e.target.value }))}
+                        className="lux-input w-full"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Mercato"
+                        value={newOdd.market_type}
+                        onChange={(e) => setNewOdd(prev => ({ ...prev, market_type: e.target.value }))}
+                        className="lux-input w-full"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Selezione"
+                        value={newOdd.selection}
+                        onChange={(e) => setNewOdd(prev => ({ ...prev, selection: e.target.value }))}
+                        className="lux-input w-full"
+                      />
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="1.01"
+                        placeholder="Quota"
+                        value={newOdd.odds}
+                        onChange={(e) => setNewOdd(prev => ({ ...prev, odds: e.target.value }))}
+                        className="lux-input w-full"
+                      />
+                      <button
+                        disabled={addingOdd || !prediction.id}
+                        onClick={() => prediction.id && addOddToPrediction(prediction.id)}
+                        className="btn-primary px-4 py-2 text-sm font-medium disabled:opacity-60"
+                      >{addingOdd ? 'Aggiungo...' : 'Aggiungi quota'}</button>
+                    </div>
+                    {addOddError && (
+                      <div className="text-red-400 text-xs mt-2">{addOddError}</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ))
         )}
       </div>
 
-      {/* Form per nuovo pronostico */}
+      {/* Modal Schedina (creazione/modifica) */}
       <PredictionForm
         isOpen={showForm}
-        onClose={() => setShowForm(false)}
-        onSubmit={handleCreatePrediction}
+        onClose={() => { setShowForm(false); setEditingPrediction(null) }}
+        onSubmit={(data) => editingPrediction ? handleEditSubmit(data) : handleCreatePrediction(data)}
         currency={currency}
+        mode={editingPrediction ? 'edit' : 'create'}
+        initialPrediction={editingPrediction ? toFormInitial(editingPrediction) : undefined}
       />
     </div>
   )

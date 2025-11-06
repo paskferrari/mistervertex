@@ -81,7 +81,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Verifica che la scalata appartenga all'utente
     const { data: scalata } = await supabase
       .from('scalate')
-      .select('id, user_id, current_step, max_steps, scalata_type, settings, current_bankroll')
+      .select('*')
       .eq('id', id)
       .eq('user_id', user.id)
       .single()
@@ -102,57 +102,82 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'La quota deve essere maggiore di 1' }, { status: 400 })
     }
 
+    // Normalizza campi con fallback tra schema inglese/italiano
+    const currentStep = Number((scalata as any).current_step ?? (scalata as any).passo_attuale ?? 0)
+    const maxSteps = Number((scalata as any).max_steps ?? (scalata as any).passi_massimi ?? 0)
+    const scalataType = (scalata as any).scalata_type ?? (scalata as any).tipo ?? 'progressive'
+    const settings = ((scalata as any).settings as ScalataSettings) ?? {
+      multiplier: (scalata as any).moltiplicatore ?? 2,
+      max_loss: (scalata as any).perdita_massima ?? 0
+    }
+    const currentBankroll = Number((scalata as any).current_bankroll ?? (scalata as any).bankroll_attuale ?? 0)
+
     // Verifica che non si superi il numero massimo di passi
-    if (scalata.current_step >= scalata.max_steps) {
+    if (currentStep >= maxSteps) {
       return NextResponse.json({ error: 'Numero massimo di passi raggiunto' }, { status: 400 })
     }
 
     // Calcola lo stake per il prossimo passo basato sul tipo di scalata
     let nextStake = 0
-    const settings = scalata.settings as ScalataSettings || {}
     
-    switch (scalata.scalata_type) {
+    switch (scalataType) {
       case 'progressive':
-        if (scalata.current_step === 0) {
+        if (currentStep === 0) {
           // Primo passo: usa il bankroll corrente
-          nextStake = scalata.current_bankroll
+          nextStake = currentBankroll
         } else {
           // Passi successivi: moltiplica per il moltiplicatore
-          const multiplier = settings.multiplier || 2
-          nextStake = scalata.current_bankroll * multiplier
+          const multiplier = (settings?.multiplier as number) || 2
+          nextStake = currentBankroll * multiplier
         }
         break
         
       case 'fixed':
         // Stake fisso: usa sempre il bankroll iniziale
-        nextStake = scalata.current_bankroll
+        nextStake = currentBankroll
         break
         
       case 'fibonacci':
         // Implementa la sequenza di Fibonacci
-        const { data: previousSteps } = await supabase
-          .from('scalata_steps')
-          .select('stake')
-          .eq('scalata_id', id)
-          .order('sequence', { ascending: false })
-          .limit(2)
-        
+        let previousSteps: any[] | null = null
+        let prevError: any = null
+        {
+          const { data, error } = await supabase
+            .from('scalata_steps')
+            .select('stake, sequence')
+            .eq('scalata_id', id)
+            .order('sequence', { ascending: false })
+            .limit(2)
+          previousSteps = data
+          prevError = error
+        }
+        if (prevError || !previousSteps) {
+          // Fallback: ordina per possibile colonna italiana
+          const { data } = await supabase
+            .from('scalata_steps')
+            .select('stake, numero_passo')
+            .eq('scalata_id', id)
+            .order('numero_passo', { ascending: false })
+            .limit(2)
+          previousSteps = data || []
+        }
+
         if (!previousSteps || previousSteps.length === 0) {
-          nextStake = scalata.current_bankroll
+          nextStake = currentBankroll
         } else if (previousSteps.length === 1) {
-          nextStake = scalata.current_bankroll
+          nextStake = currentBankroll
         } else {
-          nextStake = previousSteps[0].stake + previousSteps[1].stake
+          nextStake = (Number(previousSteps[0].stake) || 0) + (Number(previousSteps[1].stake) || 0)
         }
         break
         
       case 'custom':
         // Per scalate personalizzate, usa il bankroll corrente
-        nextStake = scalata.current_bankroll
+        nextStake = currentBankroll
         break
         
       default:
-        nextStake = scalata.current_bankroll
+        nextStake = currentBankroll
     }
 
     // Verifica che lo stake non superi il limite di perdita massima
@@ -161,34 +186,69 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Crea il nuovo passo
-    const { data: step, error } = await supabase
-      .from('scalata_steps')
-      .insert({
-        scalata_id: id,
-        sequence: scalata.current_step + 1,
-        title,
-        odds,
-        stake: nextStake,
-        status: 'pending',
-        prediction_id: prediction_id || null,
-        custom_prediction_id: custom_prediction_id || null
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Errore nella creazione del passo:', error)
-      return NextResponse.json({ error: 'Errore nella creazione del passo' }, { status: 500 })
+    let step: any = null
+    {
+      const { data, error } = await supabase
+        .from('scalata_steps')
+        .insert({
+          scalata_id: id,
+          sequence: currentStep + 1,
+          title,
+          odds,
+          stake: nextStake,
+          status: 'pending',
+          prediction_id: prediction_id || null,
+          custom_prediction_id: custom_prediction_id || null
+        })
+        .select()
+        .single()
+      if (!error) {
+        step = data
+      } else {
+        // Fallback su schema italiano
+        const { data: itData, error: itError } = await supabase
+          .from('scalata_steps')
+          .insert({
+            scalata_id: id,
+            numero_passo: currentStep + 1,
+            titolo: title,
+            quota: odds,
+            puntata: nextStake,
+            risultato: 'pending',
+            pronostico_id: prediction_id || null,
+            pronostico_custom_id: custom_prediction_id || null
+          })
+          .select()
+          .single()
+        if (itError) {
+          console.error('Errore nella creazione del passo:', itError)
+          return NextResponse.json({ error: 'Errore nella creazione del passo' }, { status: 500 })
+        }
+        step = itData
+      }
     }
 
     // Aggiorna il passo corrente della scalata
-    await supabase
-      .from('scalate')
-      .update({ 
-        current_step: scalata.current_step + 1,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
+    {
+      const { error: upError } = await supabase
+        .from('scalate')
+        .update({ 
+          current_step: currentStep + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+
+      if (upError) {
+        // Fallback su colonna italiana
+        await supabase
+          .from('scalate')
+          .update({ 
+            passo_attuale: currentStep + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id)
+      }
+    }
 
     return NextResponse.json(step, { status: 201 })
   } catch (error) {

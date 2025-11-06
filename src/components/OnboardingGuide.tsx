@@ -211,7 +211,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
   const isLastStep = currentStep === steps.length - 1
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="modal-root safe-area-sides">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
@@ -219,13 +219,18 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
       />
       
       {/* Modal */}
-      <div className="relative bg-primary border border-white/20 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 modal-content-scroll">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="onboarding-title"
+        className="relative bg-primary border border-white/20 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 modal-responsive modal-content-scroll"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
+        <div className="modal-header flex items-center justify-between p-6 border-b border-white/10">
           <div className="flex items-center space-x-3">
             {currentStepData.icon}
             <div>
-              <h2 className="text-xl font-bold text-white">{currentStepData.title}</h2>
+              <h2 id="onboarding-title" className="text-xl font-bold text-white">{currentStepData.title}</h2>
               <p className="text-sm text-gray-400">{currentStepData.description}</p>
             </div>
           </div>
@@ -259,10 +264,10 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-white/10 bg-white/5">
+        <div className="modal-actions flex items-center justify-between p-6 border-t border-white/10 bg-white/5">
           <button
             onClick={handleSkip}
-            className="text-gray-400 hover:text-white transition-colors text-sm font-medium"
+            className="text-gray-400 hover:text-white transition-colors text-sm font-medium min-h-[44px] touch-target"
           >
             Salta Guida
           </button>
@@ -271,7 +276,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
             <button
               onClick={prevStep}
               disabled={currentStep === 0}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px] touch-target"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Indietro</span>
@@ -280,7 +285,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
             {isLastStep ? (
               <button
                 onClick={handleComplete}
-                className="lux-cta px-6 py-2 rounded-lg font-medium"
+                className="lux-cta px-6 py-2 rounded-lg font-medium min-h-[44px] touch-target"
               >
                 <Award className="h-4 w-4" />
                 <span>Inizia!</span>
@@ -288,7 +293,7 @@ export default function OnboardingGuide({ isOpen, onClose, onComplete }: Onboard
             ) : (
               <button
                 onClick={nextStep}
-                className="lux-cta px-6 py-2 rounded-lg font-medium"
+                className="lux-cta px-6 py-2 rounded-lg font-medium min-h-[44px] touch-target"
               >
                 <span>Avanti</span>
                 <ChevronRight className="h-4 w-4" />

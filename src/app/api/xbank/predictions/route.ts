@@ -78,8 +78,31 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Recupera le quote associate senza dipendere da relazioni PostgREST
+    let predictions = data || []
+    if (predictions.length > 0) {
+      const ids = predictions.map(p => p.id).filter(Boolean)
+      const { data: oddsData, error: oddsError } = await supabaseAdmin
+        .from('xbank_prediction_odds')
+        .select('*')
+        .in('prediction_id', ids)
+
+      if (!oddsError && Array.isArray(oddsData)) {
+        const byPrediction = new Map<string, any[]>()
+        for (const odd of oddsData) {
+          const pid = odd.prediction_id
+          if (!byPrediction.has(pid)) byPrediction.set(pid, [])
+          byPrediction.get(pid)!.push(odd)
+        }
+        predictions = predictions.map(p => ({
+          ...p,
+          xbank_prediction_odds: byPrediction.get(p.id) || []
+        }))
+      }
+    }
+
     return NextResponse.json({
-      predictions: data || [],
+      predictions,
       pagination: {
         page,
         limit,
